@@ -1,21 +1,23 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cadastro de Usuário</title>
 </head>
+
 <body>
     <h2>Cadastro de Usuário</h2>
     <form id="userForm">
-        <label for="name">Nome:</label><br>
-        <input type="text" id="name" name="name" required><br><br>
+        <label for="nome">Nome:</label><br>
+        <input type="text" id="nome" name="nome" required><br><br>
         
-        <label for="age">Idade:</label><br>
-        <input type="number" id="age" name="age" required><br><br>
+        <label for="idade">Idade:</label><br>
+        <input type="number" id="idade" name="idade" required><br><br>
         
         <label for="salary">Salário:</label><br>
-        <input type="number" id="salary" name="salary" required><br><br>
+        <input type="number" id="salario" name="salario" required><br><br>
         
         <input type="submit" value="Cadastrar">
     </form>
@@ -28,24 +30,26 @@
         document.getElementById('userForm').addEventListener('submit', function(event) {
             event.preventDefault();
 
-            const name = document.getElementById('name').value;
-            const age = document.getElementById('age').value;
-            const salary = document.getElementById('salary').value;
+            const nome = document.getElementById('nome').value;
+            const idade = document.getElementById('idade').value;
+            const salario = document.getElementById('salario').value;
 
             userCount++;
 
             const userData = {
                 id: userCount,
-                name: name,
-                age: age,
-                salary: salary
+                nome: nome,
+                idade: idade,
+                salario: salario
             };
 
-<!_            saveData(userData); _> 
+/*            saveData(userData);*/
             showUserData(userData);
         });
 
-/*        function saveData(data) {
+
+/* Função para salvar os dados em um arquivo .json */
+        function saveData(data) {
             const jsonData = JSON.stringify(data, null, 4);
             const blob = new Blob([jsonData], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
@@ -56,15 +60,17 @@
             a.click();
             URL.revokeObjectURL(url);
         }
-*/
+
+
+/* Função que retorna os dados para o usuário na mesma página. */
         function showUserData(data) {
             const resultDiv = document.getElementById('result');
             resultDiv.innerHTML = `
                 <h2>Dados Cadastrados</h2>
                 <p>ID: ${data.id}</p>
-                <p>Nome: ${data.name}</p>
-                <p>Idade: ${data.age}</p>
-                <p>Salário: R$${data.salary}</p>
+                <p>Nome: ${data.nome}</p>
+                <p>Idade: ${data.idade}</p>
+                <p>Salário: R$${data.salario}</p>
             `;
         }
     </script>
