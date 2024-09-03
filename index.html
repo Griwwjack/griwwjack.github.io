@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de Usuário</title>
+</head>
+<body>
+    <h2>Cadastro de Usuário</h2>
+    <form id="userForm">
+        <label for="name">Nome:</label><br>
+        <input type="text" id="name" name="name" required><br><br>
+        
+        <label for="age">Idade:</label><br>
+        <input type="number" id="age" name="age" required><br><br>
+        
+        <label for="salary">Salário:</label><br>
+        <input type="number" id="salary" name="salary" required><br><br>
+        
+        <input type="submit" value="Cadastrar">
+    </form>
+
+    <div id="result"></div>
+
+    <script>
+        let userCount = 0;
+
+        document.getElementById('userForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const name = document.getElementById('name').value;
+            const age = document.getElementById('age').value;
+            const salary = document.getElementById('salary').value;
+
+            userCount++;
+
+            const userData = {
+                id: userCount,
+                name: name,
+                age: age,
+                salary: salary
+            };
+
+            saveData(userData);
+            showUserData(userData);
+        });
+
+        function saveData(data) {
+            const jsonData = JSON.stringify(data, null, 4);
+            const blob = new Blob([jsonData], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `user_data_${data.id}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function showUserData(data) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = `
+                <h2>Dados Cadastrados</h2>
+                <p>ID: ${data.id}</p>
+                <p>Nome: ${data.name}</p>
+                <p>Idade: ${data.age}</p>
+                <p>Salário: R$${data.salary}</p>
+            `;
+        }
+    </script>
+</body>
+</html>
