@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -38,6 +39,7 @@
         }
     </style>
 </head>
+
 
 <body>
     <h2>Cadastro de Usuário</h2>
@@ -78,28 +80,9 @@
                 };
 
                 users.push(userData); // Adiciona o novo usuário à lista
-
-                showUserData(); // Atualiza a exibição com todos os usuários
-
-                document.getElementById('userForm').reset(); // Limpa o formulário
+				
+				document.getElementById('userForm').reset(); // Limpa o formulário
             });
-
-            function showUserData() {
-                const resultDiv = document.getElementById('result');
-                resultDiv.innerHTML = `
-                    <h2>Dados Cadastrados</h2>
-                    <ul>
-                        ${users.map(user => `
-                            <li>
-                                <p>ID: ${user.id}</p>
-                                <p>Nome: ${user.name}</p>
-                                <p>Idade: ${user.age}</p>
-                                <p>Salário: R$${parseFloat(user.salary).toFixed(2)}</p>
-                            </li>
-                        `).join('')}
-                    </ul>
-                `;
-            }
         });
     </script>
 </body>
