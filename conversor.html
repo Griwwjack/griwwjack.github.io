@@ -17,14 +17,12 @@
             padding: 0;
             display: flex;
             flex-direction: column;
-            justify-content: center;
             align-items: center;
-            height: 100vh;
         }
 
         .title-container, .container {
             width: calc(100% - 20px); /* Preenche 100% menos 10px de cada lado */
-            margin: 0 10px;
+            margin: 10px;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
@@ -32,7 +30,6 @@
         .title-container {
             background-color: #222; /* Cinza escuro */
             padding: 10px;
-            margin-bottom: 20px;
             text-align: center;
         }
 
@@ -59,7 +56,7 @@
             border: 1px solid #30363D; /* Borda cinza escuro */
             border-radius: 5px;
             font-size: 16px;
-            background-color: #0D1117; /* Azul escuro */
+            background-color: #111; /* Cinza escuro */
             color: #C9D1D9; /* Texto branco acinzentado */
         }
 
@@ -81,6 +78,11 @@
 
         input[type=number] {
             -moz-appearance: textfield; /* Firefox */
+        }
+
+        /* Espaçamento entre os grupos de entrada */
+        .input-group {
+            margin-bottom: 20px; /* Espaço de 20px entre os campos */
         }
     </style>
 </head>
