@@ -11,8 +11,8 @@
 
         body {
             font-family: Arial, sans-serif;
-            background-color: #000;
-            color: #fff;
+            background-color: #000; /* Fundo preto */
+            color: #C9D1D9; /* Branco acinzentado */
             margin: 0;
             padding: 0;
             display: flex;
@@ -30,7 +30,7 @@
         }
 
         .title-container {
-            background-color: #222;
+            background-color: #222; /* Cinza escuro */
             padding: 10px;
             margin-bottom: 20px;
             text-align: center;
@@ -38,38 +38,49 @@
 
         .title-container h1 {
             margin: 0;
-            font-size: 20px;
-            color: #00BFFF;
+            font-size: 24px;
+            color: #58A6FF; /* Azul claro */
         }
 
         .container {
-            background-color: #222;
+            background-color: #222; /* Cinza escuro */
             padding: 20px;
         }
 
         label {
             display: block;
             margin-bottom: 5px;
-            color: #f4f4f4;
+            color: #C9D1D9; /* Branco acinzentado */
         }
 
         input {
             width: 100%;
             padding: 10px;
-            border: 1px solid #666;
+            border: 1px solid #30363D; /* Borda cinza escuro */
             border-radius: 5px;
             font-size: 16px;
-            background-color: #000;
-            color: #f4f4f4;
+            background-color: #0D1117; /* Azul escuro */
+            color: #C9D1D9; /* Texto branco acinzentado */
         }
 
         input:focus {
             outline: none;
-            border-color: #00BFFF;
+            border-color: #58A6FF; /* Azul claro quando focado */
         }
 
         input::placeholder {
-            color: #555;
+            color: #8B949E; /* Cinza claro para o placeholder */
+        }
+
+        /* Remove as setas de incremento e decremento nos campos de número */
+        input[type=number]::-webkit-outer-spin-button,
+        input[type=number]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        input[type=number] {
+            -moz-appearance: textfield; /* Firefox */
         }
     </style>
 </head>
@@ -85,7 +96,7 @@
         </div>
         <div class="input-group">
             <label for="hexadecimal">Hexadecimal</label>
-            <input type="text" id="hexadecimal" placeholder="Digite o número hexadecimal" oninput="convertFromHex()">
+            <input type="text" id="hexadecimal" placeholder="Digite o número hexadecimal" oninput="convertFromHex()" onkeyup="toUpperCaseHex()">
         </div>
         <div class="input-group">
             <label for="octal">Octal</label>
@@ -162,6 +173,12 @@
             document.getElementById('hexadecimal').value = '';
             document.getElementById('octal').value = '';
             document.getElementById('binary').value = '';
+        }
+
+        // Função para garantir que o campo hexadecimal esteja sempre em letras maiúsculas
+        function toUpperCaseHex() {
+            const hexInput = document.getElementById('hexadecimal');
+            hexInput.value = hexInput.value.toUpperCase();
         }
     </script>
 </body>
