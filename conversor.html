@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversor Numérico</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #333;
+            color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background-color: #444;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 300px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #f4f4f4;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #f4f4f4;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #666;
+            border-radius: 5px;
+            font-size: 16px;
+            background-color: #555;
+            color: #f4f4f4;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #00BFFF;
+        }
+
+        input::placeholder {
+            color: #bbb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2><center>Conversor Numérico</center></h2>
+        <div class="input-group">
+            <label for="decimal">Decimal</label>
+            <input type="number" id="decimal" placeholder="Digite o número decimal" oninput="convertFromDecimal()">
+        </div>
+        <div class="input-group">
+            <label for="hexadecimal">Hexadecimal</label>
+            <input type="text" id="hexadecimal" placeholder="Digite o número hexadecimal" oninput="convertFromHex()">
+        </div>
+        <div class="input-group">
+            <label for="octal">Octal</label>
+            <input type="text" id="octal" placeholder="Digite o número octal" oninput="convertFromOctal()">
+        </div>
+        <div class="input-group">
+            <label for="binary">Binário</label>
+            <input type="text" id="binary" placeholder="Digite o número binário" oninput="convertFromBinary()">
+        </div>
+    </div>
+
+    <script>
+        // Função para converter Decimal para Hexadecimal, Octal e Binário
+        function convertFromDecimal() {
+            const decimalInput = document.getElementById('decimal').value;
+            if (decimalInput !== '') {
+                document.getElementById('hexadecimal').value = parseInt(decimalInput, 10).toString(16).toUpperCase();
+                document.getElementById('octal').value = parseInt(decimalInput, 10).toString(8);
+                document.getElementById('binary').value = parseInt(decimalInput, 10).toString(2);
+            } else {
+                clearFields();
+            }
+        }
+
+        // Função para converter Hexadecimal para Decimal, Octal e Binário
+        function convertFromHex() {
+            const hexInput = document.getElementById('hexadecimal').value;
+            if (hexInput !== '') {
+                const decimalValue = parseInt(hexInput, 16);
+                if (!isNaN(decimalValue)) {
+                    document.getElementById('decimal').value = decimalValue;
+                    document.getElementById('octal').value = decimalValue.toString(8);
+                    document.getElementById('binary').value = decimalValue.toString(2);
+                } else {
+                    clearFields();
+                }
+            } else {
+                clearFields();
+            }
+        }
+
+        // Função para converter Octal para Decimal, Hexadecimal e Binário
+        function convertFromOctal() {
+            const octalInput = document.getElementById('octal').value;
+            if (octalInput !== '') {
+                const decimalValue = parseInt(octalInput, 8);
+                if (!isNaN(decimalValue)) {
+                    document.getElementById('decimal').value = decimalValue;
+                    document.getElementById('hexadecimal').value = decimalValue.toString(16).toUpperCase();
+                    document.getElementById('binary').value = decimalValue.toString(2);
+                } else {
+                    clearFields();
+                }
+            } else {
+                clearFields();
+            }
+        }
+
+        // Função para converter Binário para Decimal, Hexadecimal e Octal
+        function convertFromBinary() {
+            const binaryInput = document.getElementById('binary').value;
+            if (binaryInput !== '') {
+                const decimalValue = parseInt(binaryInput, 2);
+                if (!isNaN(decimalValue)) {
+                    document.getElementById('decimal').value = decimalValue;
+                    document.getElementById('hexadecimal').value = decimalValue.toString(16).toUpperCase();
+                    document.getElementById('octal').value = decimalValue.toString(8);
+                } else {
+                    clearFields();
+                }
+            } else {
+                clearFields();
+            }
+        }
+
+        // Função para limpar os campos quando a entrada for inválida
+        function clearFields() {
+            document.getElementById('decimal').value = '';
+            document.getElementById('hexadecimal').value = '';
+            document.getElementById('octal').value = '';
+            document.getElementById('binary').value = '';
+        }
+    </script>
+</body>
+</html>
