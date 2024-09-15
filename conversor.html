@@ -11,32 +11,40 @@
 
         body {
             font-family: Arial, sans-serif;
-            background-color: #333;
-            color: #f4f4f4;
+            background-color: #000;
+            color: #fff;
             margin: 0;
             padding: 0;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             height: 100vh;
         }
 
-        .container {
-            background-color: #444;
-            padding: 20px;
+        .title-container, .container {
+            width: calc(100% - 20px); /* Preenche 100% menos 10px de cada lado */
+            margin: 0 10px;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            width: 300px;
         }
 
-        h1 {
-            text-align: center;
+        .title-container {
+            background-color: #222;
+            padding: 10px;
             margin-bottom: 20px;
-            color: #f4f4f4;
+            text-align: center;
         }
 
-        .input-group {
-            margin-bottom: 15px;
+        .title-container h1 {
+            margin: 0;
+            font-size: 20px;
+            color: #00BFFF;
+        }
+
+        .container {
+            background-color: #222;
+            padding: 20px;
         }
 
         label {
@@ -51,7 +59,7 @@
             border: 1px solid #666;
             border-radius: 5px;
             font-size: 16px;
-            background-color: #555;
+            background-color: #000;
             color: #f4f4f4;
         }
 
@@ -66,8 +74,11 @@
     </style>
 </head>
 <body>
+    <div class="title-container">
+        <h1>Conversor Numérico</h1>
+    </div>
+
     <div class="container">
-        <h2><center>Conversor Numérico</center></h2>
         <div class="input-group">
             <label for="decimal">Decimal</label>
             <input type="number" id="decimal" placeholder="Digite o número decimal" oninput="convertFromDecimal()">
@@ -87,7 +98,6 @@
     </div>
 
     <script>
-        // Função para converter Decimal para Hexadecimal, Octal e Binário
         function convertFromDecimal() {
             const decimalInput = document.getElementById('decimal').value;
             if (decimalInput !== '') {
@@ -99,7 +109,6 @@
             }
         }
 
-        // Função para converter Hexadecimal para Decimal, Octal e Binário
         function convertFromHex() {
             const hexInput = document.getElementById('hexadecimal').value;
             if (hexInput !== '') {
@@ -116,7 +125,6 @@
             }
         }
 
-        // Função para converter Octal para Decimal, Hexadecimal e Binário
         function convertFromOctal() {
             const octalInput = document.getElementById('octal').value;
             if (octalInput !== '') {
@@ -133,7 +141,6 @@
             }
         }
 
-        // Função para converter Binário para Decimal, Hexadecimal e Octal
         function convertFromBinary() {
             const binaryInput = document.getElementById('binary').value;
             if (binaryInput !== '') {
@@ -150,7 +157,6 @@
             }
         }
 
-        // Função para limpar os campos quando a entrada for inválida
         function clearFields() {
             document.getElementById('decimal').value = '';
             document.getElementById('hexadecimal').value = '';
