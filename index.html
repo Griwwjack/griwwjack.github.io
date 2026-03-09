@@ -1,162 +1,272 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Conversor Numérico</title>
+    <title>Contador de Etiquetas Pro</title>
     <style>
-        * {
-            box-sizing: border-box;
-        }
-
         body {
-            font-family: Arial, sans-serif;
-            background-color: #333;
-            color: #f4f4f4;
-            margin: 0;
-            padding: 0;
+            font-family: -apple-system, sans-serif;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
-            height: 100vh;
+            justify-content: flex-start; /* Mantém no topo */
+            min-height: 100vh;
+            margin: 0;
+            background-color: #121212;
+            color: #e0e0e0;
+            padding-top: 30px; /* Pequeno espaçamento para não colar na borda do celular */
         }
 
         .container {
-            background-color: #444;
+            width: 90%;
+            max-width: 400px;
+            background: #1e1e1e;
             padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            width: 300px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
-        h1 {
-            text-align: center;
+        /* AJUSTE ESTÉTICO SOLICITADO */
+        h2 { 
+            text-align: center; 
+            color: #ffffff; 
+            margin-top: 5px; /* Margem superior reduzida drasticamente */
+            margin-bottom: 15px; /* Margem inferior levemente reduzida para equilibrar com a Onda */
+            font-size: 1.5rem; 
+        }
+
+        .onda-group {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #2c2c2c;
+            padding: 15px;
+            border-radius: 15px;
             margin-bottom: 20px;
-            color: #f4f4f4;
+            border: 1px dashed #555;
         }
 
-        .input-group {
-            margin-bottom: 15px;
+        .onda-label { font-weight: bold; color: #4dabff; }
+        
+        .onda-input {
+            width: 80px;
+            background: #121212;
+            border: 1px solid #444;
+            color: white;
+            font-size: 1.2rem;
+            padding: 8px;
+            border-radius: 8px;
+            text-align: center;
         }
 
-        label {
-            display: block;
-            margin-bottom: 5px;
-            color: #f4f4f4;
+        .counter-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 15px;
+            margin-bottom: 12px;
+            border-radius: 15px;
+            background: #252525;
+            border: 1px solid #333;
         }
 
-        input {
+        .label-group { flex-grow: 1; }
+        .name { font-size: 0.9rem; font-weight: bold; color: #bbb; display: block; }
+        .number { font-size: 1.8rem; color: #4dabff; font-weight: 800; }
+
+        .btn-group { display: flex; gap: 8px; }
+
+        button {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            border: none;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        button:active { transform: scale(0.9); }
+
+        .btn-plus { background-color: #2fb344; }
+        .btn-minus { background-color: #444; color: #bbb; }
+
+        .action-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .secondary-btn {
+            height: 50px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: bold;
+            border: 1px solid #444;
             width: 100%;
-            padding: 10px;
-            border: 1px solid #666;
-            border-radius: 5px;
-            font-size: 16px;
-            background-color: #555;
-            color: #f4f4f4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        input:focus {
-            outline: none;
-            border-color: #00BFFF;
-        }
-
-        input::placeholder {
-            color: #bbb;
-        }
+        .export-btn { background-color: #007bff; color: white; border: none; }
+        .copy-btn { background-color: #6f42c1; color: white; border: none; }
+        .reset-btn { background-color: #1e1e1e; color: #ff6b6b; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2><center>Conversor Numérico</center></h2>
-        <div class="input-group">
-            <label for="decimal">Decimal</label>
-            <input type="number" id="decimal" placeholder="Digite o número decimal" oninput="convertFromDecimal()">
+
+<div class="container">
+    <h2>Controle de Etiquetas</h2>
+
+    <div class="onda-group">
+        <span class="onda-label">Onda:</span>
+        <input type="number" id="input-onda" class="onda-input" value="1" min="1" oninput="saveOnda()">
+    </div>
+
+    <div class="counter-card">
+        <div class="label-group">
+            <span class="name">Etiqueta boa</span>
+            <span id="val-ok" class="number">0</span>
         </div>
-        <div class="input-group">
-            <label for="hexadecimal">Hexadecimal</label>
-            <input type="text" id="hexadecimal" placeholder="Digite o número hexadecimal" oninput="convertFromHex()">
-        </div>
-        <div class="input-group">
-            <label for="octal">Octal</label>
-            <input type="text" id="octal" placeholder="Digite o número octal" oninput="convertFromOctal()">
-        </div>
-        <div class="input-group">
-            <label for="binary">Binário</label>
-            <input type="text" id="binary" placeholder="Digite o número binário" oninput="convertFromBinary()">
+        <div class="btn-group">
+            <button class="btn-minus" onclick="change('ok', -1)">-</button>
+            <button class="btn-plus" onclick="change('ok', 1)">+</button>
         </div>
     </div>
 
-    <script>
-        // Função para converter Decimal para Hexadecimal, Octal e Binário
-        function convertFromDecimal() {
-            const decimalInput = document.getElementById('decimal').value;
-            if (decimalInput !== '') {
-                document.getElementById('hexadecimal').value = parseInt(decimalInput, 10).toString(16).toUpperCase();
-                document.getElementById('octal').value = parseInt(decimalInput, 10).toString(8);
-                document.getElementById('binary').value = parseInt(decimalInput, 10).toString(2);
-            } else {
-                clearFields();
-            }
-        }
+    <div class="counter-card">
+        <div class="label-group">
+            <span class="name">Etiqueta ruim</span>
+            <span id="val-bad" class="number">0</span>
+        </div>
+        <div class="btn-group">
+            <button class="btn-minus" onclick="change('bad', -1)">-</button>
+            <button class="btn-plus" onclick="change('bad', 1)" style="background-color: #e63946;">+</button>
+        </div>
+    </div>
 
-        // Função para converter Hexadecimal para Decimal, Octal e Binário
-        function convertFromHex() {
-            const hexInput = document.getElementById('hexadecimal').value;
-            if (hexInput !== '') {
-                const decimalValue = parseInt(hexInput, 16);
-                if (!isNaN(decimalValue)) {
-                    document.getElementById('decimal').value = decimalValue;
-                    document.getElementById('octal').value = decimalValue.toString(8);
-                    document.getElementById('binary').value = decimalValue.toString(2);
-                } else {
-                    clearFields();
-                }
-            } else {
-                clearFields();
-            }
-        }
+    <div class="counter-card">
+        <div class="label-group">
+            <span class="name">Etiqueta marcada</span>
+            <span id="val-marked" class="number">0</span>
+        </div>
+        <div class="btn-group">
+            <button class="btn-minus" onclick="change('marked', -1)">-</button>
+            <button class="btn-plus" onclick="change('marked', 1)" style="background-color: #f39c12;">+</button>
+        </div>
+    </div>
 
-        // Função para converter Octal para Decimal, Hexadecimal e Binário
-        function convertFromOctal() {
-            const octalInput = document.getElementById('octal').value;
-            if (octalInput !== '') {
-                const decimalValue = parseInt(octalInput, 8);
-                if (!isNaN(decimalValue)) {
-                    document.getElementById('decimal').value = decimalValue;
-                    document.getElementById('hexadecimal').value = decimalValue.toString(16).toUpperCase();
-                    document.getElementById('binary').value = decimalValue.toString(2);
-                } else {
-                    clearFields();
-                }
-            } else {
-                clearFields();
-            }
-        }
+    <div class="counter-card">
+        <div class="label-group">
+            <span class="name">Sem etiqueta</span>
+            <span id="val-none" class="number">0</span>
+        </div>
+        <div class="btn-group">
+            <button class="btn-minus" onclick="change('none', -1)">-</button>
+            <button class="btn-plus" onclick="change('none', 1)" style="background-color: #555;">+</button>
+        </div>
+    </div>
 
-        // Função para converter Binário para Decimal, Hexadecimal e Octal
-        function convertFromBinary() {
-            const binaryInput = document.getElementById('binary').value;
-            if (binaryInput !== '') {
-                const decimalValue = parseInt(binaryInput, 2);
-                if (!isNaN(decimalValue)) {
-                    document.getElementById('decimal').value = decimalValue;
-                    document.getElementById('hexadecimal').value = decimalValue.toString(16).toUpperCase();
-                    document.getElementById('octal').value = decimalValue.toString(8);
-                } else {
-                    clearFields();
-                }
-            } else {
-                clearFields();
-            }
-        }
+    <div class="action-group">
+        <button class="secondary-btn export-btn" onclick="exportToTxt()">SALVAR</button>
+        <button class="secondary-btn copy-btn" onclick="copyToClipboard()">COPIAR</button>
+        <button class="secondary-btn reset-btn" onclick="reset()">ZERAR</button>
+    </div>
+</div>
 
-        // Função para limpar os campos quando a entrada for inválida
-        function clearFields() {
-            document.getElementById('decimal').value = '';
-            document.getElementById('hexadecimal').value = '';
-            document.getElementById('octal').value = '';
-            document.getElementById('binary').value = '';
+<script>
+    const keys = ['ok', 'bad', 'marked', 'none'];
+    let counts = {};
+
+    keys.forEach(key => {
+        counts[key] = parseInt(localStorage.getItem(key)) || 0;
+    });
+    document.getElementById('input-onda').value = localStorage.getItem('currentOnda') || 1;
+
+    function updateDisplay() {
+        keys.forEach(key => {
+            document.getElementById(`val-${key}`).innerText = counts[key];
+        });
+    }
+
+    function change(type, amount) {
+        counts[type] = Math.max(0, counts[type] + amount);
+        localStorage.setItem(type, counts[type]);
+        updateDisplay();
+    }
+
+    function saveOnda() {
+        const val = document.getElementById('input-onda').value;
+        localStorage.setItem('currentOnda', val);
+    }
+
+    function reset() {
+        if(confirm("Deseja zerar contadores e avançar para a próxima Onda?")) {
+            keys.forEach(key => {
+                counts[key] = 0;
+                localStorage.removeItem(key);
+            });
+            let currentOnda = parseInt(document.getElementById('input-onda').value) || 1;
+            let nextOnda = currentOnda + 1;
+            document.getElementById('input-onda').value = nextOnda;
+            localStorage.setItem('currentOnda', nextOnda);
+            updateDisplay();
         }
-    </script>
+    }
+
+    function generateReport() {
+        const agora = new Date();
+        const ondaValue = document.getElementById('input-onda').value.toString().padStart(2, '0');
+        return `Onda ${ondaValue}\n` +
+               `Relatório de Etiquetas\n` +
+               `Data: ${agora.toLocaleString()}\n` +
+               `-----------------------------------------------\n` +
+               `Etiqueta boa: ${counts.ok}\n` +
+               `Etiqueta ruim: ${counts.bad}\n` +
+               `Etiqueta marcada: ${counts.marked}\n` +
+               `Sem etiqueta: ${counts.none}`;
+    }
+
+    function exportToTxt() {
+        const ondaValue = document.getElementById('input-onda').value.toString().padStart(2, '0');
+        const relatorio = generateReport();
+        const blob = new Blob([relatorio], { type: 'text/plain' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `Onda ${ondaValue}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
+    function copyToClipboard() {
+        const relatorio = generateReport();
+        const textArea = document.createElement("textarea");
+        textArea.value = relatorio;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-9999px";
+        textArea.style.top = "0";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        textArea.setSelectionRange(0, 99999);
+
+        try {
+            document.execCommand('copy');
+            alert("Copiado com sucesso!");
+        } catch (err) {
+            alert("Erro ao copiar.");
+        }
+        document.body.removeChild(textArea);
+    }
+
+    updateDisplay();
+</script>
+
 </body>
 </html>
