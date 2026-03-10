@@ -3,19 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sorter - Controle de Rejeito</title>
+    <meta name="theme-color" content="#121212">
+    <title>Contador de Etiquetas Pro</title>
     <style>
         body {
-            font-family: -apple-system, sans-serif;
+            font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: flex-start; /* Mantém no topo */
+            justify-content: flex-start;
             min-height: 100vh;
             margin: 0;
             background-color: #121212;
             color: #e0e0e0;
-            padding-top: 30px; /* Pequeno espaçamento para não colar na borda do celular */
+            padding-top: 30px;
         }
 
         .container {
@@ -25,13 +26,31 @@
             padding: 20px;
             border-radius: 20px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            position: relative;
+        }
+
+        /* Botão de Tela Cheia discreto */
+        .fullscreen-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            color: #555;
+            font-size: 20px;
+            cursor: pointer;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         h2 { 
             text-align: center; 
             color: #ffffff; 
-            margin-top: 3px; /* Margem superior */
-            margin-bottom: 15px; /* Margem inferior */
+            margin-top: 5px; 
+            margin-bottom: 15px; 
             font-size: 1.5rem; 
         }
 
@@ -82,10 +101,11 @@
             border-radius: 12px;
             border: none;
             color: white;
-            font-size: 20px;
+            font-size: 22px;
             font-weight: bold;
             cursor: pointer;
             transition: transform 0.1s;
+            -webkit-tap-highlight-color: transparent;
         }
 
         button:active { transform: scale(0.9); }
@@ -120,7 +140,8 @@
 <body>
 
 <div class="container">
-    <h2>Sorter Controle de Rejeito</h2>
+    <button class="fullscreen-btn" onclick="toggleFullscreen()">⛶</button>
+    <h2>Controle de Etiquetas</h2>
 
     <div class="onda-group">
         <span class="onda-label">Onda:</span>
@@ -182,6 +203,7 @@
     const keys = ['ok', 'bad', 'marked', 'none'];
     let counts = {};
 
+    // Inicialização
     keys.forEach(key => {
         counts[key] = parseInt(localStorage.getItem(key)) || 0;
     });
@@ -200,68 +222,67 @@
     }
 
     function saveOnda() {
-        const val = document.getElementById('input-onda').value;
-        localStorage.setItem('currentOnda', val);
+        localStorage.setItem('currentOnda', document.getElementById('input-onda').value);
     }
 
     function reset() {
-        if(confirm("Deseja zerar contadores e avançar para a próxima Onda?")) {
+        if(confirm("Zerar contadores e avançar para a próxima Onda?")) {
             keys.forEach(key => {
                 counts[key] = 0;
                 localStorage.removeItem(key);
             });
-            let currentOnda = parseInt(document.getElementById('input-onda').value) || 1;
-            let nextOnda = currentOnda + 1;
+            let nextOnda = (parseInt(document.getElementById('input-onda').value) || 1) + 1;
             document.getElementById('input-onda').value = nextOnda;
             localStorage.setItem('currentOnda', nextOnda);
             updateDisplay();
         }
     }
 
+    function toggleFullscreen() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(e => {
+                alert(`Erro ao ativar tela cheia: ${e.message}`);
+            });
+        } else {
+            document.exitFullscreen();
+        }
+    }
+
     function generateReport() {
         const agora = new Date();
-        const ondaValue = document.getElementById('input-onda').value.toString().padStart(2, '0');
-        return `Onda ${ondaValue}\n` +
-               `Relatório de Etiquetas\n` +
-               `Data: ${agora.toLocaleString()}\n` +
+        const onda = document.getElementById('input-onda').value.toString().padStart(2, '0');
+        return `Onda ${onda}\nRelatório de Etiquetas\nData: ${agora.toLocaleString()}\n` +
                `-----------------------------------------------\n` +
-               `Etiqueta boa: ${counts.ok}\n` +
-               `Etiqueta ruim: ${counts.bad}\n` +
-               `Etiqueta marcada: ${counts.marked}\n` +
-               `Sem etiqueta: ${counts.none}`;
+               `Etiqueta boa: ${counts.ok}\nEtiqueta ruim: ${counts.bad}\n` +
+               `Etiqueta marcada: ${counts.marked}\nSem etiqueta: ${counts.none}`;
     }
 
     function exportToTxt() {
-        const ondaValue = document.getElementById('input-onda').value.toString().padStart(2, '0');
-        const relatorio = generateReport();
-        const blob = new Blob([relatorio], { type: 'text/plain' });
+        const onda = document.getElementById('input-onda').value.toString().padStart(2, '0');
+        const blob = new Blob([generateReport()], { type: 'text/plain' });
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
-        a.download = `Onda ${ondaValue}.txt`;
-        document.body.appendChild(a);
+        a.download = `Onda_${onda}.txt`;
         a.click();
-        document.body.removeChild(a);
     }
 
     function copyToClipboard() {
-        const relatorio = generateReport();
-        const textArea = document.createElement("textarea");
-        textArea.value = relatorio;
-        textArea.style.position = "fixed";
-        textArea.style.left = "-9999px";
-        textArea.style.top = "0";
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-        textArea.setSelectionRange(0, 99999);
-
-        try {
-            document.execCommand('copy');
-            alert("Copiado com sucesso!");
-        } catch (err) {
-            alert("Erro ao copiar.");
+        const text = generateReport();
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(text).then(() => alert("Copiado!"));
+        } else {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                alert("Copiado!");
+            } catch (err) {
+                alert("Erro ao copiar.");
+            }
+            document.body.removeChild(textArea);
         }
-        document.body.removeChild(textArea);
     }
 
     updateDisplay();
@@ -269,5 +290,3 @@
 
 </body>
 </html>
-
-
