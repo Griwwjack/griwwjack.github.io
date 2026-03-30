@@ -3,43 +3,152 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editor Simples</title>
+    <title>Painel de Controle e Logs</title>
     <style>
-        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; background: #f4f4f4; }
-        .toolbar { margin-bottom: 10px; background: #fff; padding: 10px; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        button { cursor: pointer; padding: 5px 10px; border: 1px solid #ccc; background: #fff; margin-right: 5px; border-radius: 3px; }
-        button:hover { background: #e0e0e0; }
-        #editor { width: 80%; min-height: 400px; background: #fff; padding: 20px; border: 1px solid #ddd; border-radius: 5px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); outline: none; }
+        /* Estilo Base (Fundo Escuro e Layout) */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #1a1a1a; /* Fundo escuro como na imagem */
+            color: #f0f0f0;
+        }
+
+        /* Barra de Ferramentas / Controles */
+        .toolbar {
+            width: 80%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #333; /* Fundo dos cartões na imagem */
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            margin-bottom: 20px;
+            flex-wrap: wrap; /* Para telas menores */
+            gap: 10px;
+        }
+
+        /* Seção de Informações (Onda) */
+        .info-panel {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        /* Input de Onda (Estilo do Input "2" na imagem) */
+        .wave-input {
+            border: 1px solid #555;
+            border-radius: 8px;
+            background-color: #222;
+            color: #4CAF50; /* Verde, como o '+' na imagem */
+            padding: 8px;
+            width: 60px;
+            text-align: center;
+            font-size: 1.2rem;
+            outline: none;
+        }
+
+        /* Botões Gerais (Estilo "Zerar/Salvar" na imagem) */
+        button {
+            cursor: pointer;
+            padding: 10px 18px;
+            border-radius: 8px;
+            border: none;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: opacity 0.2s;
+        }
+
+        button:hover {
+            opacity: 0.8;
+        }
+
+        /* Botões Específicos */
+        .btn-zerar { background-color: #222; color: #ff5252; border: 1px solid #555;} /* Vermelho, para zerar */
+        .btn-save-log { background-color: #ff9800; color: #222; } /* Laranja, para salvar logs */
+        .btn-add-status { background-color: #4CAF50; color: #222; } /* Verde, para adicionar ao log */
+
+        /* Área de Log Editável */
+        #editor {
+            width: 80%;
+            min-height: 400px;
+            background-color: #2b2b2b; /* Um pouco mais claro que o fundo */
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #444;
+            outline: none;
+            overflow-y: auto;
+            color: #ddd;
+            font-family: 'Courier New', Courier, monospace; /* Monospaced para parecer log */
+        }
     </style>
 </head>
 <body>
 
     <div class="toolbar">
-        <button onclick="execCmd('bold')"><b>B</b></button>
-        <button onclick="execCmd('italic')"><i>I</i></button>
-        <button onclick="execCmd('insertUnorderedList')">• Lista</button>
-        <button onclick="saveContent()">Salvar Log</button>
+        <div class="info-panel">
+            <span style="color: #42a5f5;">Onda:</span>
+            <input type="number" id="wave-number" class="wave-input" value="2">
+        </div>
+        
+        <div class="info-panel">
+            <button class="btn-add-status" onclick="addStatusToLog()">Adicionar Status ao Log</button>
+            <button class="btn-zerar" onclick="zerarLog()">Zerar Log</button>
+        </div>
+
+        <div class="info-panel">
+            <button class="btn-save-log" onclick="saveContent()">Salvar Logs</button>
+        </div>
     </div>
 
     <div id="editor" contenteditable="true">
-        Comece a digitar aqui...
-    </div>
+        </div>
 
     <script>
-        function execCmd(command) {
-            document.execCommand(command, false, null);
+        // Função para simular a adição de um status ao log
+        function addStatusToLog() {
+            const editor = document.getElementById('editor');
+            const waveNum = document.getElementById('wave-number').value;
+            const now = new Date();
+            const timeString = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+            
+            // Dados fictícios baseados na imagem
+            const boa = Math.floor(Math.random() * 10) + 1; // Pelo menos 1 boa
+            const ruim = Math.floor(Math.random() * 3); // De 0 a 2 ruins
+            const marcada = Math.floor(Math.random() * 3); // De 0 a 2 marcadas
+            const sem = Math.floor(Math.random() * 2); // De 0 a 1 sem etiqueta
+
+            const entry = `[${timeString}] ONDA ${waveNum}: BOA=${boa}, RUIM=${ruim}, MARcada=${marcada}, SEM=${sem}\n`;
+            
+            // Adiciona no final e rola para baixo
+            editor.innerText += entry;
+            editor.scrollTop = editor.scrollHeight;
         }
 
+        // Função para limpar o editor
+        function zerarLog() {
+            if (confirm("Tem certeza que deseja zerar os logs atuais?")) {
+                document.getElementById('editor').innerText = '';
+            }
+        }
+
+        // Função para salvar o conteúdo (permanece igual, mas salva .txt para logs)
         function saveContent() {
-            const content = document.getElementById('editor').innerHTML;
-            const blob = new Blob([content], { type: 'text/html' });
+            const content = document.getElementById('editor').innerText; // Salva o texto puro
+            const waveNum = document.getElementById('wave-number').value;
+            const filename = `producao_onda_${waveNum}.txt`;
+            const blob = new Blob([content], { type: 'text/plain' });
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
-            a.download = 'documento.html';
+            a.download = filename;
             a.click();
         }
     </script>
 
 </body>
 </html>
-
