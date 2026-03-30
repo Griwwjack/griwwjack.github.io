@@ -88,7 +88,71 @@
         <input type="file" id="file-input" accept=".txt,.html,.js,.css" onchange="loadFile(event)">
     </div>
 
-    <textarea id="editor" placeholder="Comece a digitar seu texto aqui..."></textarea>
+    <textarea id="editor" placeholder="
+javascript:(function() {
+    /* Seleciona a div que contém os dados no ABNET WMS */
+    const dataDiv = document.querySelector('.main table');
+    if (!dataDiv) {
+        alert('Tabela de dados não encontrada!');
+        return;
+    }
+
+    /* Cria a estrutura da nova janela */
+    const newWin = window.open('', '_blank');
+    newWin.document.write(`
+        <html>
+        <head>
+            <title>Relatório - Pedidos em Clasificador</title>
+            <style>
+                body { font-family: Arial, sans-serif; font-size: 12px; padding: 20px; }
+                table { border-collapse: collapse; width: 100%; border: 1px solid #444; }
+                th { background-color: #2c3e50; color: white; padding: 10px; border: 1px solid #444; }
+                td { padding: 8px; border: 1px solid #ccc; text-align: left; }
+                tr:nth-child(even) { background-color: #f9f9f9; }
+                .header-info { margin-bottom: 20px; border-bottom: 2px solid #2c3e50; padding-bottom: 10px; }
+            </style>
+        </head>
+        <body>
+            <div class="header-info">
+                <h1>Pedidos em Clasificador</h1>
+                <p>Extraído em: ${new Date().toLocaleString()}</p>
+            </div>
+            <table id="resultTable"></table>
+        </body>
+        </html>
+    `);
+
+    const destTable = newWin.document.getElementById('resultTable');
+
+    /* Varre as linhas da tabela original */
+    const rows = dataDiv.querySelectorAll('tr');
+    rows.forEach((row) => {
+        /* Pula a linha que contém o botão 'Refrescar' */
+        if (row.querySelector('input[type="submit"]')) return;
+
+        const newRow = destTable.insertRow();
+        
+        /* Captura tanto TH quanto TD */
+        const cells = row.querySelectorAll('th, td');
+        
+        cells.forEach((cell) => {
+            const newCell = newRow.insertCell();
+            /* Pega apenas o texto, ignorando inputs ocultos e imagens de ordenação */
+            let cleanText = cell.innerText.replace(/[\n\r]+/g, ' ').trim();
+            
+            /* Se for cabeçalho, transforma em negrito na nova tabela */
+            if (cell.tagName === 'TH') {
+                newCell.outerHTML = `<th>${cleanText}</th>`;
+            } else {
+                newCell.innerText = cleanText;
+            }
+        });
+    });
+
+    newWin.document.close();
+})();
+
+"></textarea>
 
     <script>
         const editor = document.getElementById('editor');
