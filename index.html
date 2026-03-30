@@ -3,151 +3,134 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel de Controle e Logs</title>
+    <title>Editor TXT Dark</title>
     <style>
-        /* Estilo Base (Fundo Escuro e Layout) */
+        /* Reset e Estilo Base */
+        * { box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 20px;
+            background-color: #121212; /* Fundo Ultra Dark */
+            color: #e0e0e0;
             display: flex;
             flex-direction: column;
             align-items: center;
-            background-color: #1a1a1a; /* Fundo escuro como na imagem */
-            color: #f0f0f0;
+            height: 100vh;
         }
 
-        /* Barra de Ferramentas / Controles */
+        /* Barra de Ferramentas */
         .toolbar {
-            width: 80%;
+            width: 90%;
+            max-width: 900px;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background-color: #333; /* Fundo dos cartões na imagem */
-            padding: 15px;
-            border-radius: 12px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-            margin-bottom: 20px;
-            flex-wrap: wrap; /* Para telas menores */
-            gap: 10px;
+            gap: 15px;
+            background-color: #1e1e1e;
+            padding: 12px 20px;
+            border-radius: 8px 8px 0 0;
+            border-bottom: 1px solid #333;
         }
 
-        /* Seção de Informações (Onda) */
-        .info-panel {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
-        /* Input de Onda (Estilo do Input "2" na imagem) */
-        .wave-input {
-            border: 1px solid #555;
-            border-radius: 8px;
-            background-color: #222;
-            color: #4CAF50; /* Verde, como o '+' na imagem */
-            padding: 8px;
-            width: 60px;
-            text-align: center;
-            font-size: 1.2rem;
-            outline: none;
-        }
-
-        /* Botões Gerais (Estilo "Zerar/Salvar" na imagem) */
+        /* Estilo dos Botões */
         button {
             cursor: pointer;
-            padding: 10px 18px;
-            border-radius: 8px;
-            border: none;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            transition: opacity 0.2s;
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: 1px solid #444;
+            background-color: #2d2d2d;
+            color: #ffffff;
+            font-size: 14px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
 
         button:hover {
-            opacity: 0.8;
+            background-color: #3d3d3d;
+            border-color: #666;
         }
 
-        /* Botões Específicos */
-        .btn-zerar { background-color: #222; color: #ff5252; border: 1px solid #555;} /* Vermelho, para zerar */
-        .btn-save-log { background-color: #ff9800; color: #222; } /* Laranja, para salvar logs */
-        .btn-add-status { background-color: #4CAF50; color: #222; } /* Verde, para adicionar ao log */
+        .btn-save { background-color: #0d47a1; border-color: #1565c0; }
+        .btn-save:hover { background-color: #1565c0; }
 
-        /* Área de Log Editável */
+        /* Área do Editor */
         #editor {
-            width: 80%;
-            min-height: 400px;
-            background-color: #2b2b2b; /* Um pouco mais claro que o fundo */
+            width: 90%;
+            max-width: 900px;
+            flex-grow: 1;
+            background-color: #1e1e1e;
+            color: #d4d4d4;
             padding: 20px;
-            border-radius: 12px;
-            border: 1px solid #444;
+            border: none;
+            border-radius: 0 0 8px 8px;
             outline: none;
-            overflow-y: auto;
-            color: #ddd;
-            font-family: 'Courier New', Courier, monospace; /* Monospaced para parecer log */
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 16px;
+            line-height: 1.5;
+            resize: none; /* Remove o handle de redimensionamento do textarea */
+            margin-bottom: 20px;
         }
+
+        /* Input de arquivo escondido */
+        #file-input { display: none; }
     </style>
 </head>
 <body>
 
     <div class="toolbar">
-        <div class="info-panel">
-            <span style="color: #42a5f5;">Onda:</span>
-            <input type="number" id="wave-number" class="wave-input" value="2">
-        </div>
-        
-        <div class="info-panel">
-            <button class="btn-add-status" onclick="addStatusToLog()">Adicionar Status ao Log</button>
-            <button class="btn-zerar" onclick="zerarLog()">Zerar Log</button>
-        </div>
-
-        <div class="info-panel">
-            <button class="btn-save-log" onclick="saveContent()">Salvar Logs</button>
-        </div>
+        <button onclick="document.getElementById('file-input').click()">
+            📂 Abrir Arquivo
+        </button>
+        <button class="btn-save" onclick="saveFile()">
+            💾 Salvar (.txt)
+        </button>
+        <input type="file" id="file-input" accept=".txt,.html,.js,.css" onchange="loadFile(event)">
     </div>
 
-    <div id="editor" contenteditable="true">
-        </div>
+    <textarea id="editor" placeholder="Comece a digitar seu texto aqui..."></textarea>
 
     <script>
-        // Função para simular a adição de um status ao log
-        function addStatusToLog() {
-            const editor = document.getElementById('editor');
-            const waveNum = document.getElementById('wave-number').value;
-            const now = new Date();
-            const timeString = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
-            
-            // Dados fictícios baseados na imagem
-            const boa = Math.floor(Math.random() * 10) + 1; // Pelo menos 1 boa
-            const ruim = Math.floor(Math.random() * 3); // De 0 a 2 ruins
-            const marcada = Math.floor(Math.random() * 3); // De 0 a 2 marcadas
-            const sem = Math.floor(Math.random() * 2); // De 0 a 1 sem etiqueta
+        const editor = document.getElementById('editor');
 
-            const entry = `[${timeString}] ONDA ${waveNum}: BOA=${boa}, RUIM=${ruim}, MARcada=${marcada}, SEM=${sem}\n`;
-            
-            // Adiciona no final e rola para baixo
-            editor.innerText += entry;
-            editor.scrollTop = editor.scrollHeight;
+        // Função para Abrir o arquivo
+        function loadFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                editor.value = e.target.result;
+            };
+            reader.readAsText(file);
         }
 
-        // Função para limpar o editor
-        function zerarLog() {
-            if (confirm("Tem certeza que deseja zerar os logs atuais?")) {
-                document.getElementById('editor').innerText = '';
-            }
-        }
-
-        // Função para salvar o conteúdo (permanece igual, mas salva .txt para logs)
-        function saveContent() {
-            const content = document.getElementById('editor').innerText; // Salva o texto puro
-            const waveNum = document.getElementById('wave-number').value;
-            const filename = `producao_onda_${waveNum}.txt`;
-            const blob = new Blob([content], { type: 'text/plain' });
+        // Função para Salvar o arquivo
+        function saveFile() {
+            const text = editor.value;
+            const blob = new Blob([text], { type: 'text/plain' });
             const a = document.createElement('a');
+            
+            // Define o nome padrão do arquivo
+            a.download = "meu_arquivo.txt";
             a.href = URL.createObjectURL(blob);
-            a.download = filename;
+            
+            // Dispara o download
+            document.body.appendChild(a);
             a.click();
+            document.body.removeChild(a);
+            
+            // Limpa o cache do objeto URL
+            setTimeout(() => URL.revokeObjectURL(a.href), 100);
         }
+
+        // Atalho de teclado: Ctrl + S para salvar
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 's') {
+                e.preventDefault();
+                saveFile();
+            }
+        });
     </script>
 
 </body>
