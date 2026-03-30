@@ -40,6 +40,12 @@
             border: 2px dashed rgba(255,255,255,0.4);
             text-transform: uppercase;
             letter-spacing: 1px;
+            
+            /* ESTA É A CORREÇÃO PARA O VAZAMENTO DE TEXTO */
+            max-width: 300px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .btn-bookmarklet:hover {
@@ -72,7 +78,7 @@
     </div>
 
     <a class="btn-bookmarklet" title="Arraste para a barra de favoritos" href="javascript:(function(){var t=document.querySelector('.main table');if(!t){alert('Tabela nao encontrada!');return}var e=window.open('','_blank');if(!e){alert('Pop-up bloqueado!');return}var html='<html><head><style>body{font-family:%22Segoe UI%22,Roboto,Helvetica,Arial,sans-serif;padding:30px;background:#eceff1;color:#37474f}.w{display:flex;gap:25px;align-items:stretch}table{border-collapse:separate;border-spacing:0;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 4px 6px rgba(0,0,0,0.1);border:none}th{background:#263238;color:#fff;padding:12px 15px;font-size:11px;text-transform:uppercase;letter-spacing:1px;border:none}td{padding:12px 15px;text-align:center;font-size:14px;border-bottom:1px solid #f0f0f0;font-weight:600}tr:last-child td{border-bottom:none}tr:nth-child(even){background:#f8f9fa}.p{background:#102027!important}.a{color:#1976d2;font-size:22px;display:block;padding:10px 0}.card-title{font-size:12px;color:#78909c;margin-bottom:8px;display:block}h2{font-weight:300;margin-bottom:25px;border-left:5px solid #1976d2;padding-left:15px}</style></head><body><h2>Monitoramento de Onda <small style=%22font-size:14px;color:#999%22>| Refrio WMS</small></h2><div class=%22w%22><table><thead><tr><th>Pedido</th><th>Chute</th><th>Total</th><th>Classif</th><th>Caminho</th></tr></thead><tbody id=%22b%22></tbody></table><div style=%22display:flex;flex-direction:column;gap:20px%22><table><thead><tr><th class=%22p%22>Total Onda</th><th class=%22p%22>Total Classif</th><th class=%22p%22>Total Falta</th></tr></thead><tbody><tr><td id=%22s1%22>0</td><td id=%22s2%22>0</td><td id=%22s3%22 style=%22color:#c62828%22>0</td></tr></tbody></table><table><thead><tr><th class=%22p%22>Progresso da Operação</th></tr></thead><tbody><tr><td><span class=%22card-title%22>Concluído</span><span id=%22p1%22 class=%22a%22>0,00 %</span></td></tr></tbody></table></div></div></body></html>';e.document.write(html);var b=e.document.getElementById('b'),s1=0,s2=0;t.querySelectorAll('tr').forEach(function(tr){var txt=tr.innerText.toLowerCase();if(txt.includes('pedido')||txt.includes('refrescar')||tr.querySelector('th'))return;var cells=tr.querySelectorAll('td');if(cells.length<4)return;var nr=b.insertRow();cells.forEach(function(td,i){var v=td.innerText.trim();if(v!==''){var c=nr.insertCell();c.innerText=v;if(i===2)s1+=parseInt(v.replace(/\D/g,''))||0;if(i===3)s2+=parseInt(v.replace(/\D/g,''))||0}})});var f=s1-s2,p=s1>0?(s2/s1*100).toFixed(2).replace('.',',')+' %':'0,00 %';e.document.getElementById('s1').innerText=s1;e.document.getElementById('s2').innerText=s2;e.document.getElementById('s3').innerText=f;e.document.getElementById('p1').innerText=p;e.document.close();})();">
-        🚀 Dashboard Refrio
+        🚀 DASHBOARD SORTER
     </a>
 
     <p style="font-size: 11px; margin-top: 35px; color: #b0bec5;">
@@ -82,4 +88,3 @@
 
 </body>
 </html>
-
