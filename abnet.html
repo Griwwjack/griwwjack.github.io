@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Instalador de Script WMS</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            text-align: center; 
+            padding: 50px; 
+            background-color: #f4f7f6;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            display: inline-block;
+            max-width: 500px;
+        }
+        .btn-bookmarklet {
+            display: inline-block;
+            padding: 15px 30px;
+            background-color: #2c3e50;
+            color: #ffffff !important;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: bold;
+            font-size: 18px;
+            cursor: move;
+            border: 2px dashed #3498db;
+            margin: 20px 0;
+            transition: transform 0.2s;
+        }
+        .btn-bookmarklet:hover {
+            transform: scale(1.05);
+            background-color: #34495e;
+        }
+        .instructions {
+            text-align: left;
+            color: #555;
+            line-height: 1.6;
+        }
+        kbd {
+            background: #eee;
+            border-radius: 3px;
+            padding: 2px 5px;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Instalador WMS</h1>
+    <p>Siga os passos abaixo para configurar a ferramenta:</p>
+    
+    <div class="instructions">
+        <ol>
+            <li>Certifique-se que a barra de favoritos está visível (<kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>B</kbd>).</li>
+            <li><strong>Clique e arraste</strong> o botão azul abaixo diretamente para a sua barra de favoritos.</li>
+        </ol>
+    </div>
+
+    <a class="btn-bookmarklet" title="Arraste-me para a barra de favoritos" href='javascript:(function(){const t=document.querySelector(".main table");if(!t){alert("Tabela de dados não encontrada!");return}const e=window.open("","_blank");e.document.write(`<html><head><title>Dados Coletados - WMS</title><style>body{font-family:sans-serif;padding:20px}table{border-collapse:collapse;box-shadow:0 1px 3px rgba(0,0,0,0.2)}td{border:1px solid #ccc;padding:8px 12px;text-align:center;font-size:13px;color:#333}tr:nth-child(even){background-color:#f9f9f9}</style></head><body><div style="margin-bottom:15px;"><strong style="font-size:16px;">Lista de Pedidos Extraída</strong><br><small>Data: ${new Date().toLocaleString()}</small></div><table id="resultTable"></table></body></html>`);const n=e.document.getElementById("resultTable");t.querySelectorAll("tr").forEach(t=>{const r=t.innerText.toLowerCase();if(r.includes("pedido")||r.includes("chute")||r.includes("total de items")||r.includes("items clasificados")||r.includes("em caminho")||r.includes("refrescar")||t.querySelector("th")||""===t.innerText.trim())return;const o=n.insertRow();t.querySelectorAll("td").forEach(t=>{let e=t.innerText.trim();if(""!==e){o.insertCell().innerText=e}})});e.document.close();})();'>
+        🚀 COLETOR WMS
+    </a>
+
+    <p style="font-size: 12px; color: #888; margin-top: 20px;">
+        Após arrastar, o botão aparecerá na sua barra. <br>
+        Use-o sempre que estiver na página "Pedidos em clasificador".
+    </p>
+</div>
+
+</body>
+</html>
