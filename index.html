@@ -3,290 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#121212">
-    <title>Contador de Etiquetas Pro</title>
+    <title>Editor Simples</title>
     <style>
-        body {
-            font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-            min-height: 100vh;
-            margin: 0;
-            background-color: #121212;
-            color: #e0e0e0;
-            padding-top: 30px;
-        }
-
-        .container {
-            width: 90%;
-            max-width: 400px;
-            background: #1e1e1e;
-            padding: 20px;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            position: relative;
-        }
-
-        /* Botão de Tela Cheia discreto */
-        .fullscreen-btn {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: none;
-            border: none;
-            color: #555;
-            font-size: 20px;
-            cursor: pointer;
-            width: 35px;
-            height: 35px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        h2 { 
-            text-align: center; 
-            color: #ffffff; 
-            margin-top: 5px; 
-            margin-bottom: 15px; 
-            font-size: 1.5rem; 
-        }
-
-        .onda-group {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: #2c2c2c;
-            padding: 15px;
-            border-radius: 15px;
-            margin-bottom: 20px;
-            border: 1px dashed #555;
-        }
-
-        .onda-label { font-weight: bold; color: #4dabff; }
-        
-        .onda-input {
-            width: 80px;
-            background: #121212;
-            border: 1px solid #444;
-            color: white;
-            font-size: 1.2rem;
-            padding: 8px;
-            border-radius: 8px;
-            text-align: center;
-        }
-
-        .counter-card {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px 15px;
-            margin-bottom: 12px;
-            border-radius: 15px;
-            background: #252525;
-            border: 1px solid #333;
-        }
-
-        .label-group { flex-grow: 1; }
-        .name { font-size: 0.9rem; font-weight: bold; color: #bbb; display: block; }
-        .number { font-size: 1.8rem; color: #4dabff; font-weight: 800; }
-
-        .btn-group { display: flex; gap: 8px; }
-
-        button {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
-            border: none;
-            color: white;
-            font-size: 22px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: transform 0.1s;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        button:active { transform: scale(0.9); }
-
-        .btn-plus { background-color: #2fb344; }
-        .btn-minus { background-color: #444; color: #bbb; }
-
-        .action-group {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 8px;
-            margin-top: 15px;
-        }
-
-        .secondary-btn {
-            height: 50px;
-            border-radius: 10px;
-            font-size: 11px;
-            font-weight: bold;
-            border: 1px solid #444;
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .export-btn { background-color: #007bff; color: white; border: none; }
-        .copy-btn { background-color: #6f42c1; color: white; border: none; }
-        .reset-btn { background-color: #1e1e1e; color: #ff6b6b; }
+        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; background: #f4f4f4; }
+        .toolbar { margin-bottom: 10px; background: #fff; padding: 10px; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        button { cursor: pointer; padding: 5px 10px; border: 1px solid #ccc; background: #fff; margin-right: 5px; border-radius: 3px; }
+        button:hover { background: #e0e0e0; }
+        #editor { width: 80%; min-height: 400px; background: #fff; padding: 20px; border: 1px solid #ddd; border-radius: 5px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); outline: none; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <button class="fullscreen-btn" onclick="toggleFullscreen()">⛶</button>
-    <h2>Controle de Etiquetas</h2>
-
-    <div class="onda-group">
-        <span class="onda-label">Onda:</span>
-        <input type="number" id="input-onda" class="onda-input" value="1" min="1" oninput="saveOnda()">
+    <div class="toolbar">
+        <button onclick="execCmd('bold')"><b>B</b></button>
+        <button onclick="execCmd('italic')"><i>I</i></button>
+        <button onclick="execCmd('insertUnorderedList')">• Lista</button>
+        <button onclick="saveContent()">Salvar Log</button>
     </div>
 
-    <div class="counter-card">
-        <div class="label-group">
-            <span class="name">Etiqueta boa</span>
-            <span id="val-ok" class="number">0</span>
-        </div>
-        <div class="btn-group">
-            <button class="btn-minus" onclick="change('ok', -1)">-</button>
-            <button class="btn-plus" onclick="change('ok', 1)">+</button>
-        </div>
+    <div id="editor" contenteditable="true">
+        Comece a digitar aqui...
     </div>
 
-    <div class="counter-card">
-        <div class="label-group">
-            <span class="name">Etiqueta ruim</span>
-            <span id="val-bad" class="number">0</span>
-        </div>
-        <div class="btn-group">
-            <button class="btn-minus" onclick="change('bad', -1)">-</button>
-            <button class="btn-plus" onclick="change('bad', 1)" style="background-color: #e63946;">+</button>
-        </div>
-    </div>
-
-    <div class="counter-card">
-        <div class="label-group">
-            <span class="name">Etiqueta marcada</span>
-            <span id="val-marked" class="number">0</span>
-        </div>
-        <div class="btn-group">
-            <button class="btn-minus" onclick="change('marked', -1)">-</button>
-            <button class="btn-plus" onclick="change('marked', 1)" style="background-color: #f39c12;">+</button>
-        </div>
-    </div>
-
-    <div class="counter-card">
-        <div class="label-group">
-            <span class="name">Sem etiqueta</span>
-            <span id="val-none" class="number">0</span>
-        </div>
-        <div class="btn-group">
-            <button class="btn-minus" onclick="change('none', -1)">-</button>
-            <button class="btn-plus" onclick="change('none', 1)" style="background-color: #555;">+</button>
-        </div>
-    </div>
-
-    <div class="action-group">
-        <button class="secondary-btn export-btn" onclick="exportToTxt()">SALVAR</button>
-        <button class="secondary-btn copy-btn" onclick="copyToClipboard()">COPIAR</button>
-        <button class="secondary-btn reset-btn" onclick="reset()">ZERAR</button>
-    </div>
-</div>
-
-<script>
-    const keys = ['ok', 'bad', 'marked', 'none'];
-    let counts = {};
-
-    // Inicialização
-    keys.forEach(key => {
-        counts[key] = parseInt(localStorage.getItem(key)) || 0;
-    });
-    document.getElementById('input-onda').value = localStorage.getItem('currentOnda') || 1;
-
-    function updateDisplay() {
-        keys.forEach(key => {
-            document.getElementById(`val-${key}`).innerText = counts[key];
-        });
-    }
-
-    function change(type, amount) {
-        counts[type] = Math.max(0, counts[type] + amount);
-        localStorage.setItem(type, counts[type]);
-        updateDisplay();
-    }
-
-    function saveOnda() {
-        localStorage.setItem('currentOnda', document.getElementById('input-onda').value);
-    }
-
-    function reset() {
-        if(confirm("Zerar contadores e avançar para a próxima Onda?")) {
-            keys.forEach(key => {
-                counts[key] = 0;
-                localStorage.removeItem(key);
-            });
-            let nextOnda = (parseInt(document.getElementById('input-onda').value) || 1) + 1;
-            document.getElementById('input-onda').value = nextOnda;
-            localStorage.setItem('currentOnda', nextOnda);
-            updateDisplay();
+    <script>
+        function execCmd(command) {
+            document.execCommand(command, false, null);
         }
-    }
 
-    function toggleFullscreen() {
-        if (!document.fullscreenElement) {
-            document.documentElement.requestFullscreen().catch(e => {
-                alert(`Erro ao ativar tela cheia: ${e.message}`);
-            });
-        } else {
-            document.exitFullscreen();
+        function saveContent() {
+            const content = document.getElementById('editor').innerHTML;
+            const blob = new Blob([content], { type: 'text/html' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'documento.html';
+            a.click();
         }
-    }
-
-    function generateReport() {
-        const agora = new Date();
-        const onda = document.getElementById('input-onda').value.toString().padStart(2, '0');
-        return `Onda ${onda}\nRelatório de Etiquetas\nData: ${agora.toLocaleString()}\n` +
-               `-----------------------------------------------\n` +
-               `Etiqueta boa: ${counts.ok}\nEtiqueta ruim: ${counts.bad}\n` +
-               `Etiqueta marcada: ${counts.marked}\nSem etiqueta: ${counts.none}`;
-    }
-
-    function exportToTxt() {
-        const onda = document.getElementById('input-onda').value.toString().padStart(2, '0');
-        const blob = new Blob([generateReport()], { type: 'text/plain' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `Onda_${onda}.txt`;
-        a.click();
-    }
-
-    function copyToClipboard() {
-        const text = generateReport();
-        if (navigator.clipboard && window.isSecureContext) {
-            navigator.clipboard.writeText(text).then(() => alert("Copiado!"));
-        } else {
-            const textArea = document.createElement("textarea");
-            textArea.value = text;
-            document.body.appendChild(textArea);
-            textArea.select();
-            try {
-                document.execCommand('copy');
-                alert("Copiado!");
-            } catch (err) {
-                alert("Erro ao copiar.");
-            }
-            document.body.removeChild(textArea);
-        }
-    }
-
-    updateDisplay();
-</script>
+    </script>
 
 </body>
 </html>
