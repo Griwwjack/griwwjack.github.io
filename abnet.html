@@ -2,11 +2,10 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Injetor Dashboard Sorter 2.0</title>
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', sans-serif;
             background-color: #0f0f0f;
             color: #ffffff;
             display: flex;
@@ -22,55 +21,43 @@
             box-shadow: 0 10px 40px rgba(0,0,0,0.8);
             border: 1px solid #333;
             text-align: center;
-            width: 100%;
-            max-width: 400px;
+            width: 400px;
         }
         h1 { color: #64b5f6; font-weight: 300; margin-bottom: 10px; }
         p { color: #888; font-size: 14px; margin-bottom: 30px; }
         .bookmark-btn {
             display: inline-block;
-            background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%);
+            background: #0d47a1;
             color: white !important;
             padding: 16px 32px;
             text-decoration: none;
             font-weight: bold;
             border-radius: 8px;
-            border: 1px solid #1976d2;
             cursor: move;
-            transition: transform 0.2s, box-shadow 0.2s;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            box-shadow: 0 4px 15px rgba(13, 71, 161, 0.4);
+            border: 1px solid #1976d2;
         }
-        .bookmark-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(13, 71, 161, 0.6);
-        }
-        .footer {
-            margin-top: 30px;
-            font-size: 10px;
-            color: #444;
-            text-transform: uppercase;
-        }
+        .bookmark-btn:hover { background: #1565c0; }
+        .footer { margin-top: 30px; font-size: 10px; color: #444; }
     </style>
 </head>
 <body>
 
 <div class="card">
     <h1>Dashboard Injetor</h1>
-    <p>Clique e arraste o botão abaixo para a sua <strong>Barra de Favoritos</strong>.</p>
+    <p>Arraste o botão azul para sua barra de favoritos.</p>
     
-    <a id="bookmark-link" class="bookmark-btn" href="#">DASHBOARD SORTER</a>
+    <a id="btn" class="bookmark-btn">SORTER DASHBOARD</a>
 
-    <div class="footer">Versão 2.0 (Persistência Ativa) | 2026</div>
+    <div class="footer">Versão 2.0 | 2026</div>
 </div>
 
 <script>
-    // Código original processado para evitar quebra de caracteres no HTML
-    const rawCode = `javascript:(function(){var origem=window,STORAGE_KEY='refrio_rejeito_manual',dashboard=window.open('','Refrio_Dashboard');if(!dashboard){alert('Pop-up bloqueado!');return;}var renderizarPainel=function(){var html='<html><head><title>Dashboard Real-Time</title><style>body{font-family:"Segoe UI",sans-serif;padding:1px 20px;background:#121212;color:#e0e0e0;zoom:1.5;transform-origin:top left;display:flex;flex-direction:column;align-items:center}.w{display:flex;gap:25px;align-items:stretch;justify-content:center;width:100%;max-width:1200px}table{border-collapse:separate;border-spacing:0;background:#1e1e1e;border-radius:8px;box-shadow:0 4px 10px rgba(0,0,0,0.5);overflow:hidden;border:1px solid #333}th{background:#333;color:#90caf9;padding:10px;font-size:11px;text-transform:uppercase;border-bottom:2px solid #121212}td{padding:15px;text-align:center;font-size:14px;border-bottom:1px solid #2c2c2c;font-weight:600}#b td{padding:1px 12px}tr:nth-child(even){background:#252525}.p{background:#0d47a1!important;color:#fff!important}.a{color:#64b5f6;font-size:22px;display:block}h2{font-weight:300;border-left:5px solid #1976d2;padding-left:15px;color:#fff;margin:1px 0 9px 0;width:100%;max-width:1200px}.v{color:#66bb6a!important}.r{color:#ff5252!important}.s{color:#ffd54f!important}.cnt{display:flex;flex-direction:column;gap:10px;background:#1e1e1e;padding:15px;border-radius:8px;border:1px solid #333;align-items:center}.btn-w{display:flex;gap:10px}.btn{width:50px;height:50px;border:none;border-radius:5px;background:#333;color:#fff;font-size:24px;cursor:pointer;font-weight:700}.btn:active{background:#444}</style></head><body><h2>Dashboard Sorter <small id="clock" style="font-size:12px;color:#666"></small></h2><div class="w"><table><thead><tr><th>Pedido</th><th>Chute</th><th>Total</th><th>Classificado</th><th>Falta</th><th>À Caminho</th></tr></thead><tbody id="b"></tbody></table><div style="display:flex;flex-direction:column;gap:15px"><table><thead><tr><th class="p">Total Onda</th><th class="p">Total Classificado</th><th class="p">Total Falta</th></tr></thead><tbody><tr><td id="s1">0</td><td id="s2">0</td><td id="s3">0</td></tr></tbody></table><table><thead><tr><th class="p">Progresso</th></tr></thead><tbody><tr><td><span id="p1" class="a">0,00 %</span></td></tr></tbody></table><div class="cnt"><div style="font-size:11px;text-transform:uppercase;color:#90caf9;font-weight:700">Rejeito Manual</div><span id="rj" class="a" style="color:#ffb74d">0</span><div class="btn-w"><button class="btn" id="btnM">-</button><button class="btn" id="btnP">+</button></div></div></div></div></body></html>';dashboard.document.open();dashboard.document.write(html);dashboard.document.close();var val=localStorage.getItem(STORAGE_KEY),count=val?parseInt(val):0;dashboard.document.getElementById("rj").innerText=count;dashboard.document.getElementById("btnM").onclick=function(){if(count>0){count--;localStorage.setItem(STORAGE_KEY,count);dashboard.document.getElementById("rj").innerText=count;atualizarDados();}};dashboard.document.getElementById("btnP").onclick=function(){count++;localStorage.setItem(STORAGE_KEY,count);dashboard.document.getElementById("rj").innerText=count;atualizarDados();};};var atualizarDados=function(){if(dashboard.closed)return;var t=origem.document.querySelector('.main table');if(!t)return;var s1=0,s2=0;t.querySelectorAll('tr').forEach(function(tr){var txt=tr.innerText.toLowerCase();if(txt.includes('pedido')||txt.includes('refrescar')||tr.querySelector('th'))return;var cells=tr.querySelectorAll('td');if(cells.length>=4){s1+=parseInt(cells[2].innerText.replace(/\\D/g,''))||0;s2+=parseInt(cells[3].innerText.replace(/\\D/g,''))||0;}});var perc=s1>0?(s2/s1*100):0,corpo=dashboard.document.getElementById('b');corpo.innerHTML="";t.querySelectorAll('tr').forEach(function(tr){var txt=tr.innerText.toLowerCase();if(txt.includes('pedido')||txt.includes('refrescar')||tr.querySelector('th'))return;var cells=tr.querySelectorAll('td');if(cells.length>=4){var nr=corpo.insertRow(),vT=parseInt(cells[2].innerText.replace(/\\D/g,''))||0,vC=parseInt(cells[3].innerText.replace(/\\D/g,''))||0,vF=vT-vC;cells.forEach(function(td,i){var v=td.innerText.trim();if(v!==""){var nc=nr.insertCell();nc.innerText=v;if(i===3){var cf=nr.insertCell();cf.innerText=vF;if(vF===0)cf.className="v";else if(perc>=90)cf.className="r";}}});}});dashboard.document.getElementById('s1').innerText=s1;dashboard.document.getElementById('s2').innerText=s2;var rj=parseInt(dashboard.document.getElementById('rj').innerText)||0,fR=s1-s2-rj,s3=dashboard.document.getElementById('s3');s3.innerText=fR;if(fR===0)s3.className="v";else if(fR<0)s3.className="s";else s3.className=(perc>=90?"r":"");var p1=dashboard.document.getElementById('p1');p1.innerText=perc.toFixed(2).replace('.',',')+' %';p1.className=(perc>=100)?"a v":"a";dashboard.document.getElementById('clock').innerText='| '+new Date().toLocaleTimeString();};var timerAuto=function(){if(dashboard.closed)return;origem.location.reload();setTimeout(timerAuto,5000);};renderizarPainel();atualizarDados();setTimeout(timerAuto,5000);origem.addEventListener('load',function(){setTimeout(atualizarDados,1500);});})();`;
+    // O código original, agora tratado para ser injetado sem erros
+    var raw = "javascript:(function(){var%20origem=window,STORAGE_KEY='refrio_rejeito_manual',dashboard=window.open('','Refrio_Dashboard');if(!dashboard){alert('Pop-up%20bloqueado!');return;}var%20renderizarPainel=function(){var%20html='<html><head><title>Dashboard%20Real-Time</title><style>body{font-family:%22Segoe%20UI%22,sans-serif;padding:1px%2020px;background:#121212;color:#e0e0e0;zoom:1.5;transform-origin:top%20left;display:flex;flex-direction:column;align-items:center}.w{display:flex;gap:25px;align-items:stretch;justify-content:center;width:100%;max-width:1200px}table{border-collapse:separate;border-spacing:0;background:#1e1e1e;border-radius:8px;box-shadow:0%204px%2010px%20rgba(0,0,0,0.5);overflow:hidden;border:1px%20solid%20#333}th{background:#333;color:#90caf9;padding:10px;font-size:11px;text-transform:uppercase;border-bottom:2px%20solid%20#121212}td{padding:15px;text-align:center;font-size:14px;border-bottom:1px%20solid%20#2c2c2c;font-weight:600}#b%20td{padding:1px%2012px}tr:nth-child(even){background:#252525}.p{background:#0d47a1!important;color:#fff!important}.a{color:#64b5f6;font-size:22px;display:block}h2{font-weight:300;border-left:5px%20solid%20#1976d2;padding-left:15px;color:#fff;margin:1px%200%209px%200;width:100%;max-width:1200px}.v{color:#66bb6a!important}.r{color:#ff5252!important}.s{color:#ffd54f!important}.cnt{display:flex;flex-direction:column;gap:10px;background:#1e1e1e;padding:15px;border-radius:8px;border:1px%20solid%20#333;align-items:center}.btn-w{display:flex;gap:10px}.btn{width:50px;height:50px;border:none;border-radius:5px;background:#333;color:#fff;font-size:24px;cursor:pointer;font-weight:700}.btn:active{background:#444}</style></head><body><h2>Dashboard%20Sorter%20<small%20id=%22clock%22%20style=%22font-size:12px;color:#666%22></small></h2><div%20class=%22w%22><table><thead><tr><th>Pedido</th><th>Chute</th><th>Total</th><th>Classificado</th><th>Falta</th><th>%C3%80%20Caminho</th></tr></thead><tbody%20id=%22b%22></tbody></table><div%20style=%22display:flex;flex-direction:column;gap:15px%22><table><thead><tr><th%20class=%22p%22>Total%20Onda</th><th%20class=%22p%22>Total%20Classificado</th><th%20class=%22p%22>Total%20Falta</th></tr></thead><tbody><tr><td%20id=%22s1%22>0</td><td%20id=%22s2%22>0</td><td%20id=%22s3%22>0</td></tr></tbody></table><table><thead><tr><th%20class=%22p%22>Progresso</th></tr></thead><tbody><tr><td><span%20id=%22p1%22%20class=%22a%22>0,00%20%</span></td></tr></tbody></table><div%20class=%22cnt%22><div%20style=%22font-size:11px;text-transform:uppercase;color:#90caf9;font-weight:700%22>Rejeito%20Manual</div><span%20id=%22rj%22%20class=%22a%22%20style=%22color:#ffb74d%22>0</span><div%20class=%22btn-w%22><button%20class=%22btn%22%20id=%22btnM%22>-</button><button%20class=%22btn%22%20id=%22btnP%22>+</button></div></div></div></div></body></html>';dashboard.document.open();dashboard.document.write(html);dashboard.document.close();var%20val=localStorage.getItem(STORAGE_KEY),count=val?parseInt(val):0;dashboard.document.getElementById(%22rj%22).innerText=count;dashboard.document.getElementById(%22btnM%22).onclick=function(){if(count%3E0){count--;localStorage.setItem(STORAGE_KEY,count);dashboard.document.getElementById(%22rj%22).innerText=count;atualizarDados();}};dashboard.document.getElementById(%22btnP%22).onclick=function(){count++;localStorage.setItem(STORAGE_KEY,count);dashboard.document.getElementById(%22rj%22).innerText=count;atualizarDados();};};var%20atualizarDados=function(){if(dashboard.closed)return;var%20t=origem.document.querySelector('.main%20table');if(!t)return;var%20s1=0,s2=0;t.querySelectorAll('tr').forEach(function(tr){var%20txt=tr.innerText.toLowerCase();if(txt.includes('pedido')||txt.includes('refrescar')||tr.querySelector('th'))return;var%20cells=tr.querySelectorAll('td');if(cells.length%3E=4){s1+=parseInt(cells[2].innerText.replace(/\\D/g,''))||0;s2+=parseInt(cells[3].innerText.replace(/\\D/g,''))||0;}});var%20perc=s1%3E0?(s2/s1*100):0,corpo=dashboard.document.getElementById('b');corpo.innerHTML=%22%22;t.querySelectorAll('tr').forEach(function(tr){var%20txt=tr.innerText.toLowerCase();if(txt.includes('pedido')||txt.includes('refrescar')||tr.querySelector('th'))return;var%20cells=tr.querySelectorAll('td');if(cells.length%3E=4){var%20nr=corpo.insertRow(),vT=parseInt(cells[2].innerText.replace(/\\D/g,''))||0,vC=parseInt(cells[3].innerText.replace(/\\D/g,''))||0,vF=vT-vC;cells.forEach(function(td,i){var%20v=td.innerText.trim();if(v!==%22%22){var%20nc=nr.insertCell();nc.innerText=v;if(i===3){var%20cf=nr.insertCell();cf.innerText=vF;if(vF===0)cf.className=%22v%22;else%20if(perc%3E=90)cf.className=%22r%22;}}});}});dashboard.document.getElementById('s1').innerText=s1;dashboard.document.getElementById('s2').innerText=s2;var%20rj=parseInt(dashboard.document.getElementById('rj').innerText)||0,fR=s1-s2-rj,s3=dashboard.document.getElementById('s3');s3.innerText=fR;if(fR===0)s3.className=%22v%22;else%20if(fR%3C0)s3.className=%22s%22;else%20s3.className=(perc%3E=90?%22r%22:%22%22);var%20p1=dashboard.document.getElementById('p1');p1.innerText=perc.toFixed(2).replace('.',',')+'%20%';p1.className=(perc%3E=100)?%22a%20v%22:%22a%22;dashboard.document.getElementById('clock').innerText='|%20'+new%20Date().toLocaleTimeString();};var%20timerAuto=function(){if(dashboard.closed)return;origem.location.reload();setTimeout(timerAuto,5000);};renderizarPainel();atualizarDados();setTimeout(timerAuto,5000);origem.addEventListener('load',function(){setTimeout(atualizarDados,1500);});})();";
 
-    // Atribui o código ao botão de forma segura
-    document.getElementById('bookmark-link').href = rawCode;
+    // Atribuição direta ao atributo 'href'
+    document.getElementById('btn').setAttribute('href', raw);
 </script>
 
 </body>
