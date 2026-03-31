@@ -2,88 +2,56 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Instalador Dashboard WMS - Refrio</title>
+    <title>Injetor Dashboard Sorter</title>
     <style>
-        body { 
-            font-family: "Segoe UI", Tahoma, sans-serif; 
-            background-color: #eceff1; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            height: 100vh; 
-            margin: 0; 
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
         }
-        .card {
-            background: white;
+        .container {
+            text-align: center;
+            background-color: #1e1e1e;
             padding: 40px;
             border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 1px solid #333;
             max-width: 500px;
         }
-        h1 { color: #263238; font-size: 24px; margin-bottom: 10px; }
-        p { color: #546e7a; font-size: 16px; line-height: 1.5; }
-        
-        .btn-bookmarklet {
+        h1 { color: #90caf9; margin-bottom: 20px; }
+        p { line-height: 1.6; margin-bottom: 30px; }
+        .btn-bookmark {
             display: inline-block;
-            margin-top: 25px;
-            padding: 18px 40px;
-            background-color: #1976d2;
-            color: white !important;
+            padding: 15px 30px;
+            background-color: #0d47a1;
+            color: white;
             text-decoration: none;
-            border-radius: 50px;
             font-weight: bold;
-            font-size: 16px;
-            box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
-            transition: all 0.3s ease;
+            border-radius: 6px;
             cursor: move;
-            border: 2px dashed rgba(255,255,255,0.4);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            
-            /* ESTA É A CORREÇÃO PARA O VAZAMENTO DE TEXTO */
-            max-width: 300px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            transition: background 0.3s;
+            border: 1px solid #1976d2;
         }
-
-        .btn-bookmarklet:hover {
-            background-color: #1565c0;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(25, 118, 210, 0.4);
-        }
-
-        .step {
-            margin-top: 30px;
-            text-align: left;
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 8px;
-            border-left: 5px solid #1976d2;
-            font-size: 14px;
-        }
-        .step b { color: #1976d2; }
+        .btn-bookmark:hover { background-color: #1565c0; }
+        .footer { margin-top: 25px; font-size: 12px; color: #666; }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <h1>Dashboard Sorter</h1>
-    <p>Injetor de monitoramento operacional para o sistema AB-net.</p>
+<div class="container">
+    <h1>Dashboard Injetor</h1>
+    <p>Arraste o botão abaixo para a sua <strong>barra de favoritos</strong> do navegador.</p>
     
-    <div class="step">
-        <b>COMO INSTALAR:</b><br>
-        Clique e segure no botão azul abaixo, então <b>arraste-o</b> diretamente para a sua barra de favoritos do navegador.
-    </div>
-
-    <a class="btn-bookmarklet" title="Arraste para a barra de favoritos" href="javascript:(function(){var t=document.querySelector('.main table');if(!t){alert('Tabela nao encontrada!');return}var e=window.open('','_blank');if(!e){alert('Pop-up bloqueado!');return}var html='<html><head><style>body{font-family:%22Segoe UI%22,Roboto,Helvetica,Arial,sans-serif;padding:30px;background:#eceff1;color:#37474f}.w{display:flex;gap:25px;align-items:stretch}table{border-collapse:separate;border-spacing:0;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 4px 6px rgba(0,0,0,0.1);border:none}th{background:#263238;color:#fff;padding:12px 15px;font-size:11px;text-transform:uppercase;letter-spacing:1px;border:none}td{padding:12px 15px;text-align:center;font-size:14px;border-bottom:1px solid #f0f0f0;font-weight:600}tr:last-child td{border-bottom:none}tr:nth-child(even){background:#f8f9fa}.p{background:#102027!important}.a{color:#1976d2;font-size:22px;display:block;padding:10px 0}.card-title{font-size:12px;color:#78909c;margin-bottom:8px;display:block}h2{font-weight:300;margin-bottom:25px;border-left:5px solid #1976d2;padding-left:15px}</style></head><body><h2>Monitoramento de Onda <small style=%22font-size:14px;color:#999%22>| Refrio WMS</small></h2><div class=%22w%22><table><thead><tr><th>Pedido</th><th>Chute</th><th>Total</th><th>Classif</th><th>Caminho</th></tr></thead><tbody id=%22b%22></tbody></table><div style=%22display:flex;flex-direction:column;gap:20px%22><table><thead><tr><th class=%22p%22>Total Onda</th><th class=%22p%22>Total Classif</th><th class=%22p%22>Total Falta</th></tr></thead><tbody><tr><td id=%22s1%22>0</td><td id=%22s2%22>0</td><td id=%22s3%22 style=%22color:#c62828%22>0</td></tr></tbody></table><table><thead><tr><th class=%22p%22>Progresso da Operação</th></tr></thead><tbody><tr><td><span class=%22card-title%22>Concluído</span><span id=%22p1%22 class=%22a%22>0,00 %</span></td></tr></tbody></table></div></div></body></html>';e.document.write(html);var b=e.document.getElementById('b'),s1=0,s2=0;t.querySelectorAll('tr').forEach(function(tr){var txt=tr.innerText.toLowerCase();if(txt.includes('pedido')||txt.includes('refrescar')||tr.querySelector('th'))return;var cells=tr.querySelectorAll('td');if(cells.length<4)return;var nr=b.insertRow();cells.forEach(function(td,i){var v=td.innerText.trim();if(v!==''){var c=nr.insertCell();c.innerText=v;if(i===2)s1+=parseInt(v.replace(/\D/g,''))||0;if(i===3)s2+=parseInt(v.replace(/\D/g,''))||0}})});var f=s1-s2,p=s1>0?(s2/s1*100).toFixed(2).replace('.',',')+' %':'0,00 %';e.document.getElementById('s1').innerText=s1;e.document.getElementById('s2').innerText=s2;e.document.getElementById('s3').innerText=f;e.document.getElementById('p1').innerText=p;e.document.close();})();">
-        🚀 DASHBOARD SORTER
+    <a class="btn-bookmark" href="javascript:(function(){var%20origem=window,STORAGE_KEY='refrio_rejeito_manual',dashboard=window.open('','Refrio_Dashboard');if(!dashboard){alert('Pop-up%20bloqueado!');return;}var%20renderizarPainel=function(){var%20html='<html><head><title>Dashboard%20Real-Time</title><style>body{font-family:%22Segoe%20UI%22,sans-serif;padding:1px%2020px;background:#121212;color:#e0e0e0;zoom:1.5;transform-origin:top%20left;display:flex;flex-direction:column;align-items:center}.w{display:flex;gap:25px;align-items:stretch;justify-content:center;width:100%;max-width:1200px}table{border-collapse:separate;border-spacing:0;background:#1e1e1e;border-radius:8px;box-shadow:0%204px%2010px%20rgba(0,0,0,0.5);overflow:hidden;border:1px%20solid%20#333}th{background:#333;color:#90caf9;padding:10px;font-size:11px;text-transform:uppercase;border-bottom:2px%20solid%20#121212}td{padding:15px;text-align:center;font-size:14px;border-bottom:1px%20solid%20#2c2c2c;font-weight:600}#b%20td{padding:1px%2012px}tr:nth-child(even){background:#252525}.p{background:#0d47a1!important;color:#fff!important}.a{color:#64b5f6;font-size:22px;display:block}h2{font-weight:300;border-left:5px%20solid%20#1976d2;padding-left:15px;color:#fff;margin:1px%200%209px%200;width:100%;max-width:1200px}.v{color:#66bb6a!important}.r{color:#ff5252!important}.s{color:#ffd54f!important}.cnt{display:flex;flex-direction:column;gap:10px;background:#1e1e1e;padding:15px;border-radius:8px;border:1px%20solid%20#333;align-items:center}.btn-w{display:flex;gap:10px}.btn{width:50px;height:50px;border:none;border-radius:5px;background:#333;color:#fff;font-size:24px;cursor:pointer;font-weight:700}.btn:active{background:#444}</style></head><body><h2>Dashboard%20Sorter%20<small%20id=%22clock%22%20style=%22font-size:12px;color:#666%22></small></h2><div%20class=%22w%22><table><thead><tr><th>Pedido</th><th>Chute</th><th>Total</th><th>Classificado</th><th>Falta</th><th>%C3%80%20Caminho</th></tr></thead><tbody%20id=%22b%22></tbody></table><div%20style=%22display:flex;flex-direction:column;gap:15px%22><table><thead><tr><th%20class=%22p%22>Total%20Onda</th><th%20class=%22p%22>Total%20Classificado</th><th%20class=%22p%22>Total%20Falta</th></tr></thead><tbody><tr><td%20id=%22s1%22>0</td><td%20id=%22s2%22>0</td><td%20id=%22s3%22>0</td></tr></tbody></table><table><thead><tr><th%20class=%22p%22>Progresso</th></tr></thead><tbody><tr><td><span%20id=%22p1%22%20class=%22a%22>0,00%20%</span></td></tr></tbody></table><div%20class=%22cnt%22><div%20style=%22font-size:11px;text-transform:uppercase;color:#90caf9;font-weight:700%22>Rejeito%20Manual</div><span%20id=%22rj%22%20class=%22a%22%20style=%22color:#ffb74d%22>0</span><div%20class=%22btn-w%22><button%20class=%22btn%22%20id=%22btnM%22>-</button><button%20class=%22btn%22%20id=%22btnP%22>+</button></div></div></div></div></body></html>';dashboard.document.open();dashboard.document.write(html);dashboard.document.close();var%20val=localStorage.getItem(STORAGE_KEY),count=val?parseInt(val):0;dashboard.document.getElementById("rj").innerText=count;dashboard.document.getElementById("btnM").onclick=function(){if(count>0){count--;localStorage.setItem(STORAGE_KEY,count);dashboard.document.getElementById("rj").innerText=count;atualizarDados();}};dashboard.document.getElementById("btnP").onclick=function(){count++;localStorage.setItem(STORAGE_KEY,count);dashboard.document.getElementById("rj").innerText=count;atualizarDados();};};var%20atualizarDados=function(){if(dashboard.closed)return;var%20t=origem.document.querySelector('.main%20table');if(!t)return;var%20s1=0,s2=0;t.querySelectorAll('tr').forEach(function(tr){var%20txt=tr.innerText.toLowerCase();if(txt.includes('pedido')||txt.includes('refrescar')||tr.querySelector('th'))return;var%20cells=tr.querySelectorAll('td');if(cells.length>=4){s1+=parseInt(cells[2].innerText.replace(/\D/g,''))||0;s2+=parseInt(cells[3].innerText.replace(/\D/g,''))||0;}});var%20perc=s1>0?(s2/s1*100):0,corpo=dashboard.document.getElementById('b');corpo.innerHTML=%22%22;t.querySelectorAll('tr').forEach(function(tr){var%20txt=tr.innerText.toLowerCase();if(txt.includes('pedido')||txt.includes('refrescar')||tr.querySelector('th'))return;var%20cells=tr.querySelectorAll('td');if(cells.length>=4){var%20nr=corpo.insertRow(),vT=parseInt(cells[2].innerText.replace(/\D/g,''))||0,vC=parseInt(cells[3].innerText.replace(/\D/g,''))||0,vF=vT-vC;cells.forEach(function(td,i){var%20v=td.innerText.trim();if(v!==%22%22){var%20nc=nr.insertCell();nc.innerText=v;if(i===3){var%20cf=nr.insertCell();cf.innerText=vF;if(vF===0)cf.className=%22v%22;else%20if(perc>=90)cf.className=%22r%22;}}});}});dashboard.document.getElementById('s1').innerText=s1;dashboard.document.getElementById('s2').innerText=s2;var%20rj=parseInt(dashboard.document.getElementById('rj').innerText)||0,fR=s1-s2-rj,s3=dashboard.document.getElementById('s3');s3.innerText=fR;if(fR===0)s3.className=%22v%22;else%20if(fR<0)s3.className=%22s%22;else%20s3.className=(perc>=90?%22r%22:%22%22);var%20p1=dashboard.document.getElementById('p1');p1.innerText=perc.toFixed(2).replace('.',',')+'%20%';p1.className=(perc>=100)?%22a%20v%22:%22a%22;dashboard.document.getElementById('clock').innerText='|%20'+new%20Date().toLocaleTimeString();};var%20timerAuto=function(){if(dashboard.closed)return;origem.location.reload();setTimeout(timerAuto,5000);};renderizarPainel();atualizarDados();setTimeout(timerAuto,5000);origem.addEventListener('load',function(){setTimeout(atualizarDados,1500);});})();">
+        DASHBOARD SORTER 2.0
     </a>
 
-    <p style="font-size: 11px; margin-top: 35px; color: #b0bec5;">
-        Dica: Se a barra de favoritos não estiver aparecendo, use <b>Ctrl+Shift+B</b>.
-    </p>
+    <p class="footer">Versão: Persistência Ativa (Sem Botão Zerar) | 2026</p>
 </div>
 
 </body>
