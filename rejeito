@@ -1,3 +1,1 @@
-$chromePath = "C:\Program Files\Google\Chrome\Application\chrome.exe"
-$fullPath = "$strPath\$htmlFile"
-Start-Process -FilePath $chromePath -ArgumentList "--allow-file-access-from-files" -Wait:$false
+"C:\Program Files\Google\Chrome\Application\chrome.exe" --allow-file-access-from-files --user-data-dir="C:\temp\sessao_abnet" "C:\CAMINHO_PARA_SEU_ARQUIVO\Contador de Rejeitos.html"
