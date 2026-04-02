@@ -1,1 +1,605 @@
-"C:\Program Files\Google\Chrome\Application\chrome.exe" --allow-file-access-from-files --user-data-dir="C:\temp\sessao_abnet" "C:\CAMINHO_PARA_SEU_ARQUIVO\Contador de Rejeitos.html"
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CONTADOR DE REJEITOS</title>
+    <style>
+        :root {
+            --bg-body: #121212;
+            --bg-container: #1e1e1e;
+            --bg-card: #2d2d2d;
+            --text-main: #e0e0e0;
+            --text-sub: #b0b0b0;
+            --success: #2e7d32;
+            --danger: #c62828;
+            --warning: #f9a825;
+            --info: #0288d1;
+            --avaria: #8e44ad;
+            --border: #444;
+            --waiting: #7f8c8d;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+        }
+
+        .container {
+            max-width: 95%;
+            width: 850px;
+            background: var(--bg-container);
+            padding: 15px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            border: 1px solid var(--border);
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--text-main);
+            margin: 10px 0 5px 0;
+            font-size: 1.5rem;
+        }
+        
+        .onda-atual-badge {
+            text-align: center;
+            margin-bottom: 15px;
+            font-weight: bold;
+            color: var(--info);
+            font-size: 1.1rem;
+        }
+
+        .grid-contadores {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: var(--bg-card);
+            padding: 15px 5px;
+            border-radius: 12px;
+            text-align: center;
+            border-bottom: 5px solid #555;
+            transition: transform 0.2s;
+        }
+
+        .card h3 {
+            margin: 0;
+            font-size: 11px;
+            text-transform: uppercase;
+            color: var(--text-sub);
+            min-height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card .numero {
+            font-size: 32px;
+            font-weight: bold;
+            display: block;
+            margin: 5px 0;
+            color: #fff;
+        }
+
+        .controles {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            padding: 0 5px;
+        }
+
+        .btn {
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+            color: white;
+            transition: opacity 0.2s;
+        }
+
+        .btn:active {
+            opacity: 0.7;
+        }
+
+        .btn-add {
+            background-color: var(--success);
+            flex-grow: 2;
+        }
+
+        .btn-sub {
+            background-color: #555;
+            color: #eee;
+            flex-grow: 1;
+        }
+
+        .card.boa { border-color: var(--success); }
+        .card.ruins { border-color: var(--danger); }
+        .card.rasgada { border-color: var(--warning); }
+        .card.amassada { border-color: var(--info); }
+        .card.vazia { border-color: #7f8c8d; }
+        .card.avaria { border-color: var(--avaria); }
+
+        #monitor-abnet {
+            margin-top: 20px;
+            padding: 15px;
+            background: #000;
+            border-radius: 12px;
+            border: 1px solid #444;
+        }
+
+        #shuts-box {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .shut-card {
+            background: #1a1a1a;
+            border: 1px solid #444;
+            padding: 8px;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 11px;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: #2d2d2d;
+            padding: 20px;
+            border-radius: 12px;
+            width: 280px;
+            border: 2px solid var(--info);
+        }
+
+        .modal-content h2 {
+            font-size: 1rem;
+            margin-top: 0;
+            color: var(--info);
+            text-align: center;
+        }
+
+        .radio-box {
+            background: #1e1e1e;
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+
+        .radio-box label {
+            display: block;
+            margin: 5px 0;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .modal-input {
+            width: 100%;
+            padding: 12px;
+            box-sizing: border-box;
+            background: #1e1e1e;
+            border: 1px solid #444;
+            color: white;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-confirm {
+            background: var(--success);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            flex: 1;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .btn-cancel {
+            background: #c62828;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            flex: 1;
+            cursor: pointer;
+        }
+
+        .acoes-final {
+            border-top: 1px solid var(--border);
+            padding-top: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .btn-salvar-onda {
+            background-color: var(--success);
+            padding: 12px;
+            font-size: 16px;
+            width: 100%;
+            color: white;
+            cursor: pointer;
+            border: none;
+            font-weight: bold;
+            border-radius: 8px;
+        }
+
+        .btn-finalizar-geral {
+            background-color: #37474f;
+            padding: 15px;
+            font-size: 18px;
+            width: 100%;
+            border: 2px solid #546e7a;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            border-radius: 8px;
+        }
+
+        .relatorio-area {
+            margin-top: 30px;
+            width: 100%;
+            max-width: 850px;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            min-width: 500px;
+            border-collapse: collapse;
+            background: var(--bg-container);
+            color: var(--text-main);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        th {
+            background: #333;
+            color: var(--info);
+            padding: 10px;
+            text-align: left;
+            font-size: 13px;
+            border: 1px solid var(--border);
+        }
+
+        td {
+            padding: 10px;
+            border: 1px solid var(--border);
+            font-family: monospace;
+            font-size: 11px;
+            white-space: pre-wrap;
+            vertical-align: top;
+        }
+
+        tr:nth-child(even) {
+            background: #252525;
+        }
+
+        .footer-admin {
+            margin-top: 40px;
+            padding: 20px;
+            opacity: 0.3;
+        }
+
+        .footer-admin:hover {
+            opacity: 1;
+        }
+
+        .btn-limpar {
+            background: none;
+            border: 1px solid #444;
+            color: #777;
+            font-size: 10px;
+            padding: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>CONTADOR DE REJEITOS</h1>
+        <div class="onda-atual-badge">ONDA ATUAL: <span id="onda-numero-display">01</span></div>
+        
+        <div class="grid-contadores">
+            <div class="card boa"><h3>Etiqueta Boa</h3><span class="numero" id="v-boa">0</span><div class="controles"><button class="btn btn-sub" onclick="alterar('boa', -1)">-</button><button class="btn btn-add" onclick="alterar('boa', 1)">+</button></div></div>
+            <div class="card ruins"><h3>Etiqueta Ruim</h3><span class="numero" id="v-ruim">0</span><div class="controles"><button class="btn btn-sub" onclick="alterar('ruim', -1)">-</button><button class="btn btn-add" onclick="abrirModal('ruim')">+</button></div></div>
+            <div class="card rasgada"><h3>Etiqueta Rasgada</h3><span class="numero" id="v-rasgada">0</span><div class="controles"><button class="btn btn-sub" onclick="alterar('rasgada', -1)">-</button><button class="btn btn-add" onclick="abrirModal('rasgada')">+</button></div></div>
+            <div class="card amassada"><h3>Etiqueta Amassada</h3><span class="numero" id="v-amassada">0</span><div class="controles"><button class="btn btn-sub" onclick="alterar('amassada', -1)">-</button><button class="btn btn-add" onclick="abrirModal('amassada')">+</button></div></div>
+            <div class="card vazia"><h3>Sem Etiqueta</h3><span class="numero" id="v-sem">0</span><div class="controles"><button class="btn btn-sub" onclick="alterar('sem', -1)">-</button><button class="btn btn-add" onclick="alterar('sem', 1)">+</button></div></div>
+            <div class="card avaria"><h3>Avaria</h3><span class="numero" id="v-avaria">0</span><div class="controles"><button class="btn btn-sub" onclick="alterar('avaria', -1)">-</button><button class="btn btn-add" onclick="abrirModal('avaria')">+</button></div></div>
+        </div>
+
+        <div id="monitor-abnet">
+            <div style="display:flex; justify-content:space-between; color:#0288d1; font-size:12px; font-weight:bold; margin-bottom:10px;">
+                <span>ABNET MONITOR</span>
+                <span>
+                    TOTAL: <span id="abnet-total">0</span> | 
+                    CLASSIF: <span id="abnet-classif">0</span> | 
+                    <span id="label-faltam-geral" style="color:#f9a825">FALTAM: <span id="abnet-faltam-geral">0</span></span> | 
+                    <span style="color:#00ff00">PROGRESSO: <span id="abnet-porcentagem">0%</span></span>
+                </span>
+            </div>
+            <div id="shuts-box"></div>
+        </div>
+
+        <div class="acoes-final">
+            <button class="btn btn-salvar-onda" onclick="finalizarOnda()">SALVAR ONDA</button>
+            <button class="btn btn-finalizar-geral" onclick="finalizarOperacaoCompleta()">FINALIZAR OPERAÇÃO</button>
+        </div>
+    </div>
+
+    <div id="modalInfo" class="modal-overlay">
+        <div class="modal-content">
+            <h2 id="modalTitle">Título</h2>
+            <div class="radio-box">
+                <label><input type="radio" name="opcao" value="RUA" id="radioRua" checked> Rua</label>
+                <label id="labelChute" style="display:none;"><input type="radio" name="opcao" value="CHUTE"> Chute</label>
+            </div>
+            <input type="text" id="modalInput" class="modal-input" placeholder="Digite o número...">
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="fecharModal()">Cancelar</button>
+                <button class="btn-confirm" onclick="confirmarModal()">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="relatorio-area">
+        <h2 style="color: var(--text-main); font-size: 1.2rem; margin-bottom: 10px;">Histórico das Ondas</h2>
+        <table id="tabela-relatorio">
+            <thead><tr><th width="50">Onda</th><th>Relatório Detalhado</th></tr></thead>
+            <tbody id="corpo-relatorio"></tbody>
+        </table>
+    </div>
+
+    <div class="footer-admin">
+        <button class="btn-limpar" onclick="limparTudo()">APAGAR TUDO E REINICIAR</button>
+    </div>
+
+    <script>
+        let contagem = { boa: 0, ruim: 0, rasgada: 0, amassada: 0, sem: 0, avaria: 0 };
+        let obsAtual = [];
+        let historico = [];
+        let proximaOnda = 1;
+        let tipoModal = "";
+
+        window.onload = function() {
+            const savedContagem = localStorage.getItem('contagemAtual');
+            const savedHistorico = localStorage.getItem('historicoOndas');
+            const savedOnda = localStorage.getItem('proximaOnda');
+            const savedObs = localStorage.getItem('obsAtual');
+            if (savedContagem) contagem = JSON.parse(savedContagem);
+            if (savedHistorico) historico = JSON.parse(savedHistorico);
+            if (savedOnda) proximaOnda = parseInt(savedOnda);
+            if (savedObs) obsAtual = JSON.parse(savedObs);
+            atualizarTela();
+            renderizarHistorico();
+            setInterval(atualizarDadosAbnet, 3000);
+            atualizarDadosAbnet();
+        };
+
+        function atualizarDadosAbnet() {
+            fetch('dados_abnet.txt?t=' + new Date().getTime())
+                .then(response => response.text())
+                .then(data => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(data, 'text/html');
+                    const rows = doc.querySelectorAll('table tr');
+                    
+                    const totalRejeitos = contagem.ruim + contagem.rasgada + contagem.amassada + contagem.sem;
+                    let html = `<div class="shut-card" style="border-color: #c62828;">REJEITOS<br><b style="color:#c62828">${totalRejeitos}</b></div>`;
+                    
+                    let totalGeral = 0;
+                    let classifGeral = 0;
+                    let faltamGeral = 0;
+
+                    if (rows.length > 1) {
+                        rows.forEach((row, index) => {
+                            if (index > 0) {
+                                const cols = row.querySelectorAll('td');
+                                if (cols.length >= 4) {
+                                    const chute = cols[1].innerText.trim();
+                                    const total = parseInt(cols[2].innerText) || 0;
+                                    const classif = parseInt(cols[3].innerText) || 0;
+                                    const falta = total - classif;
+
+                                    if (chute !== "") {
+                                        totalGeral += total;
+                                        classifGeral += classif;
+                                        if (falta > 0) faltamGeral += falta;
+
+                                        // NOVA LÓGICA DE CORES
+                                        let cor = '#f9a825'; // Amarelo (Falta)
+                                        let statusTexto = 'Faltam: ' + falta;
+
+                                        if (total === 0) {
+                                            cor = '#7f8c8d'; // Cinza (Aguardando)
+                                            statusTexto = 'AGUARDANDO';
+                                        } else if (falta <= 0) {
+                                            cor = '#2e7d32'; // Verde (Concluído)
+                                            statusTexto = 'CONCLUÍDO';
+                                        }
+
+                                        html += `<div class="shut-card" style="border-color: ${cor};">
+                                                    Shut ${chute}<br><b style="color:${cor}">${classif}/${total}</b><br>
+                                                    <span style="font-size:9px; color:${cor}">${statusTexto}</span>
+                                                 </div>`;
+                                    }
+                                }
+                            }
+                        });
+                    }
+
+                    document.getElementById('shuts-box').innerHTML = html;
+                    document.getElementById('abnet-total').innerText = totalGeral;
+                    document.getElementById('abnet-classif').innerText = classifGeral;
+                    document.getElementById('abnet-faltam-geral').innerText = faltamGeral;
+                    
+                    // COR DO FALTAM GERAL NO TOPO
+                    const labelFaltam = document.getElementById('label-faltam-geral');
+                    if (totalGeral === 0) labelFaltam.style.color = '#7f8c8d';
+                    else if (faltamGeral === 0) labelFaltam.style.color = '#00ff00';
+                    else labelFaltam.style.color = '#f9a825';
+
+                    const porc = totalGeral > 0 ? ((classifGeral / totalGeral) * 100).toFixed(1) : 0;
+                    document.getElementById('abnet-porcentagem').innerText = porc + "%";
+                })
+                .catch(err => console.log("Erro ao ler dados..."));
+        }
+
+        function finalizarOnda() {
+            if (confirm("Deseja salvar a Onda " + proximaOnda + "?")) {
+                let agora = new Date().toLocaleString('pt-BR');
+                let totalRejeitos = contagem.ruim + contagem.rasgada + contagem.amassada + contagem.sem;
+                let texto = `============================================================\n   ONDA ${proximaOnda.toString().padStart(2, '0')} - RELATÓRIO DE OPERAÇÃO\n   Data/Hora: ${agora}\n============================================================\n\nRESUMO DE REJEITOS (MANUAL)\n------------------------------------------------------------\n Ruim: ${contagem.ruim.toString().padEnd(14)} Rasgada: ${contagem.rasgada.toString().padEnd(13)} Amassada: ${contagem.amassada}\n Sem Etiq: ${contagem.sem}\n TOTAL DE REJEITOS: ${totalRejeitos}\n\nAVARIA: ${contagem.avaria}\n\n`;
+                if (obsAtual.length > 0) {
+                    texto += ` DETALHAMENTO DE REJEITOS E AVARIAS:\n`;
+                    obsAtual.forEach(o => texto += `  - ${o.tipo.toUpperCase()} (${o.subtipo}): ${o.valor}\n`);
+                    texto += `\n`;
+                }
+                texto += `DADOS DO SORTER (ABNET)\n------------------------------------------------------------\n CHUTE      TOTAL      CLASS.      FALTAM      STATUS\n`;
+                let tGS = 0, cGS = 0;
+                const cards = document.querySelectorAll('.shut-card');
+                cards.forEach(card => {
+                    if (card.innerText.includes('Shut')) {
+                        const parts = card.innerText.split('\n');
+                        const nome = parts[0].trim();
+                        const vals = parts[1].split('/');
+                        const c = parseInt(vals[0]) || 0;
+                        const t = parseInt(vals[1]) || 0;
+                        const f = t - c;
+                        const st = card.innerText.includes('CONCLUÍDO') ? "OK" : (t === 0 ? "AGUARDANDO" : "PENDENTE");
+                        tGS += t; cGS += c;
+                        texto += ` ${nome.padEnd(10)} ${t.toString().padEnd(10)} ${c.toString().padEnd(11)} ${f.toString().padEnd(11)} ${st}\n`;
+                    }
+                });
+                texto += `------------------------------------------------------------\n TOTAL GERAL: ${tGS.toString().padEnd(10)} TOTAL CLASS: ${cGS} | FALTAM: ${tGS - cGS}\n PROGRESSO DA ONDA: ${(tGS > 0 ? ((cGS / tGS) * 100).toFixed(1) : 0)}%\n============================================================\n\n\n`;
+                historico.unshift({ id: proximaOnda, conteudo: texto });
+                proximaOnda++;
+                contagem = { boa: 0, ruim: 0, rasgada: 0, amassada: 0, sem: 0, avaria: 0 };
+                obsAtual = [];
+                salvarNoNavegador(); atualizarTela(); renderizarHistorico();
+            }
+        }
+
+        function finalizarOperacaoCompleta() {
+            if (confirm("Isso baixará o relatório completo e ZERARÁ toda a tela. Confirma?")) {
+                let conteudoFinal = "REPORTE CONSOLIDADO DE PRODUÇÃO - SORTER\r\nEMISSÃO: " + new Date().toLocaleString('pt-BR') + "\r\n============================================================\r\n\r\n";
+                [...historico].reverse().forEach(item => conteudoFinal += item.conteudo.replace(/\n/g, "\r\n"));
+                const blob = new Blob([conteudoFinal], { type: 'text/plain;charset=utf-8' });
+                const link = document.createElement('a');
+                link.href = window.URL.createObjectURL(blob);
+                link.download = `Relatorio_Final_${new Date().toLocaleDateString().replace(/\//g, '-')}.txt`;
+                link.click();
+                limparDadosSistema();
+            }
+        }
+
+        function limparDadosSistema() {
+            localStorage.clear();
+            contagem = { boa: 0, ruim: 0, rasgada: 0, amassada: 0, sem: 0, avaria: 0 };
+            obsAtual = []; historico = []; proximaOnda = 1;
+            atualizarTela(); renderizarHistorico();
+        }
+
+        function abrirModal(tipo) {
+            tipoModal = tipo;
+            document.getElementById('modalInput').value = "";
+            document.getElementById('radioRua').checked = true;
+            if (tipo === 'avaria') {
+                document.getElementById('modalTitle').innerText = "AVARIA EM:";
+                document.getElementById('labelChute').style.display = "block";
+            } else {
+                document.getElementById('modalTitle').innerText = tipo.toUpperCase() + " - RUA:";
+                document.getElementById('labelChute').style.display = "none";
+            }
+            document.getElementById('modalInfo').style.display = "flex";
+            document.getElementById('modalInput').focus();
+        }
+
+        function fecharModal() { document.getElementById('modalInfo').style.display = "none"; }
+
+        function confirmarModal() {
+            const valor = document.getElementById('modalInput').value.trim();
+            if (valor === "") { alert("Informe a identificação."); return; }
+            const subtipo = document.querySelector('input[name="opcao"]:checked').value;
+            obsAtual.push({ tipo: tipoModal, subtipo: subtipo, valor: valor });
+            contagem[tipoModal]++;
+            fecharModal(); atualizarTela(); salvarNoNavegador();
+        }
+
+        function alterar(tipo, valor) {
+            if (contagem[tipo] + valor >= 0) {
+                contagem[tipo] += valor;
+                if (valor === -1) {
+                    for (let i = obsAtual.length - 1; i >= 0; i--) {
+                        if (obsAtual[i].tipo === tipo) { obsAtual.splice(i, 1); break; }
+                    }
+                }
+                atualizarTela(); salvarNoNavegador();
+            }
+        }
+
+        function renderizarHistorico() {
+            const corpo = document.getElementById('corpo-relatorio');
+            corpo.innerHTML = "";
+            historico.forEach(item => {
+                const linha = corpo.insertRow();
+                linha.insertCell(0).innerText = item.id;
+                linha.insertCell(1).innerText = item.conteudo;
+            });
+        }
+
+        function limparTudo() { if (confirm("Isso apagará tudo sem salvar. Confirma?")) limparDadosSistema(); }
+
+        function salvarNoNavegador() {
+            localStorage.setItem('contagemAtual', JSON.stringify(contagem));
+            localStorage.setItem('historicoOndas', JSON.stringify(historico));
+            localStorage.setItem('proximaOnda', proximaOnda.toString());
+            localStorage.setItem('obsAtual', JSON.stringify(obsAtual));
+        }
+
+        function atualizarTela() {
+            document.getElementById('v-boa').innerText = contagem.boa;
+            document.getElementById('v-ruim').innerText = contagem.ruim;
+            document.getElementById('v-rasgada').innerText = contagem.rasgada;
+            document.getElementById('v-amassada').innerText = contagem.amassada;
+            document.getElementById('v-sem').innerText = contagem.sem;
+            document.getElementById('v-avaria').innerText = contagem.avaria;
+            document.getElementById('onda-numero-display').innerText = proximaOnda.toString().padStart(2, '0');
+        }
+    </script>
+</body>
+</html>
