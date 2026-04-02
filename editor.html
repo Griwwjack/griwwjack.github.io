@@ -1,237 +1,39 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web Pad - Pro (Community Edition)</title>
-    <style>
-        :root {
-            --bg-color: #1e1e1e;
-            --toolbar-color: #2d2d2d;
-            --text-color: #d4d4d4;
-            --accent-color: #333333;
-            --accent-hover: #454545;
-            --border-color: #3c3c3c;
-            --icon-fill: #cccccc;
-            --danger-hover: #8e2e2e;
-        }
+// Lógica de Salvar CORRIGIDA
+document.getElementById('btnSave').onclick = async () => {
+    const content = editor.value;
+    const currentName = fileNameDisplay.textContent.replace(" (recuperado)", "");
 
-        body, html {
-            margin: 0; padding: 0; height: 100%;
-            font-family: 'Segoe UI', Tahoma, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            overflow: hidden;
-        }
-
-        .container { display: flex; flex-direction: column; height: 100vh; }
-
-        header {
-            background-color: var(--toolbar-color);
-            padding: 8px 15px;
-            display: flex; gap: 8px;
-            border-bottom: 1px solid var(--border-color);
-            align-items: center;
-        }
-
-        .btn-icon {
-            background-color: var(--accent-color);
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            width: 36px; height: 36px;
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; transition: all 0.2s;
-        }
-
-        .btn-icon:hover { background-color: var(--accent-hover); border-color: #555; }
-        .btn-icon svg { width: 20px; height: 20px; fill: var(--icon-fill); }
-        .btn-danger:hover { background-color: var(--danger-hover); }
-
-        .info-panel { margin-left: auto; text-align: right; }
-        .filename-display { font-size: 11px; color: var(--text-color); font-family: monospace; display: block; }
-        .cursor-pos { font-size: 10px; color: #777; font-family: monospace; display: block; }
-
-        textarea {
-            flex-grow: 1; width: 100%;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            border: none; padding: 15px;
-            box-sizing: border-box; resize: none;
-            font-family: 'Consolas', 'Monaco', monospace;
-            font-size: 15px; line-height: 1.6;
-            outline: none; white-space: pre; overflow: auto;
-        }
-
-        /* MODAL DE AJUDA */
-        #modalHelp {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8);
-            z-index: 100;
-            align-items: center; justify-content: center;
-        }
-
-        .modal-content {
-            background: var(--toolbar-color);
-            padding: 25px;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-            max-width: 400px;
-            width: 90%;
-        }
-
-        .modal-content h2 { margin-top: 0; color: #007acc; }
-        .modal-content ul { padding-left: 20px; font-size: 14px; line-height: 1.8; }
-        .close-modal {
-            margin-top: 20px;
-            width: 100%;
-            background: var(--accent-color);
-            color: white;
-            border: 1px solid var(--border-color);
-            padding: 10px;
-            cursor: pointer;
-            border-radius: 4px;
-        }
-
-        /* Scrollbar */
-        textarea::-webkit-scrollbar { width: 10px; height: 10px; }
-        textarea::-webkit-scrollbar-track { background: var(--bg-color); }
-        textarea::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 5px; }
-    </style>
-</head>
-<body>
-
-<div class="container">
-    <header>
-        <div id="btnNew" class="btn-icon btn-danger" title="Novo / Limpar tudo">
-            <svg viewBox="0 0 24 24"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19V4M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z" /></svg>
-        </div>
-
-        <div id="btnOpen" class="btn-icon" title="Abrir arquivo">
-            <svg viewBox="0 0 24 24"><path d="M20,18H4V8H20M20,6H12L10,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V8C22,6.89 21.1,6 20,6Z" /></svg>
-        </div>
-        
-        <div id="btnSave" class="btn-icon" title="Salvar">
-            <svg viewBox="0 0 24 24"><path d="M15,9H5V5H15M12,19A3,3 0 0,1 9,16A3,3 0 0,1 12,13A3,3 0 0,1 15,16A3,3 0 0,1 12,19M17,3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V7L17,3Z" /></svg>
-        </div>
-
-        <div id="btnHelp" class="btn-icon" title="Ajuda">
-            <svg viewBox="0 0 24 24"><path d="M11,18H13V16H11V18M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20M12,6A4,4 0 0,0 8,10H10A2,2 0 0,1 12,8A2,2 0 0,1 14,10C14,12 11,11.75 11,15H13C13,12.75 16,12.5 16,10A4,4 0 0,0 12,6Z" /></svg>
-        </div>
-
-        <div class="info-panel">
-            <span id="fileName" class="filename-display">sem-titulo.txt</span>
-            <span id="cursorPos" class="cursor-pos">Lin 1, Col 1</span>
-        </div>
-    </header>
-    
-    <textarea id="editor" wrap="off" spellcheck="false" placeholder="Inicie a edição..."></textarea>
-</div>
-
-<div id="modalHelp">
-    <div class="modal-content">
-        <h2>Web Pad Pro</h2>
-        <ul>
-            <li><strong>Lixeira:</strong> Limpa o editor e a memória.</li>
-            <li><strong>Pasta:</strong> Abre arquivos .txt locais.</li>
-            <li><strong>Disquete:</strong> Salva/Baixa o arquivo atual.</li>
-            <li><strong>Persistência:</strong> O texto é salvo automaticamente no navegador ao digitar.</li>
-            <li><strong>Atalhos:</strong> Use <code>Ctrl + S</code> para salvar rapidamente.</li>
-        </ul>
-        <button class="close-modal" onclick="closeHelp()">Fechar</button>
-    </div>
-</div>
-
-<script>
-    const editor = document.getElementById('editor');
-    const fileNameDisplay = document.getElementById('fileName');
-    const cursorPosDisplay = document.getElementById('cursorPos');
-    const modalHelp = document.getElementById('modalHelp');
-
-    const STORAGE_KEY_CONTENT = 'webpad_draft_content';
-    const STORAGE_KEY_NAME = 'webpad_draft_name';
-
-    // Recuperação
-    window.onload = () => {
-        const c = localStorage.getItem(STORAGE_KEY_CONTENT);
-        const n = localStorage.getItem(STORAGE_KEY_NAME);
-        if (c) editor.value = c;
-        if (n) fileNameDisplay.textContent = n + " (recuperado)";
-        updateCursorInfo();
-    };
-
-    // Botão Novo/Limpar
-    document.getElementById('btnNew').onclick = () => {
-        if(confirm("Deseja limpar todo o texto e começar um novo arquivo?")) {
-            editor.value = "";
-            fileNameDisplay.textContent = "sem-titulo.txt";
-            localStorage.removeItem(STORAGE_KEY_CONTENT);
-            localStorage.removeItem(STORAGE_KEY_NAME);
-            updateCursorInfo();
-        }
-    };
-
-    // Modal Ajuda
-    document.getElementById('btnHelp').onclick = () => modalHelp.style.display = 'flex';
-    function closeHelp() { modalHelp.style.display = 'none'; }
-
-    // Atualiza Cursor
-    function updateCursorInfo() {
-        const text = editor.value;
-        const pos = editor.selectionStart;
-        const lines = text.substr(0, pos).split("\n");
-        cursorPosDisplay.textContent = `Lin ${lines.length}, Col ${lines[lines.length - 1].length + 1}`;
-    }
-
-    editor.addEventListener('input', () => {
-        localStorage.setItem(STORAGE_KEY_CONTENT, editor.value);
-        localStorage.setItem(STORAGE_KEY_NAME, fileNameDisplay.textContent.replace(" (recuperado)", ""));
-        updateCursorInfo();
-    });
-    
-    ['keyup', 'click', 'selectionchange'].forEach(ev => editor.addEventListener(ev, updateCursorInfo));
-
-    // Abrir
-    document.getElementById('btnOpen').onclick = async () => {
-        try {
-            const [handle] = await window.showOpenFilePicker();
-            const file = await handle.getFile();
-            updateEditor(await file.text(), file.name);
-        } catch (e) {}
-    };
-
-    // Salvar
-    document.getElementById('btnSave').onclick = async () => {
-        try {
+    try {
+        // Tenta usar a API moderna (Chrome/Edge/Opera)
+        if ('showSaveFilePicker' in window) {
             const handle = await window.showSaveFilePicker({
-                suggestedName: fileNameDisplay.textContent.replace(" (recuperado)", ""),
+                suggestedName: currentName,
                 types: [{ description: 'Txt', accept: {'text/plain': ['.txt']} }]
             });
+            
+            // Se chegou aqui, o usuário NÃO cancelou
             const writable = await handle.createWritable();
-            await writable.write(editor.value);
+            await writable.write(content);
             await writable.close();
-            updateEditor(editor.value, handle.name);
-        } catch (e) {
-            // Fallback download
-            const blob = new Blob([editor.value], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url; a.download = fileNameDisplay.textContent.replace(" (recuperado)", "");
-            a.click();
+            updateEditor(content, handle.name);
+        } else {
+            // Se o navegador não suporta a API (Firefox/Safari/Mobile antigo)
+            throw new Error('Modern API not supported'); 
         }
-    };
+    } catch (e) {
+        // Se o erro for porque o usuário cancelou, não fazemos nada e saímos da função
+        if (e.name === 'AbortError') {
+            console.log('Salvamento cancelado pelo usuário.');
+            return; 
+        }
 
-    function updateEditor(content, name) {
-        editor.value = content;
-        fileNameDisplay.textContent = name;
-        localStorage.setItem(STORAGE_KEY_CONTENT, content);
-        localStorage.setItem(STORAGE_KEY_NAME, name);
-        updateCursorInfo();
+        // Se o erro for outro (como falta de suporte), aí sim rodamos o Fallback de download
+        const blob = new Blob([content], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = currentName;
+        a.click();
+        URL.revokeObjectURL(url);
     }
-
-    window.onkeydown = (e) => { if (e.ctrlKey && e.key === 's') { e.preventDefault(); document.getElementById('btnSave').click(); } };
-</script>
-
-</body>
-</html>
+};
