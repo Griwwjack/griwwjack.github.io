@@ -3,15 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web Text Editor - No Wrap</title>
+    <title>Web Pad - Pro</title>
     <style>
         :root {
             --bg-color: #1e1e1e;
             --toolbar-color: #2d2d2d;
             --text-color: #d4d4d4;
-            --accent-color: #007acc;
-            --accent-hover: #005a9e;
+            --accent-color: #333333;
+            --accent-hover: #454545;
             --border-color: #3c3c3c;
+            --icon-fill: #cccccc;
         }
 
         body, html {
@@ -32,88 +33,83 @@
 
         header {
             background-color: var(--toolbar-color);
-            padding: 10px 20px;
+            padding: 8px 15px;
             display: flex;
-            gap: 10px;
+            gap: 8px;
             border-bottom: 1px solid var(--border-color);
             align-items: center;
-            z-index: 10;
         }
 
-        button {
+        .btn-icon {
             background-color: var(--accent-color);
-            color: white;
-            border: none;
-            padding: 8px 16px;
+            border: 1px solid var(--border-color);
             border-radius: 4px;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             cursor: pointer;
-            font-size: 14px;
-            transition: background 0.2s;
+            transition: all 0.2s;
         }
 
-        button:hover {
+        .btn-icon:hover {
             background-color: var(--accent-hover);
+            border-color: #555;
+        }
+
+        .btn-icon svg {
+            width: 20px;
+            height: 20px;
+            fill: var(--icon-fill);
         }
 
         .filename-display {
             margin-left: auto;
-            font-size: 12px;
-            color: #888;
-        }
-
-        main {
-            flex-grow: 1;
-            position: relative;
+            font-size: 11px;
+            color: #666;
+            font-family: monospace;
         }
 
         textarea {
+            flex-grow: 1;
             width: 100%;
-            height: 100%;
             background-color: var(--bg-color);
             color: var(--text-color);
             border: none;
-            padding: 20px;
+            padding: 15px;
             box-sizing: border-box;
             resize: none;
             font-family: 'Consolas', 'Monaco', monospace;
-            font-size: 16px;
-            line-height: 1.5;
+            font-size: 15px;
+            line-height: 1.6;
             outline: none;
-            
-            /* Desabilitando quebra automática */
             white-space: pre;
             overflow: auto;
         }
 
-        /* Scrollbars customizadas */
-        textarea::-webkit-scrollbar {
-            width: 12px;
-            height: 12px;
-        }
-        textarea::-webkit-scrollbar-track {
-            background: var(--bg-color);
-        }
-        textarea::-webkit-scrollbar-thumb {
-            background: var(--border-color);
-            border: 3px solid var(--bg-color);
-            border-radius: 10px;
-        }
-        textarea::-webkit-scrollbar-thumb:hover {
-            background: #555;
-        }
+        /* Scrollbar Style */
+        textarea::-webkit-scrollbar { width: 10px; height: 10px; }
+        textarea::-webkit-scrollbar-track { background: var(--bg-color); }
+        textarea::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 5px; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <header>
-        <button id="btnOpen">Abrir Arquivo</button>
-        <button id="btnSave">Salvar Como</button>
-        <span id="fileName" class="filename-display">Novo arquivo.txt</span>
+        <div id="btnOpen" class="btn-icon" title="Abrir arquivo">
+            <svg viewBox="0 0 24 24"><path d="M20,18H4V8H20M20,6H12L10,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V8C22,6.89 21.1,6 20,6Z" /></svg>
+        </div>
+        
+        <div id="btnSave" class="btn-icon" title="Salvar">
+            <svg viewBox="0 0 24 24"><path d="M15,9H5V5H15M12,19A3,3 0 0,1 9,16A3,3 0 0,1 12,13A3,3 0 0,1 15,16A3,3 0 0,1 12,19M17,3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V7L17,3Z" /></svg>
+        </div>
+
+        <span id="fileName" class="filename-display">sem-titulo.txt</span>
     </header>
-    <main>
-        <textarea id="editor" wrap="off" spellcheck="false" placeholder="Modo sem quebra de linha..."></textarea>
-    </main>
+    
+    <textarea id="editor" wrap="off" spellcheck="false" placeholder="Digite seu texto..."></textarea>
 </div>
 
 <script>
@@ -122,19 +118,17 @@
     const editor = document.getElementById('editor');
     const fileNameDisplay = document.getElementById('fileName');
 
-    btnOpen.addEventListener('click', async () => {
+    // Lógica de Abrir
+    btnOpen.onclick = async () => {
         try {
             if ('showOpenFilePicker' in window) {
-                const [fileHandle] = await window.showOpenFilePicker({
-                    types: [{ description: 'Texto', accept: { 'text/plain': ['.txt'] } }]
-                });
-                const file = await fileHandle.getFile();
+                const [handle] = await window.showOpenFilePicker();
+                const file = await handle.getFile();
                 editor.value = await file.text();
                 fileNameDisplay.textContent = file.name;
             } else {
                 const input = document.createElement('input');
                 input.type = 'file';
-                input.accept = '.txt';
                 input.onchange = e => {
                     const file = e.target.files[0];
                     const reader = new FileReader();
@@ -146,16 +140,17 @@
                 };
                 input.click();
             }
-        } catch (err) {}
-    });
+        } catch (e) {}
+    };
 
-    btnSave.addEventListener('click', async () => {
+    // Lógica de Salvar
+    btnSave.onclick = async () => {
         const content = editor.value;
         try {
             if ('showSaveFilePicker' in window) {
                 const handle = await window.showSaveFilePicker({
-                    suggestedName: 'arquivo.txt',
-                    types: [{ description: 'Texto', accept: { 'text/plain': ['.txt'] } }]
+                    suggestedName: fileNameDisplay.textContent,
+                    types: [{ description: 'Txt', accept: {'text/plain': ['.txt']} }]
                 });
                 const writable = await handle.createWritable();
                 await writable.write(content);
@@ -166,19 +161,20 @@
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = 'arquivo.txt';
+                a.download = fileNameDisplay.textContent;
                 a.click();
                 URL.revokeObjectURL(url);
             }
-        } catch (err) {}
-    });
+        } catch (e) {}
+    };
 
-    window.addEventListener('keydown', (e) => {
+    // Atalho Ctrl+S
+    window.onkeydown = (e) => {
         if (e.ctrlKey && e.key === 's') {
             e.preventDefault();
             btnSave.click();
         }
-    });
+    };
 </script>
 
 </body>
