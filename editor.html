@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web Text Editor</title>
+    <title>Web Text Editor - No Wrap</title>
     <style>
         :root {
             --bg-color: #1e1e1e;
@@ -18,7 +18,7 @@
             margin: 0;
             padding: 0;
             height: 100%;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
             overflow: hidden;
@@ -30,7 +30,6 @@
             height: 100vh;
         }
 
-        /* Toolbar */
         header {
             background-color: var(--toolbar-color);
             padding: 10px 20px;
@@ -38,6 +37,7 @@
             gap: 10px;
             border-bottom: 1px solid var(--border-color);
             align-items: center;
+            z-index: 10;
         }
 
         button {
@@ -61,10 +61,9 @@
             color: #888;
         }
 
-        /* Editor Area */
         main {
             flex-grow: 1;
-            padding: 0;
+            position: relative;
         }
 
         textarea {
@@ -76,21 +75,31 @@
             padding: 20px;
             box-sizing: border-box;
             resize: none;
-            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-family: 'Consolas', 'Monaco', monospace;
             font-size: 16px;
             line-height: 1.5;
             outline: none;
+            
+            /* Desabilitando quebra automática */
+            white-space: pre;
+            overflow: auto;
         }
 
-        /* Scrollbar customizada */
+        /* Scrollbars customizadas */
         textarea::-webkit-scrollbar {
-            width: 10px;
+            width: 12px;
+            height: 12px;
         }
         textarea::-webkit-scrollbar-track {
             background: var(--bg-color);
         }
         textarea::-webkit-scrollbar-thumb {
             background: var(--border-color);
+            border: 3px solid var(--bg-color);
+            border-radius: 10px;
+        }
+        textarea::-webkit-scrollbar-thumb:hover {
+            background: #555;
         }
     </style>
 </head>
@@ -103,7 +112,7 @@
         <span id="fileName" class="filename-display">Novo arquivo.txt</span>
     </header>
     <main>
-        <textarea id="editor" placeholder="Comece a digitar aqui..."></textarea>
+        <textarea id="editor" wrap="off" spellcheck="false" placeholder="Modo sem quebra de linha..."></textarea>
     </main>
 </div>
 
@@ -113,55 +122,46 @@
     const editor = document.getElementById('editor');
     const fileNameDisplay = document.getElementById('fileName');
 
-    // Função para Abrir Arquivo
     btnOpen.addEventListener('click', async () => {
         try {
-            // Tenta usar a API moderna primeiro
             if ('showOpenFilePicker' in window) {
                 const [fileHandle] = await window.showOpenFilePicker({
-                    types: [{ description: 'Arquivos de Texto', accept: { 'text/plain': ['.txt'] } }]
+                    types: [{ description: 'Texto', accept: { 'text/plain': ['.txt'] } }]
                 });
                 const file = await fileHandle.getFile();
-                const content = await file.text();
-                editor.value = content;
+                editor.value = await file.text();
                 fileNameDisplay.textContent = file.name;
             } else {
-                // Fallback para navegadores antigos
                 const input = document.createElement('input');
                 input.type = 'file';
                 input.accept = '.txt';
                 input.onchange = e => {
                     const file = e.target.files[0];
                     const reader = new FileReader();
-                    reader.onload = event => {
-                        editor.value = event.target.result;
+                    reader.onload = ev => {
+                        editor.value = ev.target.result;
                         fileNameDisplay.textContent = file.name;
                     };
                     reader.readAsText(file);
                 };
                 input.click();
             }
-        } catch (err) {
-            console.log('Abertura cancelada ou erro:', err);
-        }
+        } catch (err) {}
     });
 
-    // Função para Salvar Arquivo
     btnSave.addEventListener('click', async () => {
         const content = editor.value;
-        
         try {
             if ('showSaveFilePicker' in window) {
                 const handle = await window.showSaveFilePicker({
-                    suggestedName: 'meu-arquivo.txt',
-                    types: [{ description: 'Arquivo de Texto', accept: { 'text/plain': ['.txt'] } }]
+                    suggestedName: 'arquivo.txt',
+                    types: [{ description: 'Texto', accept: { 'text/plain': ['.txt'] } }]
                 });
                 const writable = await handle.createWritable();
                 await writable.write(content);
                 await writable.close();
                 fileNameDisplay.textContent = handle.name;
             } else {
-                // Fallback para download via Blob
                 const blob = new Blob([content], { type: 'text/plain' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
@@ -170,12 +170,9 @@
                 a.click();
                 URL.revokeObjectURL(url);
             }
-        } catch (err) {
-            console.log('Salvamento cancelado ou erro:', err);
-        }
+        } catch (err) {}
     });
 
-    // Atalho de teclado (Ctrl + S)
     window.addEventListener('keydown', (e) => {
         if (e.ctrlKey && e.key === 's') {
             e.preventDefault();
