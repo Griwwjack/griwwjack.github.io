@@ -1,149 +1,196 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>µPen Editor</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>µPen Editor</title>
 
-    <style>
-        :root {
-            --bg-color: #1e1e1e;
-            --toolbar-color: #2d2d2d;
-            --text-color: #d4d4d4;
-            --accent-color: #333333;
-            --accent-hover: #454545;
-            --border-color: #3c3c3c;
-            --icon-fill: #cccccc;
-            --danger-hover: #8e2e2e;
-        }
+<style>
+:root {
+    --bg-color: #1e1e1e;
+    --toolbar-color: #2d2d2d;
+    --text-color: #d4d4d4;
+    --accent-color: #333333;
+    --accent-hover: #454545;
+    --border-color: #3c3c3c;
+    --icon-fill: #cccccc;
+    --danger-hover: #8e2e2e;
+}
 
-        body, html {
-            margin: 0; padding: 0; height: 100%;
-            font-family: 'Segoe UI', Tahoma, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            overflow: hidden;
-        }
+/* Tema claro */
+.light-theme {
+    --bg-color: #ffffff;
+    --toolbar-color: #f0f0f0;
+    --text-color: #000000;
+    --accent-color: #dddddd;
+    --accent-hover: #cccccc;
+    --border-color: #bbbbbb;
+    --icon-fill: #333333;
+}
 
-        .container { display: flex; flex-direction: column; height: 100vh; }
+body, html {
+    margin: 0; padding: 0; height: 100%;
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    overflow: hidden;
+}
 
-        header {
-            background-color: var(--toolbar-color);
-            padding: 8px 15px;
-            display: flex; gap: 8px;
-            border-bottom: 1px solid var(--border-color);
-            align-items: center;
-        }
+.container { display: flex; flex-direction: column; height: 100vh; }
 
-        .btn-icon {
-            background-color: var(--accent-color);
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            width: 36px; height: 36px;
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; transition: all 0.2s;
-        }
+header {
+    background-color: var(--toolbar-color);
+    padding: 8px 15px;
+    display: flex; gap: 8px;
+    border-bottom: 1px solid var(--border-color);
+    align-items: center;
+}
 
-        .btn-icon:hover { background-color: var(--accent-hover); border-color: #555; }
-        .btn-icon svg { width: 20px; height: 20px; fill: var(--icon-fill); }
-        .btn-danger:hover { background-color: var(--danger-hover); }
+.btn-icon {
+    background-color: var(--accent-color);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    width: 36px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.2s;
+}
 
-        .info-panel { margin-left: auto; text-align: right; }
-        .filename-display { font-size: 11px; font-family: monospace; display: block; }
-        .cursor-pos { font-size: 10px; color: #777; font-family: monospace; display: block; }
+.btn-icon:hover { background-color: var(--accent-hover); border-color: #555; }
+.btn-icon svg { width: 20px; height: 20px; fill: var(--icon-fill); }
+.btn-danger:hover { background-color: var(--danger-hover); }
 
-        textarea {
-            flex-grow: 1; width: 100%;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            border: none; padding: 15px;
-            box-sizing: border-box; resize: none;
-            font-family: 'Consolas', 'Monaco', monospace;
-            font-size: 18px;
-            line-height: 1.6;
-            outline: none; white-space: pre; overflow: auto;
-        }
+.info-panel { margin-left: auto; text-align: right; }
+.filename-display { font-size: 11px; font-family: monospace; display: block; }
+.cursor-pos { font-size: 10px; color: #777; font-family: monospace; display: block; }
 
-        #modalHelp {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8);
-            z-index: 100;
-            align-items: center; justify-content: center;
-        }
+textarea {
+    flex-grow: 1; width: 100%;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    border: none; padding: 15px;
+    box-sizing: border-box; resize: none;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 18px;
+    line-height: 1.6;
+    outline: none; white-space: pre; overflow: auto;
+}
 
-        .modal-content {
-            background: var(--toolbar-color);
-            padding: 25px;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-            max-width: 400px;
-            width: 90%;
-        }
+/* Modal padrão */
+#modalHelp, #modalSettings {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.8);
+    z-index: 100;
+    align-items: center; justify-content: center;
+}
 
-        .modal-content h2 { margin-top: 0; color: #007acc; }
-        .modal-content ul { padding-left: 20px; font-size: 14px; line-height: 1.8; }
+.modal-content {
+    background: var(--toolbar-color);
+    padding: 25px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    max-width: 400px;
+    width: 90%;
+}
 
-        .close-modal {
-            margin-top: 20px;
-            width: 100%;
-            background: var(--accent-color);
-            color: white;
-            border: 1px solid var(--border-color);
-            padding: 10px;
-            cursor: pointer;
-            border-radius: 4px;
-        }
+.modal-content h2 { margin-top: 0; color: #007acc; }
+.modal-content ul { padding-left: 20px; font-size: 14px; line-height: 1.8; }
 
-        textarea::-webkit-scrollbar { width: 10px; height: 10px; }
-        textarea::-webkit-scrollbar-track { background: var(--bg-color); }
-        textarea::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 5px; }
-    </style>
+.close-modal {
+    margin-top: 20px;
+    width: 100%;
+    background: var(--accent-color);
+    color: white;
+    border: 1px solid var(--border-color);
+    padding: 10px;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+select {
+    margin-top: 10px;
+    width: 100%;
+    padding: 8px;
+    background: var(--accent-color);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+}
+
+textarea::-webkit-scrollbar { width: 10px; height: 10px; }
+textarea::-webkit-scrollbar-track { background: var(--bg-color); }
+textarea::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 5px; }
+</style>
 </head>
 
 <body>
 
 <div class="container">
-    <header>
-        <div id="btnNew" class="btn-icon btn-danger">
-            <svg viewBox="0 0 24 24"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19V4M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z" /></svg>
-        </div>
+<header>
 
-        <div id="btnOpen" class="btn-icon">
-            <svg viewBox="0 0 24 24"><path d="M20,18H4V8H20M20,6H12L10,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V8C22,6.89 21.1,6 20,6Z" /></svg>
-        </div>
-        
-        <div id="btnSave" class="btn-icon">
-            <svg viewBox="0 0 24 24"><path d="M15,9H5V5H15M12,19A3,3 0 0,1 9,16A3,3 0 0,1 12,13A3,3 0 0,1 15,16A3,3 0 0,1 12,19M17,3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V7L17,3Z" /></svg>
-        </div>
-
-        <div id="btnHelp" class="btn-icon">
-            <svg viewBox="0 0 24 24"><path d="M11,18H13V16H11V18M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20M12,6A4,4 0 0,0 8,10H10A2,2 0 0,1 12,8A2,2 0 0,1 14,10C14,12 11,11.75 11,15H13C13,12.75 16,12.5 16,10A4,4 0 0,0 12,6Z" /></svg>
-        </div>
-
-        <div class="info-panel">
-            <span id="fileName" class="filename-display">sem-titulo.txt</span>
-            <span id="cursorPos" class="cursor-pos">Lin 1, Col 1</span>
-        </div>
-    </header>
-
-    <textarea id="editor" wrap="off" spellcheck="false"></textarea>
-    <input type="file" id="fileInput" accept=".txt" style="display:none;">
+<div id="btnNew" class="btn-icon btn-danger">
+<svg viewBox="0 0 24 24"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19V4M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg>
 </div>
 
+<div id="btnOpen" class="btn-icon">
+<svg viewBox="0 0 24 24"><path d="M20,18H4V8H20M20,6H12L10,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V8C22,6.89 21.1,6 20,6Z"/></svg>
+</div>
+
+<div id="btnSave" class="btn-icon">
+<svg viewBox="0 0 24 24"><path d="M15,9H5V5H15M12,19A3,3 0 0,1 9,16A3,3 0 0,1 12,13A3,3 0 0,1 15,16A3,3 0 0,1 12,19M17,3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V7L17,3Z"/></svg>
+</div>
+
+<div id="btnHelp" class="btn-icon">
+<svg viewBox="0 0 24 24"><path d="M11,18H13V16H11V18M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20M12,6A4,4 0 0,0 8,10H10A2,2 0 0,1 12,8A2,2 0 0,1 14,10C14,12 11,11.75 11,15H13C13,12.75 16,12.5 16,10A4,4 0 0,0 12,6Z"/></svg>
+</div>
+
+<!-- NOVO BOTÃO -->
+<div id="btnSettings" class="btn-icon">
+<svg viewBox="0 0 24 24"><path d="M12,8A4,4 0 1,0 16,12A4,4 0 0,0 12,8M19.4,12.9L21,11.3L19.4,9.7L17.6,10.3A5.9,5.9 0 0,0 16.7,9L17,7H15L14.6,8.8A6,6 0 0,0 13,8.3L12.3,6H10.7L10,8.3A6,6 0 0,0 8.4,8.8L8,7H6L6.3,9A5.9,5.9 0 0,0 5.4,10.3L3.6,9.7L2,11.3L3.6,12.9L5.4,12.3A5.9,5.9 0 0,0 6.3,14L6,16H8L8.4,14.2A6,6 0 0,0 10,14.7L10.7,17H12.3L13,14.7A6,6 0 0,0 14.6,14.2L15,16H17L16.7,14A5.9,5.9 0 0,0 17.6,12.3Z"/></svg>
+</div>
+
+<div class="info-panel">
+<span id="fileName" class="filename-display">sem-titulo.txt</span>
+<span id="cursorPos" class="cursor-pos">Lin 1, Col 1</span>
+</div>
+
+</header>
+
+<textarea id="editor" wrap="off" spellcheck="false"></textarea>
+<input type="file" id="fileInput" accept=".txt" style="display:none;">
+</div>
+
+<!-- HELP -->
 <div id="modalHelp">
-    <div class="modal-content">
-        <h2>µPen Editor</h2>
-        <h5>Versão 0.1</h5>
-        <hr>
-        <ul>
-            <li>Limpar, abrir e salvar arquivos TXT</li>
-            <li>Salvamento automático</li>
-            <li>Ctrl+S para salvar</li>
-        </ul>
-        <button class="close-modal" onclick="closeHelp()">Fechar</button>
-    </div>
+<div class="modal-content">
+<h2>µPen Editor</h2>
+<h5>Versão 0.1</h5>
+<hr>
+<ul>
+<li>Editor simples e minimalista</li>
+<li>Salvamento automático</li>
+<li>Ctrl+S para salvar</li>
+</ul>
+<button class="close-modal" onclick="closeHelp()">Fechar</button>
+</div>
+</div>
+
+<!-- SETTINGS -->
+<div id="modalSettings">
+<div class="modal-content">
+<h2>Configurações</h2>
+<hr>
+
+<label>Tema:</label>
+<select id="themeSelector">
+<option value="dark">Escuro</option>
+<option value="light">Claro</option>
+</select>
+
+<button class="close-modal" onclick="closeSettings()">Fechar</button>
+</div>
 </div>
 
 <script>
@@ -151,20 +198,50 @@ const editor = document.getElementById('editor');
 const fileNameDisplay = document.getElementById('fileName');
 const cursorPosDisplay = document.getElementById('cursorPos');
 const fileInput = document.getElementById('fileInput');
+const modalHelp = document.getElementById('modalHelp');
+const modalSettings = document.getElementById('modalSettings');
+const themeSelector = document.getElementById('themeSelector');
 
 const STORAGE_KEY_CONTENT = 'webpad_draft_content';
 const STORAGE_KEY_NAME = 'webpad_draft_name';
+const STORAGE_THEME = 'upen_theme';
 
+/* Tema */
+function applyTheme(theme) {
+    document.documentElement.classList.toggle('light-theme', theme === 'light');
+}
+
+/* Load */
 window.onload = () => {
+    const theme = localStorage.getItem(STORAGE_THEME) || 'dark';
+    themeSelector.value = theme;
+    applyTheme(theme);
+
     const c = localStorage.getItem(STORAGE_KEY_CONTENT);
     const n = localStorage.getItem(STORAGE_KEY_NAME);
     if (c) editor.value = c;
     if (n) fileNameDisplay.textContent = n;
+
     updateCursorInfo();
 };
 
+/* Settings */
+document.getElementById('btnSettings').onclick = () => modalSettings.style.display = 'flex';
+function closeSettings(){ modalSettings.style.display = 'none'; }
+
+themeSelector.addEventListener('change', () => {
+    const theme = themeSelector.value;
+    localStorage.setItem(STORAGE_THEME, theme);
+    applyTheme(theme);
+});
+
+/* Help */
+document.getElementById('btnHelp').onclick = () => modalHelp.style.display = 'flex';
+function closeHelp(){ modalHelp.style.display = 'none'; }
+
+/* Novo */
 document.getElementById('btnNew').onclick = () => {
-    if(confirm("Deseja limpar tudo?")) {
+    if(confirm("Deseja limpar tudo?")){
         editor.value = "";
         fileNameDisplay.textContent = "sem-titulo.txt";
         localStorage.clear();
@@ -172,36 +249,21 @@ document.getElementById('btnNew').onclick = () => {
     }
 };
 
-document.getElementById('btnHelp').onclick = () => modalHelp.style.display = 'flex';
-function closeHelp() { modalHelp.style.display = 'none'; }
-
-function updateCursorInfo() {
-    const pos = editor.selectionStart;
-    const lines = editor.value.substr(0, pos).split("\n");
-    cursorPosDisplay.textContent = `Lin ${lines.length}, Col ${lines[lines.length - 1].length + 1}`;
-}
-
-editor.addEventListener('input', () => {
-    localStorage.setItem(STORAGE_KEY_CONTENT, editor.value);
-    localStorage.setItem(STORAGE_KEY_NAME, fileNameDisplay.textContent);
-    updateCursorInfo();
-});
-
-['keyup', 'click'].forEach(ev => editor.addEventListener(ev, updateCursorInfo));
-
+/* Abrir */
 document.getElementById('btnOpen').onclick = () => fileInput.click();
 
-fileInput.addEventListener('change', (e) => {
+fileInput.addEventListener('change', (e)=>{
     const file = e.target.files[0];
-    if (!file) return;
+    if(!file) return;
 
     const reader = new FileReader();
-    reader.onload = (ev) => updateEditor(ev.target.result, file.name);
+    reader.onload = (ev)=> updateEditor(ev.target.result, file.name);
     reader.readAsText(file);
 });
 
-document.getElementById('btnSave').onclick = () => {
-    const blob = new Blob([editor.value], { type: 'text/plain' });
+/* Salvar */
+document.getElementById('btnSave').onclick = ()=>{
+    const blob = new Blob([editor.value], {type:'text/plain'});
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -210,7 +272,23 @@ document.getElementById('btnSave').onclick = () => {
     URL.revokeObjectURL(url);
 };
 
-function updateEditor(content, name) {
+/* Cursor */
+function updateCursorInfo(){
+    const pos = editor.selectionStart;
+    const lines = editor.value.substr(0,pos).split("\n");
+    cursorPosDisplay.textContent =
+        `Lin ${lines.length}, Col ${lines[lines.length-1].length+1}`;
+}
+
+editor.addEventListener('input', ()=>{
+    localStorage.setItem(STORAGE_KEY_CONTENT, editor.value);
+    localStorage.setItem(STORAGE_KEY_NAME, fileNameDisplay.textContent);
+    updateCursorInfo();
+});
+
+['keyup','click'].forEach(ev=>editor.addEventListener(ev, updateCursorInfo));
+
+function updateEditor(content,name){
     editor.value = content;
     fileNameDisplay.textContent = name;
     localStorage.setItem(STORAGE_KEY_CONTENT, content);
@@ -218,8 +296,9 @@ function updateEditor(content, name) {
     updateCursorInfo();
 }
 
-window.onkeydown = (e) => {
-    if (e.ctrlKey && e.key === 's') {
+/* Atalho */
+window.onkeydown = (e)=>{
+    if(e.ctrlKey && e.key === 's'){
         e.preventDefault();
         document.getElementById('btnSave').click();
     }
