@@ -2,136 +2,24 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editor TXT Dark</title>
+    <title>Hub de Ferramentas - Automação</title>
     <style>
-        /* Reset e Estilo Base */
-        * { box-sizing: border-box; }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #121212; /* Fundo Ultra Dark */
-            color: #e0e0e0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            height: 100vh;
+        body { font-family: sans-serif; background: #1a1a1a; color: white; padding: 20px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .card { 
+            background: #333; padding: 20px; border-radius: 8px; text-align: center;
+            text-decoration: none; color: #00ff00; border: 1px solid #444; transition: 0.3s;
         }
-
-        /* Barra de Ferramentas */
-        .toolbar {
-            width: 90%;
-            max-width: 900px;
-            display: flex;
-            gap: 15px;
-            background-color: #1e1e1e;
-            padding: 12px 20px;
-            border-radius: 8px 8px 0 0;
-            border-bottom: 1px solid #333;
-        }
-
-        /* Estilo dos Botões */
-        button {
-            cursor: pointer;
-            padding: 8px 16px;
-            border-radius: 6px;
-            border: 1px solid #444;
-            background-color: #2d2d2d;
-            color: #ffffff;
-            font-size: 14px;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        button:hover {
-            background-color: #3d3d3d;
-            border-color: #666;
-        }
-
-        .btn-save { background-color: #0d47a1; border-color: #1565c0; }
-        .btn-save:hover { background-color: #1565c0; }
-
-        /* Área do Editor */
-        #editor {
-            width: 90%;
-            max-width: 900px;
-            flex-grow: 1;
-            background-color: #1e1e1e;
-            color: #d4d4d4;
-            padding: 20px;
-            border: none;
-            border-radius: 0 0 8px 8px;
-            outline: none;
-            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-            font-size: 16px;
-            line-height: 1.5;
-            resize: none; /* Remove o handle de redimensionamento do textarea */
-            margin-bottom: 20px;
-        }
-
-        /* Input de arquivo escondido */
-        #file-input { display: none; }
+        .card:hover { background: #444; border-color: #00ff00; scale: 1.05; }
     </style>
 </head>
 <body>
-
-    <div class="toolbar">
-        <button onclick="document.getElementById('file-input').click()">
-            📂 Abrir Arquivo
-        </button>
-        <button class="btn-save" onclick="saveFile()">
-            💾 Salvar (.txt)
-        </button>
-        <input type="file" id="file-input" accept=".txt,.html,.js,.css" onchange="loadFile(event)">
-    </div>
-// -----------------------------------------
-    <textarea id="editor" placeholder=""></textarea>
-
-    <script>
-        const editor = document.getElementById('editor');
-
-        // Função para Abrir o arquivo
-        function loadFile(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                editor.value = e.target.result;
-            };
-            reader.readAsText(file);
-        }
-
-        // Função para Salvar o arquivo
-        function saveFile() {
-            const text = editor.value;
-            const blob = new Blob([text], { type: 'text/plain' });
-            const a = document.createElement('a');
-            
-            // Define o nome padrão do arquivo
-            a.download = "meu_arquivo.txt";
-            a.href = URL.createObjectURL(blob);
-            
-            // Dispara o download
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            
-            // Limpa o cache do objeto URL
-            setTimeout(() => URL.revokeObjectURL(a.href), 100);
-        }
-
-        // Atalho de teclado: Ctrl + S para salvar
-        document.addEventListener('keydown', function(e) {
-            if (e.ctrlKey && e.key === 's') {
-                e.preventDefault();
-                saveFile();
-            }
-        });
-    </script>
-
+    <h1>Painel de Controle WMS</h1>
+    <hr>
+    <div class="grid">
+        <a href="nfe_extractor/index.html" class="card">Extrator de NFe</a>
+        <a href="dashboard_sorter/index.html" class="card">Dashboard Sorter</a>
+        <a href="contador_etiquetas/index.html" class="card">Contador Pro</a>
+        </div>
 </body>
 </html>
