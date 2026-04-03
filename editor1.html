@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>µPen Editor</title>
+
+<style>
+:root {
+    --bg-color: #1e1e1e;
+    --toolbar-color: #2d2d2d;
+    --text-color: #d4d4d4;
+    --accent-color: #333333;
+    --accent-hover: #454545;
+    --border-color: #3c3c3c;
+    --icon-fill: #cccccc;
+    --danger-hover: #8e2e2e;
+}
+
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    overflow: hidden;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+header {
+    background-color: var(--toolbar-color);
+    padding: 8px;
+    display: flex;
+    gap: 8px;
+    border-bottom: 1px solid var(--border-color);
+    align-items: center;
+}
+
+.btn-icon {
+    background-color: var(--accent-color);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-icon:active {
+    background-color: var(--accent-hover);
+}
+
+.btn-icon svg {
+    width: 22px;
+    height: 22px;
+    fill: var(--icon-fill);
+}
+
+.info-panel {
+    margin-left: auto;
+    text-align: right;
+}
+
+.filename-display {
+    font-size: 11px;
+    font-family: monospace;
+}
+
+.cursor-pos {
+    font-size: 10px;
+    color: #777;
+    font-family: monospace;
+}
+
+textarea {
+    flex-grow: 1;
+    width: 100%;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    border: none;
+    padding: 15px;
+    box-sizing: border-box;
+    resize: none;
+    font-family: monospace;
+    font-size: 18px;
+    line-height: 1.6;
+    outline: none;
+    white-space: pre;
+}
+
+/* Modal */
+#modalHelp {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.85);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background: var(--toolbar-color);
+    padding: 20px;
+    border-radius: 8px;
+    max-width: 400px;
+    width: 90%;
+}
+
+.close-modal {
+    margin-top: 15px;
+    width: 100%;
+    padding: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+<header>
+
+<div id="btnNew" class="btn-icon">🗑️</div>
+<div id="btnOpen" class="btn-icon">📂</div>
+<div id="btnSave" class="btn-icon">💾</div>
+<div id="btnHelp" class="btn-icon">❓</div>
+
+<div class="info-panel">
+<span id="fileName" class="filename-display">sem-titulo.txt</span>
+<span id="cursorPos" class="cursor-pos">Lin 1, Col 1</span>
+</div>
+
+</header>
+
+<textarea id="editor" placeholder="Comece a escrever..."></textarea>
+<input type="file" id="fileInput" accept=".txt" style="display:none;">
+
+</div>
+
+<div id="modalHelp">
+<div class="modal-content">
+<h2>µPen Editor</h2>
+<p>Editor simples e rápido.</p>
+<button class="close-modal" onclick="closeHelp()">Fechar</button>
+</div>
+</div>
+
+<script>
+const editor = document.getElementById('editor');
+const fileNameDisplay = document.getElementById('fileName');
+const cursorPosDisplay = document.getElementById('cursorPos');
+const fileInput = document.getElementById('fileInput');
+const modalHelp = document.getElementById('modalHelp');
+
+const STORAGE_KEY_CONTENT = 'upen_content';
+const STORAGE_KEY_NAME = 'upen_name';
+
+/* Carregar */
+window.onload = () => {
+    const c = localStorage.getItem(STORAGE_KEY_CONTENT);
+    const n = localStorage.getItem(STORAGE_KEY_NAME);
+    if (c) editor.value = c;
+    if (n) fileNameDisplay.textContent = n;
+    updateCursorInfo();
+};
+
+/* Novo */
+document.getElementById('btnNew').onclick = () => {
+    if (confirm("Limpar tudo?")) {
+        editor.value = "";
+        fileNameDisplay.textContent = "sem-titulo.txt";
+        localStorage.clear();
+        updateCursorInfo();
+    }
+};
+
+/* Abrir */
+document.getElementById('btnOpen').onclick = () => fileInput.click();
+
+fileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+        updateEditor(ev.target.result, file.name);
+    };
+    reader.readAsText(file);
+});
+
+/* Salvar */
+document.getElementById('btnSave').onclick = () => {
+    const content = editor.value;
+    const name = fileNameDisplay.textContent;
+
+    const blob = new Blob([content], {type: "text/plain"});
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = name;
+    a.click();
+
+    URL.revokeObjectURL(url);
+};
+
+/* Help */
+document.getElementById('btnHelp').onclick = () => modalHelp.style.display = 'flex';
+function closeHelp(){ modalHelp.style.display = 'none'; }
+
+/* Cursor */
+function updateCursorInfo() {
+    const pos = editor.selectionStart;
+    const lines = editor.value.substr(0, pos).split("\n");
+    cursorPosDisplay.textContent =
+        "Lin " + lines.length + ", Col " + (lines[lines.length-1].length + 1);
+}
+
+editor.addEventListener('input', () => {
+    localStorage.setItem(STORAGE_KEY_CONTENT, editor.value);
+    localStorage.setItem(STORAGE_KEY_NAME, fileNameDisplay.textContent);
+    updateCursorInfo();
+});
+
+editor.addEventListener('keyup', updateCursorInfo);
+editor.addEventListener('click', updateCursorInfo);
+
+/* Atalho */
+window.onkeydown = (e) => {
+    if (e.ctrlKey && e.key === 's') {
+        e.preventDefault();
+        document.getElementById('btnSave').click();
+    }
+};
+
+function updateEditor(content, name) {
+    editor.value = content;
+    fileNameDisplay.textContent = name;
+    localStorage.setItem(STORAGE_KEY_CONTENT, content);
+    localStorage.setItem(STORAGE_KEY_NAME, name);
+    updateCursorInfo();
+}
+</script>
+
+</body>
+</html>
