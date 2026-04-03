@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web Pad - Pro (Community Edition)</title>
+    <title>Web Pad</title>
     <style>
         :root {
             --bg-color: #1e1e1e;
@@ -131,13 +131,15 @@
 
 <div id="modalHelp">
     <div class="modal-content">
-        <h2>Web Pad Pro</h2>
+        <h2>Web Pad</h2>
         <ul>
             <li><strong>Lixeira:</strong> Limpa o editor e a memória.</li>
             <li><strong>Pasta:</strong> Abre arquivos .txt locais.</li>
-            <li><strong>Disquete:</strong> Salva/Baixa o arquivo atual.</li>
+            <li><strong>Disquete:</strong> Salva/Baixa o arquivo atual, formato TXT Unix UTF-8.</li>
             <li><strong>Persistência:</strong> O texto é salvo automaticamente no navegador ao digitar.</li>
             <li><strong>Atalhos:</strong> Use <code>Ctrl + S</code> para salvar rapidamente.</li>
+            
+            <strong>By:</strong> Griwwjack
         </ul>
         <button class="close-modal" onclick="closeHelp()">Fechar</button>
     </div>
@@ -203,22 +205,41 @@
 
     // Salvar
     document.getElementById('btnSave').onclick = async () => {
+        const content = editor.value;
+        const currentName = fileNameDisplay.textContent.replace(" (recuperado)", "");
+    
         try {
-            const handle = await window.showSaveFilePicker({
-                suggestedName: fileNameDisplay.textContent.replace(" (recuperado)", ""),
-                types: [{ description: 'Txt', accept: {'text/plain': ['.txt']} }]
-            });
-            const writable = await handle.createWritable();
-            await writable.write(editor.value);
-            await writable.close();
-            updateEditor(editor.value, handle.name);
+            // Tenta usar a API moderna (Chrome/Edge/Opera)
+            if ('showSaveFilePicker' in window) {
+                const handle = await window.showSaveFilePicker({
+                    suggestedName: currentName,
+                    types: [{ description: 'Txt', accept: {'text/plain': ['.txt']} }]
+                });
+                
+                // Se chegou aqui, o usuário NÃO cancelou
+                const writable = await handle.createWritable();
+                await writable.write(content);
+                await writable.close();
+                updateEditor(content, handle.name);
+            } else {
+                // Se o navegador não suporta a API (Firefox/Safari/Mobile antigo)
+                throw new Error('Modern API not supported'); 
+            }
         } catch (e) {
-            // Fallback download
-            const blob = new Blob([editor.value], { type: 'text/plain' });
+            // Se o erro for porque o usuário cancelou, não fazemos nada e saímos da função
+            if (e.name === 'AbortError') {
+                console.log('Salvamento cancelado pelo usuário.');
+                return; 
+            }
+    
+            // Se o erro for outro (como falta de suporte), aí sim rodamos o Fallback de download
+            const blob = new Blob([content], { type: 'text/plain' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.href = url; a.download = fileNameDisplay.textContent.replace(" (recuperado)", "");
+            a.href = url;
+            a.download = currentName;
             a.click();
+            URL.revokeObjectURL(url);
         }
     };
 
