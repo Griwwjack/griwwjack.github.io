@@ -1,10 +1,10 @@
 # =============================================================================
 # PROJETO: ABnetSim - Simulador de Onda de Sorter
-# VERSÃO: 0.1
-# AUTOR: Jurimar M. C. Joazeiro
+# VERSÃO: 0.2
+# AUTOR: Jurimar Mendes
 # DATA: Abril / 2026
 # DESCRIÇÃO: Simulador de fluxo de logística para integração com sistema ABnet.
-#            Gera arquivos HTML temporários para espelhamento de dados.
+#            Cria e atualiza o arquivo 'dados_abnet.txt' automaticamente.
 # TECNOLOGIAS: Python 3, CustomTkinter (UI), Threading, Random.
 # =============================================================================
 
@@ -16,16 +16,20 @@ from datetime import datetime
 import tkinter as tk
 import customtkinter as ctk 
 
-# --- CONFIGURAÇÃO DE TEMA ---
+# Configurações de Tema
 ctk.set_appearance_mode("Dark")
 ctk.set_default_color_theme("blue")
 
 class SimuladorABnet:
     def __init__(self, root):
         self.root = root
-        self.root.title("ABnetSim v0.1")
+        self.root.title("ABnetSim v0.2")
         self.root.geometry("380x745") 
-        self.root.resizable(False, False)  # Bloqueio de redimencionamento e maximização de janela.
+        self.root.resizable(False, False)
+        
+        # GARANTIR EXISTÊNCIA DO ARQUIVO NA INICIALIZAÇÃO
+        self.verificar_arquivo_dados()
+        
         self.dados_pedidos = []
         self.simulando = False
         self.faltas_aplicadas = False
@@ -40,7 +44,7 @@ class SimuladorABnet:
         self.main_container = ctk.CTkFrame(master=self.root, fg_color="transparent")
         self.main_container.pack(expand=True, fill="both", padx=30, pady=(20, 10))
 
-        # --- CABEÇALHO ---
+        # --- CABEÇALHO DA UI ---
         self.header_label = ctk.CTkLabel(master=self.main_container, text="Sorter - Simulador de Onda", 
                                          font=("Segoe UI", 24, "bold"), text_color="#ffffff")
         self.header_label.pack(anchor="w", pady=(0, 15))
@@ -100,6 +104,14 @@ class SimuladorABnet:
                                          font=("Segoe UI", 9, "bold"), text_color="#d4d4d4")
         self.status_label.pack(side="left", padx=20)
 
+    def verificar_arquivo_dados(self):
+        if not os.path.exists("dados_abnet.txt"):
+            try:
+                with open("dados_abnet.txt", "w", encoding="utf-8") as f:
+                    f.write("")
+            except Exception as e:
+                print(f"Erro ao criar arquivo inicial: {e}")
+
     def validar_inteiros(self, p_value):
         return p_value == "" or p_value.isdigit()
 
@@ -121,7 +133,6 @@ class SimuladorABnet:
                 self.status_label.configure(text="> CHUTES ATIVOS e TOTAL DE CAIXAS devem ser maiores que 0")
                 return
 
-            tempo_total = float(self.val_minutos.get() or 0)
             self.dados_pedidos = []
             self.faltas_aplicadas = False
             
@@ -139,7 +150,7 @@ class SimuladorABnet:
             self.progress.set(0)
             self.progress.configure(progress_color=self.bg_progress)
             self.btn_iniciar.configure(state="normal")
-            self.status_label.configure(text=f"> Onda Associada: {qtd} Chutes Ativos  -  {total_global} Caixas Reservadas", text_color="#d4d4d4")
+            self.status_label.configure(text=f"> Onda Associada: {qtd} Chutes Ativos  -  {total_global} Caixas", text_color="#d4d4d4")
         except: pass
 
     def atualizar_arquivo(self):
