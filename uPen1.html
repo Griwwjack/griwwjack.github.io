@@ -156,12 +156,11 @@
 <div id="modalHelp">
     <div class="modal-content">
         <h2>µPen Editor</h2>
-        <h5>Versão 0.3</h5>
+        <h5>Versão 0.4</h5>
         <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 15px 0;">
         <ul>
-            <li><strong>Auto-Format:</strong> XMLs ficam legíveis ao abrir.</li>
-            <li><strong>Smart-Save:</strong> XMLs são compactados ao salvar.</li>
-            <li><strong>Portátil:</strong> Funciona 100% no navegador.</li>
+            <li><strong>Auto-Format:</strong> XMLs legíveis.</li>
+            <li><strong>Smart-Save:</strong> Compactação rigorosa para navegadores.</li>
         </ul>
         <button class="close-modal" onclick="closeHelp()">Fechar</button>
     </div>
@@ -209,12 +208,14 @@
     const STORAGE_KEY_CONTENT = 'upen_draft_content';
     const STORAGE_KEY_NAME = 'upen_draft_name';
 
-    /* Lógica de XML */
+    /* Lógica de XML Corrigida */
     function formatXML(xml) {
         let formatted = '';
         let indent = '';
         const tab = '    ';
-        xml = xml.replace(/>\s+</g, '><'); 
+        // Remove espaços entre tags e limpa o início/fim
+        xml = xml.trim().replace(/>\s+</g, '><'); 
+        
         xml.split(/>\s*</).forEach(node => {
             if (node.match(/^\/\w/)) indent = indent.substring(tab.length);
             formatted += indent + '<' + node + '>\r\n';
@@ -224,11 +225,10 @@
     }
 
     function minifyXML(xml) {
-        // Remove quebras de linha e espaços entre tags para o formato original
-        return xml.replace(/>\s+</g, '><').trim();
+        // A limpeza rigorosa garante que o arquivo comece com '<'
+        return xml.trim().replace(/>\s+</g, '><');
     }
 
-    /* Persistência e Temas */
     function applyTheme(theme) { document.documentElement.classList.toggle('light-theme', theme === 'light'); }
 
     window.onload = () => {
@@ -251,7 +251,6 @@
         updateCursorInfo();
     };
 
-    /* Ações */
     themeSelector.onchange = () => { localStorage.setItem('upen_theme', themeSelector.value); applyTheme(themeSelector.value); };
     fontSizeSelector.onchange = () => { editor.style.fontSize = fontSizeSelector.value; localStorage.setItem('upen_font', fontSizeSelector.value); };
     wrapCheck.onchange = () => { editor.wrap = wrapCheck.checked ? 'on' : 'off'; localStorage.setItem('upen_wrap', wrapCheck.checked); };
@@ -282,9 +281,12 @@
         let contentToSave = editor.value;
         const isXML = fileNameDisplay.textContent.toLowerCase().endsWith('.xml');
         
-        if (isXML) contentToSave = minifyXML(contentToSave);
+        if (isXML) {
+            contentToSave = minifyXML(contentToSave);
+        }
 
-        const blob = new Blob([contentToSave], {type: isXML ? 'text/xml' : 'text/plain'});
+        // Criamos o Blob garantindo UTF-8 puro sem BOM
+        const blob = new Blob([contentToSave], {type: isXML ? 'application/xml' : 'text/plain'});
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
