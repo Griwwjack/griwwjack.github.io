@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>µPen Editor + XML Pro</title>
+
+    <style>
+        :root {
+            --bg-color: #1e1e1e;
+            --toolbar-color: #2d2d2d;
+            --text-color: #d4d4d4;
+            --accent-color: #333333;
+            --accent-hover: #454545;
+            --border-color: #3c3c3c;
+            --icon-fill: #cccccc;
+            --danger-hover: #8e2e2e;
+            --info-color: #777;
+        }
+
+        .light-theme {
+            --bg-color: #ffffff;
+            --toolbar-color: #f0f0f0;
+            --text-color: #000000;
+            --accent-color: #dddddd;
+            --accent-hover: #cccccc;
+            --border-color: #bbbbbb;
+            --icon-fill: #333333;
+            --info-color: #555;
+        }
+
+        body, html {
+            margin: 0; padding: 0; height: 100%;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            overflow: hidden;
+            transition: background-color 0.3s;
+        }
+
+        .container { display: flex; flex-direction: column; height: 100vh; }
+
+        header {
+            background-color: var(--toolbar-color);
+            padding: 8px 15px;
+            display: flex; gap: 8px;
+            border-bottom: 1px solid var(--border-color);
+            align-items: center;
+        }
+
+        .btn-icon {
+            background-color: var(--accent-color);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            width: 36px; height: 36px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.2s;
+        }
+
+        .btn-icon:hover { background-color: var(--accent-hover); border-color: #555; }
+        .btn-icon svg { width: 20px; height: 20px; fill: var(--icon-fill); }
+        .btn-danger:hover { background-color: var(--danger-hover); border-color: #a00; }
+
+        .info-panel { margin-left: auto; text-align: right; }
+        .filename-display { font-size: 11px; font-family: 'Consolas', monospace; display: block; color: var(--text-color); }
+        .cursor-pos { font-size: 10px; color: var(--info-color); font-family: 'Consolas', monospace; display: block; }
+
+        textarea {
+            flex-grow: 1; width: 100%;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            border: none; padding: 15px;
+            box-sizing: border-box; resize: none;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 16px;
+            line-height: 1.6;
+            outline: none; overflow: auto;
+            scrollbar-gutter: stable;
+        }
+
+        /* Modais */
+        #modalHelp, #modalSettings {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 100;
+            align-items: center; justify-content: center;
+        }
+
+        .modal-content {
+            background: var(--toolbar-color);
+            color: var(--text-color);
+            padding: 25px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+
+        .modal-content h2 { margin-top: 0; color: #007acc; font-size: 1.5rem; }
+        .setting-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-size: 14px; font-weight: bold; }
+
+        .close-modal {
+            margin-top: 20px;
+            width: 100%;
+            background: #007acc;
+            color: white;
+            border: none;
+            padding: 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        select {
+            width: 100%;
+            padding: 10px;
+            background: var(--bg-color);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+        }
+
+        textarea::-webkit-scrollbar { width: 10px; height: 10px; }
+        textarea::-webkit-scrollbar-track { background: var(--bg-color); }
+        textarea::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 5px; }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <header>
+        <div id="btnNew" class="btn-icon btn-danger" title="Limpar tudo">
+            <svg viewBox="0 0 24 24"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19V4M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg>
+        </div>
+
+        <div id="btnOpen" class="btn-icon" title="Abrir">
+            <svg viewBox="0 0 24 24"><path d="M20,18H4V8H20M20,6H12L10,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V8C22,6.89 21.1,6 20,6Z"/></svg>
+        </div>
+
+        <div id="btnSave" class="btn-icon" title="Salvar">
+            <svg viewBox="0 0 24 24"><path d="M15,9H5V5H15M12,19A3,3 0 0,1 9,16A3,3 0 0,1 12,13A3,3 0 0,1 15,16A3,3 0 0,1 12,19M17,3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V7L17,3Z"/></svg>
+        </div>
+
+        <div id="btnSettings" class="btn-icon" title="Configurações">
+            <svg viewBox="0 0 24 24"><path d="M19.14,12.94A7.49,7.49 0 0,0 19.19,12A7.49,7.49 0 0,0 19.14,11.06L21.19,9.47C21.33,9.36 21.37,9.16 21.28,9L19.28,5.5C19.19,5.34 19,5.28 18.84,5.34L16.39,6.3C15.97,5.97 15.5,5.7 15,5.5L14.65,3C14.62,2.82 14.47,2.7 14.29,2.7H9.71C9.53,2.7 9.38,2.82 9.35,3L9,5.5C8.5,5.7 8.03,5.97 7.61,6.3L5.16,5.34C5,5.28 4.81,5.34 4.72,5.5L2.72,9C2.63,9.16 2.67,9.36 2.81,9.47L4.86,11.06C4.81,11.38 4.78,11.69 4.78,12C4.78,12.31 4.81,12.62 4.86,12.94L2.81,14.53C2.67,14.64 2.63,14.84 2.72,15L4.72,18.5C4.81,18.66 5,18.72 5.16,18.66L7.61,17.7C8.03,18.03 8.5,18.3 9,18.5L9.35,21C9.38,21.18 9.53,21.3 9.71,21.3H14.29C14.47,21.3 14.62,21.18 14.65,21L15,18.5C15.5,18.3 15.97,18.03 16.39,17.7L18.84,18.66C19,18.72 19.19,18.66 19.28,18.5L21.28,15C21.37,14.84 21.33,14.64 21.19,14.53L19.14,12.94M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5Z"/></svg>
+        </div>
+
+        <div id="btnHelp" class="btn-icon" title="Ajuda">
+            <svg viewBox="0 0 24 24"><path d="M11,18H13V16H11V18M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20M12,6A4,4 0 0,0 8,10H10A2,2 0 0,1 12,8A2,2 0 0,1 14,10C14,12 11,11.75 11,15H13C13,12.75 16,12.5 16,10A4,4 0 0,0 12,6Z"/></svg>
+        </div>
+
+        <div class="info-panel">
+            <span id="fileName" class="filename-display">sem-titulo.txt</span>
+            <span id="cursorPos" class="cursor-pos">Lin 1, Col 1</span>
+        </div>
+    </header>
+
+    <textarea id="editor" wrap="off" spellcheck="false" placeholder="Comece a digitar ou arraste um XML..."></textarea>
+    <input type="file" id="fileInput" accept=".txt,.xml" style="display:none;">
+</div>
+
+<div id="modalHelp">
+    <div class="modal-content">
+        <h2>µPen Editor</h2>
+        <h5>Versão 0.2 (XML Ready)</h5>
+        <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 15px 0;">
+        <ul>
+            <li>Suporte a <strong>XML/NF-e</strong> com auto-formatação.</li>
+            <li><strong>Auto-save:</strong> Salvo localmente no navegador.</li>
+            <li><strong>Atalhos:</strong> <code>Ctrl + S</code> para baixar o arquivo.</li>
+        </ul>
+        <button class="close-modal" onclick="closeHelp()">Fechar</button>
+    </div>
+</div>
+
+<div id="modalSettings">
+    <div class="modal-content">
+        <h2>Configurações</h2>
+        <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 15px 0;">
+        
+        <div class="setting-group">
+            <label for="themeSelector">Tema da Interface:</label>
+            <select id="themeSelector">
+                <option value="dark">Modo Escuro (Dark)</option>
+                <option value="light">Modo Claro (Light)</option>
+            </select>
+        </div>
+
+        <div class="setting-group">
+            <label for="fontSizeSelector">Tamanho da Fonte:</label>
+            <select id="fontSizeSelector">
+                <option value="12px">Pequena (12px)</option>
+                <option value="14px">Média (14px)</option>
+                <option value="16px" selected>Padrão (16px)</option>
+                <option value="18px">Grande (18px)</option>
+                <option value="20px">Extra (20px)</option>
+            </select>
+        </div>
+
+        <div class="setting-group">
+            <label style="display: flex; align-items: center; gap: 8px;">
+                <input type="checkbox" id="wrapCheck"> Quebra de linha automática
+            </label>
+        </div>
+
+        <button class="close-modal" onclick="closeSettings()">Salvar e Fechar</button>
+    </div>
+</div>
+
+<script>
+    const editor = document.getElementById('editor');
+    const fileNameDisplay = document.getElementById('fileName');
+    const cursorPosDisplay = document.getElementById('cursorPos');
+    const fileInput = document.getElementById('fileInput');
+    const modalHelp = document.getElementById('modalHelp');
+    const modalSettings = document.getElementById('modalSettings');
+    const themeSelector = document.getElementById('themeSelector');
+    const fontSizeSelector = document.getElementById('fontSizeSelector');
+    const wrapCheck = document.getElementById('wrapCheck');
+
+    const STORAGE_KEY_CONTENT = 'upen_draft_content';
+    const STORAGE_KEY_NAME = 'upen_draft_name';
+    const STORAGE_THEME = 'upen_theme';
+    const STORAGE_FONT = 'upen_font_size';
+    const STORAGE_WRAP = 'upen_wrap';
+
+    function applyTheme(theme) {
+        document.documentElement.classList.toggle('light-theme', theme === 'light');
+    }
+
+    /* FORMATADOR DE XML */
+    function formatXML(xml) {
+        let formatted = '';
+        let indent = '';
+        const tab = '    ';
+        // Limpa espaços extras entre tags antes de processar
+        xml = xml.replace(/>\s+</g, '><'); 
+        
+        xml.split(/>\s*</).forEach(node => {
+            if (node.match(/^\/\w/)) {
+                indent = indent.substring(tab.length);
+            }
+            formatted += indent + '<' + node + '>\r\n';
+            if (node.match(/^<?\w[^>]*[^\/]$/) && !node.startsWith("?")) {
+                indent += tab;
+            }
+        });
+        return formatted.trim();
+    }
+
+    window.onload = () => {
+        // Recuperar Configurações
+        const savedTheme = localStorage.getItem(STORAGE_THEME) || 'dark';
+        const savedFont = localStorage.getItem(STORAGE_FONT) || '16px';
+        const savedWrap = localStorage.getItem(STORAGE_WRAP) === 'true';
+
+        themeSelector.value = savedTheme;
+        applyTheme(savedTheme);
+        
+        fontSizeSelector.value = savedFont;
+        editor.style.fontSize = savedFont;
+        
+        wrapCheck.checked = savedWrap;
+        editor.wrap = savedWrap ? 'on' : 'off';
+
+        // Recuperar Conteúdo
+        const c = localStorage.getItem(STORAGE_KEY_CONTENT);
+        const n = localStorage.getItem(STORAGE_KEY_NAME);
+        if (c) editor.value = c;
+        if (n) fileNameDisplay.textContent = n;
+
+        updateCursorInfo();
+    };
+
+    /* Listeners de Configurações */
+    themeSelector.onchange = () => {
+        localStorage.setItem(STORAGE_THEME, themeSelector.value);
+        applyTheme(themeSelector.value);
+    };
+
+    fontSizeSelector.onchange = () => {
+        editor.style.fontSize = fontSizeSelector.value;
+        localStorage.setItem(STORAGE_FONT, fontSizeSelector.value);
+    };
+
+    wrapCheck.onchange = () => {
+        editor.wrap = wrapCheck.checked ? 'on' : 'off';
+        localStorage.setItem(STORAGE_WRAP, wrapCheck.checked);
+    };
+
+    /* Modais */
+    document.getElementById('btnSettings').onclick = () => modalSettings.style.display = 'flex';
+    function closeSettings(){ modalSettings.style.display = 'none'; }
+    document.getElementById('btnHelp').onclick = () => modalHelp.style.display = 'flex';
+    function closeHelp(){ modalHelp.style.display = 'none'; }
+
+    /* Arquivos */
+    document.getElementById('btnNew').onclick = () => {
+        if(confirm("Deseja limpar tudo?")){
+            updateEditor("", "sem-titulo.txt");
+        }
+    };
+
+    document.getElementById('btnOpen').onclick = () => fileInput.click();
+    fileInput.onchange = (e) => {
+        const file = e.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            let content = ev.target.result;
+            if(file.name.toLowerCase().endsWith('.xml')) {
+                content = formatXML(content);
+            }
+            updateEditor(content, file.name);
+        };
+        reader.readAsText(file);
+    };
+
+    document.getElementById('btnSave').onclick = () => {
+        const blob = new Blob([editor.value], {type:'text/plain'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileNameDisplay.textContent;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+
+    function updateCursorInfo(){
+        const pos = editor.selectionStart;
+        const textBefore = editor.value.substr(0, pos);
+        const lines = textBefore.split("\n");
+        cursorPosDisplay.textContent = `Lin ${lines.length}, Col ${lines[lines.length-1].length + 1}`;
+    }
+
+    editor.oninput = () => {
+        localStorage.setItem(STORAGE_KEY_CONTENT, editor.value);
+        localStorage.setItem(STORAGE_KEY_NAME, fileNameDisplay.textContent);
+        updateCursorInfo();
+    };
+
+    ['keyup','click', 'focus'].forEach(ev => editor.addEventListener(ev, updateCursorInfo));
+
+    function updateEditor(content, name){
+        editor.value = content;
+        fileNameDisplay.textContent = name;
+        localStorage.setItem(STORAGE_KEY_CONTENT, content);
+        localStorage.setItem(STORAGE_KEY_NAME, name);
+        updateCursorInfo();
+    }
+
+    window.onkeydown = (e) => {
+        if(e.ctrlKey && e.key === 's'){
+            e.preventDefault();
+            document.getElementById('btnSave').click();
+        }
+    };
+</script>
+
+</body>
+</html>
