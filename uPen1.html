@@ -16,6 +16,7 @@
             --icon-fill: #cccccc;
             --danger-hover: #8e2e2e;
             --info-color: #777;
+            --interactive-accent: #007acc; /* Cor base dos botões e destaque */
         }
 
         .light-theme {
@@ -27,6 +28,7 @@
             --border-color: #bbbbbb;
             --icon-fill: #333333;
             --info-color: #555;
+            --interactive-accent: #007acc; /* Mantém azul no claro para coerência */
         }
 
         body, html {
@@ -99,14 +101,27 @@
             box-shadow: 0 10px 25px rgba(0,0,0,0.5);
         }
 
-        .modal-content h2 { margin-top: 0; color: #007acc; font-size: 1.5rem; }
+        .modal-content h2 { margin-top: 0; color: var(--interactive-accent); font-size: 1.5rem; }
         .setting-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-size: 14px; font-weight: bold; }
 
-        .close-modal {
-            margin-top: 20px; width: 100%; background: #007acc; color: white;
-            border: none; padding: 12px; cursor: pointer; border-radius: 4px; font-weight: bold;
+        /* Estilização coesa do Checkbox */
+        input[type="checkbox"] {
+            accent-color: var(--interactive-accent); /* Cor de destaque quando marcado */
+            cursor: pointer;
+            vertical-align: middle;
+            margin-right: 5px;
         }
+
+        .close-modal {
+            margin-top: 20px; width: 100%; 
+            background: var(--interactive-accent); 
+            color: white;
+            border: none; padding: 12px; cursor: pointer; border-radius: 4px; font-weight: bold;
+            transition: background-color 0.2s;
+        }
+        
+        .close-modal:hover { background-color: #005a9e; }
 
         select {
             width: 100%; padding: 10px; background: var(--bg-color); color: var(--text-color);
@@ -145,7 +160,7 @@
         </div>
     </header>
 
-    <textarea id="editor" wrap="off" spellcheck="false" placeholder="Comece a digitar..."></textarea>
+    <textarea id="editor" wrap="off" spellcheck="false" placeholder="Comece a digitar 2..."></textarea>
     <input type="file" id="fileInput" accept=".txt,.xml" style="display:none;">
 </div>
 
