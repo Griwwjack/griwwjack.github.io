@@ -149,19 +149,19 @@
         </div>
     </header>
 
-    <textarea id="editor" wrap="off" spellcheck="false" placeholder="Comece a digitar..."></textarea>
+    <textarea id="editor" wrap="off" spellcheck="false" placeholder="Comece a digitar 2..."></textarea>
     <input type="file" id="fileInput" accept=".txt,.xml" style="display:none;">
 </div>
 
 <div id="modalHelp">
     <div class="modal-content">
         <h2>µPen Editor</h2>
-        <h5>Versão 0.3</h5>
+        <h5>Versão 0.6</h5>
         <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 15px 0;">
         <ul>
+            <li><strong>Fix:</strong> Removido caracteres duplicados no topo/fim.</li>
             <li><strong>Auto-Format:</strong> XMLs ficam legíveis ao abrir.</li>
             <li><strong>Smart-Save:</strong> XMLs são compactados ao salvar.</li>
-            <li><strong>Portátil:</strong> Funciona 100% no navegador.</li>
         </ul>
         <button class="close-modal" onclick="closeHelp()">Fechar</button>
     </div>
@@ -209,26 +209,41 @@
     const STORAGE_KEY_CONTENT = 'upen_draft_content';
     const STORAGE_KEY_NAME = 'upen_draft_name';
 
-    /* Lógica de XML */
+    /* Lógica de XML Corrigida para evitar < no início e > no final duplicados */
     function formatXML(xml) {
         let formatted = '';
         let indent = '';
         const tab = '    ';
-        xml = xml.replace(/>\s+</g, '><'); 
-        xml.split(/>\s*</).forEach(node => {
+        
+        // Limpeza inicial
+        xml = xml.trim().replace(/>\s+</g, '><'); 
+        
+        // Divide as tags
+        const nodes = xml.split(/>\s*</);
+
+        nodes.forEach((node, index) => {
+            // Se for a tag de fechamento, reduz o recuo
             if (node.match(/^\/\w/)) indent = indent.substring(tab.length);
-            formatted += indent + '<' + node + '>\r\n';
-            if (node.match(/^<?\w[^>]*[^\/]$/) && !node.startsWith("?")) indent += tab;
+            
+            // Reconstrói a tag cuidando para não duplicar < e >
+            let line = node;
+            if (!line.startsWith('<')) line = '<' + line;
+            if (!line.endsWith('>')) line = line + '>';
+            
+            formatted += indent + line + '\r\n';
+            
+            // Se for tag de abertura (e não auto-fechamento), aumenta recuo
+            if (node.match(/^<?\w[^>]*[^\/]$/) && !node.startsWith("?") && !node.startsWith("/")) {
+                indent += tab;
+            }
         });
         return formatted.trim();
     }
 
     function minifyXML(xml) {
-        // Remove quebras de linha e espaços entre tags para o formato original
         return xml.replace(/>\s+</g, '><').trim();
     }
 
-    /* Persistência e Temas */
     function applyTheme(theme) { document.documentElement.classList.toggle('light-theme', theme === 'light'); }
 
     window.onload = () => {
@@ -251,7 +266,6 @@
         updateCursorInfo();
     };
 
-    /* Ações */
     themeSelector.onchange = () => { localStorage.setItem('upen_theme', themeSelector.value); applyTheme(themeSelector.value); };
     fontSizeSelector.onchange = () => { editor.style.fontSize = fontSizeSelector.value; localStorage.setItem('upen_font', fontSizeSelector.value); };
     wrapCheck.onchange = () => { editor.wrap = wrapCheck.checked ? 'on' : 'off'; localStorage.setItem('upen_wrap', wrapCheck.checked); };
