@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>µPen Editor | Smart Save 0.7</title>
+    <title>µPen Editor | XML Manual Control</title>
 
     <style>
         :root {
@@ -145,18 +145,18 @@
         </div>
     </header>
 
-    <textarea id="editor" wrap="off" spellcheck="false" placeholder="Comece a digitar 4..."></textarea>
+    <textarea id="editor" wrap="off" spellcheck="false" placeholder="Comece a digitar..."></textarea>
     <input type="file" id="fileInput" accept=".txt,.xml" style="display:none;">
 </div>
 
 <div id="modalHelp">
     <div class="modal-content">
         <h2>µPen Editor</h2>
-        <h5>Versão 0.7</h5>
+        <h5>Versão 0.8</h5>
         <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 15px 0;">
         <ul>
-            <li><strong>Auto-Detect:</strong> Salva minificado apenas se o original era minificado.</li>
-            <li><strong>Safe XML:</strong> Formatação sem erros de caracteres duplicados.</li>
+            <li><strong>Manual Control:</strong> Opção de minificar agora está em configurações.</li>
+            <li><strong>XML Clean:</strong> Estrutura de tags 100% corrigida.</li>
         </ul>
         <button class="close-modal" onclick="document.getElementById('modalHelp').style.display='none'">Fechar</button>
     </div>
@@ -165,11 +165,21 @@
 <div id="modalSettings">
     <div class="modal-content">
         <h2>Configurações</h2>
+        <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 15px 0;">
+        
+        <div class="setting-group">
+            <label><input type="checkbox" id="minifyCheck"> Minificar XML ao salvar (NFe)</label>
+        </div>
+
         <div class="setting-group">
             <label for="themeSelector">Tema:</label>
-            <select id="themeSelector"><option value="dark">Escuro</option><option value="light">Claro</option></select>
+            <select id="themeSelector">
+                <option value="dark">Escuro</option>
+                <option value="light">Claro</option>
+            </select>
         </div>
-        <button class="close-modal" onclick="document.getElementById('modalSettings').style.display='none'">Fechar</button>
+
+        <button class="close-modal" id="btnSaveSettings">Salvar e Fechar</button>
     </div>
 </div>
 
@@ -178,11 +188,12 @@
     const fileNameDisplay = document.getElementById('fileName');
     const cursorPosDisplay = document.getElementById('cursorPos');
     const fileInput = document.getElementById('fileInput');
+    const minifyCheck = document.getElementById('minifyCheck');
+    const themeSelector = document.getElementById('themeSelector');
+    
     const STORAGE_KEY_CONTENT = 'upen_draft_content';
     const STORAGE_KEY_NAME = 'upen_draft_name';
-
-    // ESTADO: Detecta se deve minificar ao salvar
-    let shouldMinifyOnSave = false;
+    const STORAGE_KEY_MINIFY = 'upen_minify_xml';
 
     function formatXML(xml) {
         let formatted = '';
@@ -205,7 +216,7 @@
         return xml.replace(/>\s+</g, '><').trim();
     }
 
-    // BOTÃO ABRIR (Corrigido)
+    // Ações dos Botões
     document.getElementById('btnOpen').onclick = () => fileInput.click();
 
     fileInput.onchange = (e) => {
@@ -214,23 +225,20 @@
         const reader = new FileReader();
         reader.onload = (ev) => {
             let content = ev.target.result;
-            if(file.name.toLowerCase().endsWith('.xml')) {
-                const lineCount = (content.match(/\n/g) || []).length + 1;
-                shouldMinifyOnSave = (lineCount < 5); // Detecta se era minificado
-                content = formatXML(content);
-            } else {
-                shouldMinifyOnSave = false;
-            }
+            if(file.name.toLowerCase().endsWith('.xml')) content = formatXML(content);
             updateEditor(content, file.name);
         };
         reader.readAsText(file);
     };
 
-    // BOTÃO SALVAR (Com detecção inteligente)
     document.getElementById('btnSave').onclick = () => {
         let contentToSave = editor.value;
         const isXML = fileNameDisplay.textContent.toLowerCase().endsWith('.xml');
-        if (isXML && shouldMinifyOnSave) contentToSave = minifyXML(contentToSave);
+        
+        // Aplica minificação baseada no CHECKBOX das configurações
+        if (isXML && minifyCheck.checked) {
+            contentToSave = minifyXML(contentToSave);
+        }
 
         const blob = new Blob([contentToSave], {type: isXML ? 'text/xml' : 'text/plain'});
         const url = URL.createObjectURL(blob);
@@ -241,14 +249,20 @@
         URL.revokeObjectURL(url);
     };
 
-    // OUTROS BOTÕES
     document.getElementById('btnNew').onclick = () => {
         if(confirm("Limpar tudo?")) updateEditor("", "sem-titulo.txt");
     };
+
     document.getElementById('btnSettings').onclick = () => document.getElementById('modalSettings').style.display = 'flex';
+    document.getElementById('btnSaveSettings').onclick = () => {
+        localStorage.setItem(STORAGE_KEY_MINIFY, minifyCheck.checked);
+        localStorage.setItem('upen_theme', themeSelector.value);
+        applyTheme(themeSelector.value);
+        document.getElementById('modalSettings').style.display = 'none';
+    };
     document.getElementById('btnHelp').onclick = () => document.getElementById('modalHelp').style.display = 'flex';
 
-    // AUXILIARES E PERSISTÊNCIA
+    // Funções de Interface e Persistência
     function updateEditor(content, name){
         editor.value = content;
         fileNameDisplay.textContent = name;
@@ -263,7 +277,16 @@
         cursorPosDisplay.textContent = `Lin ${lines.length}, Col ${lines[lines.length-1].length + 1}`;
     }
 
+    function applyTheme(theme) { document.documentElement.classList.toggle('light-theme', theme === 'light'); }
+
     window.onload = () => {
+        const theme = localStorage.getItem('upen_theme') || 'dark';
+        applyTheme(theme);
+        themeSelector.value = theme;
+
+        const isMinify = localStorage.getItem(STORAGE_KEY_MINIFY) === 'true';
+        minifyCheck.checked = isMinify;
+
         const c = localStorage.getItem(STORAGE_KEY_CONTENT);
         const n = localStorage.getItem(STORAGE_KEY_NAME);
         if (c) editor.value = c;
