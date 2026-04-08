@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>µPen Editor | XML Fixed</title>
+    <title>µPen Editor + XML Smart Save</title>
 
     <style>
         :root {
@@ -149,18 +149,19 @@
         </div>
     </header>
 
-    <textarea id="editor" wrap="off" spellcheck="false" placeholder="Comece a digitar 2..."></textarea>
+    <textarea id="editor" wrap="off" spellcheck="false" placeholder="Comece a digitar..."></textarea>
     <input type="file" id="fileInput" accept=".txt,.xml" style="display:none;">
 </div>
 
 <div id="modalHelp">
     <div class="modal-content">
         <h2>µPen Editor</h2>
-        <h5>Versão 0.5 (Fixed XML)</h5>
+        <h5>Versão 0.3</h5>
         <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 15px 0;">
         <ul>
-            <li><strong>Auto-Format:</strong> XMLs legíveis sem erros de sintaxe.</li>
-            <li><strong>Smart-Save:</strong> Compactação fiel ao original.</li>
+            <li><strong>Auto-Format:</strong> XMLs ficam legíveis ao abrir.</li>
+            <li><strong>Smart-Save:</strong> XMLs são compactados ao salvar.</li>
+            <li><strong>Portátil:</strong> Funciona 100% no navegador.</li>
         </ul>
         <button class="close-modal" onclick="closeHelp()">Fechar</button>
     </div>
@@ -208,38 +209,26 @@
     const STORAGE_KEY_CONTENT = 'upen_draft_content';
     const STORAGE_KEY_NAME = 'upen_draft_name';
 
-    /* LÓGICA DE XML CORRIGIDA (SEM DUPLICAR <> ) */
+    /* Lógica de XML */
     function formatXML(xml) {
         let formatted = '';
         let indent = '';
         const tab = '    ';
-        
-        // Remove espaços entre tags e garante que o XML comece no primeiro caractere válido
-        xml = xml.trim().replace(/>\s+</g, '><'); 
-        
-        // Usamos uma regex para separar mantendo os delimitadores
-        const tokens = xml.split(/(?=<)|(?<=>)/);
-
-        tokens.forEach(node => {
-            if (node.match(/^<\/\w/)) { // Tag de fechamento </tag>
-                indent = indent.substring(tab.length);
-                formatted += indent + node + '\r\n';
-            } else if (node.match(/^<\w[^>]*[^\/]>$/) && !node.startsWith("<?")) { // Tag de abertura <tag>
-                formatted += indent + node + '\r\n';
-                indent += tab;
-            } else if (node.trim() !== "") { // Conteúdo ou tags de auto-fechamento <tag/>
-                formatted += indent + node + '\r\n';
-            }
+        xml = xml.replace(/>\s+</g, '><'); 
+        xml.split(/>\s*</).forEach(node => {
+            if (node.match(/^\/\w/)) indent = indent.substring(tab.length);
+            formatted += indent + '<' + node + '>\r\n';
+            if (node.match(/^<?\w[^>]*[^\/]$/) && !node.startsWith("?")) indent += tab;
         });
-        
         return formatted.trim();
     }
 
     function minifyXML(xml) {
-        // Remove as quebras de linha e os recuos extras antes de salvar
+        // Remove quebras de linha e espaços entre tags para o formato original
         return xml.replace(/>\s+</g, '><').trim();
     }
 
+    /* Persistência e Temas */
     function applyTheme(theme) { document.documentElement.classList.toggle('light-theme', theme === 'light'); }
 
     window.onload = () => {
@@ -262,6 +251,7 @@
         updateCursorInfo();
     };
 
+    /* Ações */
     themeSelector.onchange = () => { localStorage.setItem('upen_theme', themeSelector.value); applyTheme(themeSelector.value); };
     fontSizeSelector.onchange = () => { editor.style.fontSize = fontSizeSelector.value; localStorage.setItem('upen_font', fontSizeSelector.value); };
     wrapCheck.onchange = () => { editor.wrap = wrapCheck.checked ? 'on' : 'off'; localStorage.setItem('upen_wrap', wrapCheck.checked); };
@@ -294,7 +284,7 @@
         
         if (isXML) contentToSave = minifyXML(contentToSave);
 
-        const blob = new Blob([contentToSave], {type: isXML ? 'application/xml' : 'text/plain'});
+        const blob = new Blob([contentToSave], {type: isXML ? 'text/xml' : 'text/plain'});
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
