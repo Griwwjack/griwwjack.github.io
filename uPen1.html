@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>µPen Editor + XML Smart Save</title>
+    <title>µPen Editor | XML Fixed</title>
 
     <style>
         :root {
@@ -149,18 +149,18 @@
         </div>
     </header>
 
-    <textarea id="editor" wrap="off" spellcheck="false" placeholder="Comece a digitar..."></textarea>
+    <textarea id="editor" wrap="off" spellcheck="false" placeholder="Comece a digitar 2..."></textarea>
     <input type="file" id="fileInput" accept=".txt,.xml" style="display:none;">
 </div>
 
 <div id="modalHelp">
     <div class="modal-content">
         <h2>µPen Editor</h2>
-        <h5>Versão 0.4</h5>
+        <h5>Versão 0.5 (Fixed XML)</h5>
         <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 15px 0;">
         <ul>
-            <li><strong>Auto-Format:</strong> XMLs legíveis.</li>
-            <li><strong>Smart-Save:</strong> Compactação rigorosa para navegadores.</li>
+            <li><strong>Auto-Format:</strong> XMLs legíveis sem erros de sintaxe.</li>
+            <li><strong>Smart-Save:</strong> Compactação fiel ao original.</li>
         </ul>
         <button class="close-modal" onclick="closeHelp()">Fechar</button>
     </div>
@@ -208,25 +208,36 @@
     const STORAGE_KEY_CONTENT = 'upen_draft_content';
     const STORAGE_KEY_NAME = 'upen_draft_name';
 
-    /* Lógica de XML Corrigida */
+    /* LÓGICA DE XML CORRIGIDA (SEM DUPLICAR <> ) */
     function formatXML(xml) {
         let formatted = '';
         let indent = '';
         const tab = '    ';
-        // Remove espaços entre tags e limpa o início/fim
+        
+        // Remove espaços entre tags e garante que o XML comece no primeiro caractere válido
         xml = xml.trim().replace(/>\s+</g, '><'); 
         
-        xml.split(/>\s*</).forEach(node => {
-            if (node.match(/^\/\w/)) indent = indent.substring(tab.length);
-            formatted += indent + '<' + node + '>\r\n';
-            if (node.match(/^<?\w[^>]*[^\/]$/) && !node.startsWith("?")) indent += tab;
+        // Usamos uma regex para separar mantendo os delimitadores
+        const tokens = xml.split(/(?=<)|(?<=>)/);
+
+        tokens.forEach(node => {
+            if (node.match(/^<\/\w/)) { // Tag de fechamento </tag>
+                indent = indent.substring(tab.length);
+                formatted += indent + node + '\r\n';
+            } else if (node.match(/^<\w[^>]*[^\/]>$/) && !node.startsWith("<?")) { // Tag de abertura <tag>
+                formatted += indent + node + '\r\n';
+                indent += tab;
+            } else if (node.trim() !== "") { // Conteúdo ou tags de auto-fechamento <tag/>
+                formatted += indent + node + '\r\n';
+            }
         });
+        
         return formatted.trim();
     }
 
     function minifyXML(xml) {
-        // A limpeza rigorosa garante que o arquivo comece com '<'
-        return xml.trim().replace(/>\s+</g, '><');
+        // Remove as quebras de linha e os recuos extras antes de salvar
+        return xml.replace(/>\s+</g, '><').trim();
     }
 
     function applyTheme(theme) { document.documentElement.classList.toggle('light-theme', theme === 'light'); }
@@ -281,11 +292,8 @@
         let contentToSave = editor.value;
         const isXML = fileNameDisplay.textContent.toLowerCase().endsWith('.xml');
         
-        if (isXML) {
-            contentToSave = minifyXML(contentToSave);
-        }
+        if (isXML) contentToSave = minifyXML(contentToSave);
 
-        // Criamos o Blob garantindo UTF-8 puro sem BOM
         const blob = new Blob([contentToSave], {type: isXML ? 'application/xml' : 'text/plain'});
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
