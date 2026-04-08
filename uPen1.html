@@ -145,18 +145,18 @@
         </div>
     </header>
 
-    <textarea id="editor" wrap="off" spellcheck="false" placeholder="Comece a digitar..."></textarea>
+    <textarea id="editor" wrap="off" spellcheck="false" placeholder="Comece a digitar 2..."></textarea>
     <input type="file" id="fileInput" accept=".txt,.xml" style="display:none;">
 </div>
 
 <div id="modalHelp">
     <div class="modal-content">
         <h2>µPen Editor</h2>
-        <h5>Versão 0.8</h5>
+        <h5>Versão 0.9</h5>
         <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 15px 0;">
         <ul>
-            <li><strong>Manual Control:</strong> Opção de minificar agora está em configurações.</li>
-            <li><strong>XML Clean:</strong> Estrutura de tags 100% corrigida.</li>
+            <li><strong>Auto-Format:</strong> Só ocorre se o checkbox de NFe estiver ativo em Configurações.</li>
+            <li><strong>Raw Mode:</strong> Se o checkbox estiver desativado, o XML é lido e salvo como texto puro.</li>
         </ul>
         <button class="close-modal" onclick="document.getElementById('modalHelp').style.display='none'">Fechar</button>
     </div>
@@ -168,7 +168,8 @@
         <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 15px 0;">
         
         <div class="setting-group">
-            <label><input type="checkbox" id="minifyCheck"> Minificar XML ao salvar (NFe)</label>
+            <label><input type="checkbox" id="minifyCheck"> Ativar Smart XML (Auto-formatar ao abrir / Minificar ao salvar)</label>
+            <small style="font-size: 10px; color: var(--info-color); display: block; margin-top: 4px;">Útil para NF-e. Se desativado, o arquivo é lido como texto comum.</small>
         </div>
 
         <div class="setting-group">
@@ -216,7 +217,7 @@
         return xml.replace(/>\s+</g, '><').trim();
     }
 
-    // Ações dos Botões
+    // Ações de Arquivo
     document.getElementById('btnOpen').onclick = () => fileInput.click();
 
     fileInput.onchange = (e) => {
@@ -225,7 +226,13 @@
         const reader = new FileReader();
         reader.onload = (ev) => {
             let content = ev.target.result;
-            if(file.name.toLowerCase().endsWith('.xml')) content = formatXML(content);
+            const isXML = file.name.toLowerCase().endsWith('.xml');
+            
+            // LÓGICA DE LEITURA: Só formata se o checkbox estiver ligado
+            if(isXML && minifyCheck.checked) {
+                content = formatXML(content);
+            }
+            
             updateEditor(content, file.name);
         };
         reader.readAsText(file);
@@ -235,7 +242,7 @@
         let contentToSave = editor.value;
         const isXML = fileNameDisplay.textContent.toLowerCase().endsWith('.xml');
         
-        // Aplica minificação baseada no CHECKBOX das configurações
+        // LÓGICA DE SALVAMENTO: Só minifica se o checkbox estiver ligado
         if (isXML && minifyCheck.checked) {
             contentToSave = minifyXML(contentToSave);
         }
@@ -249,10 +256,8 @@
         URL.revokeObjectURL(url);
     };
 
-    document.getElementById('btnNew').onclick = () => {
-        if(confirm("Limpar tudo?")) updateEditor("", "sem-titulo.txt");
-    };
-
+    // Interface e Modais
+    document.getElementById('btnNew').onclick = () => { if(confirm("Limpar tudo?")) updateEditor("", "sem-titulo.txt"); };
     document.getElementById('btnSettings').onclick = () => document.getElementById('modalSettings').style.display = 'flex';
     document.getElementById('btnSaveSettings').onclick = () => {
         localStorage.setItem(STORAGE_KEY_MINIFY, minifyCheck.checked);
@@ -262,7 +267,6 @@
     };
     document.getElementById('btnHelp').onclick = () => document.getElementById('modalHelp').style.display = 'flex';
 
-    // Funções de Interface e Persistência
     function updateEditor(content, name){
         editor.value = content;
         fileNameDisplay.textContent = name;
@@ -283,10 +287,8 @@
         const theme = localStorage.getItem('upen_theme') || 'dark';
         applyTheme(theme);
         themeSelector.value = theme;
-
         const isMinify = localStorage.getItem(STORAGE_KEY_MINIFY) === 'true';
         minifyCheck.checked = isMinify;
-
         const c = localStorage.getItem(STORAGE_KEY_CONTENT);
         const n = localStorage.getItem(STORAGE_KEY_NAME);
         if (c) editor.value = c;
@@ -300,6 +302,10 @@
     };
 
     ['keyup','click', 'focus'].forEach(ev => editor.addEventListener(ev, updateCursorInfo));
+
+    window.onkeydown = (e) => {
+        if(e.ctrlKey && e.key === 's'){ e.preventDefault(); document.getElementById('btnSave').click(); }
+    };
 </script>
 
 </body>
