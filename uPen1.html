@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>µPen Editor + XML Smart Save</title>
+    <title>µPen Editor | Smart Detection</title>
 
     <style>
         :root {
@@ -99,7 +99,6 @@
             box-shadow: 0 10px 25px rgba(0,0,0,0.5);
         }
 
-        .modal-content h2 { margin-top: 0; color: #007acc; font-size: 1.5rem; }
         .setting-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-size: 14px; font-weight: bold; }
 
@@ -112,10 +111,6 @@
             width: 100%; padding: 10px; background: var(--bg-color); color: var(--text-color);
             border: 1px solid var(--border-color); border-radius: 4px;
         }
-
-        textarea::-webkit-scrollbar { width: 10px; height: 10px; }
-        textarea::-webkit-scrollbar-track { background: var(--bg-color); }
-        textarea::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 5px; }
     </style>
 </head>
 
@@ -126,19 +121,15 @@
         <div id="btnNew" class="btn-icon btn-danger" title="Limpar tudo">
             <svg viewBox="0 0 24 24"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19V4M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg>
         </div>
-
         <div id="btnOpen" class="btn-icon" title="Abrir">
             <svg viewBox="0 0 24 24"><path d="M20,18H4V8H20M20,6H12L10,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V8C22,6.89 21.1,6 20,6Z"/></svg>
         </div>
-
         <div id="btnSave" class="btn-icon" title="Salvar">
             <svg viewBox="0 0 24 24"><path d="M15,9H5V5H15M12,19A3,3 0 0,1 9,16A3,3 0 0,1 12,13A3,3 0 0,1 15,16A3,3 0 0,1 12,19M17,3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V7L17,3Z"/></svg>
         </div>
-
         <div id="btnSettings" class="btn-icon" title="Configurações">
             <svg viewBox="0 0 24 24"><path d="M19.14,12.94A7.49,7.49 0 0,0 19.19,12A7.49,7.49 0 0,0 19.14,11.06L21.19,9.47C21.33,9.36 21.37,9.16 21.28,9L19.28,5.5C19.19,5.34 19,5.28 18.84,5.34L16.39,6.3C15.97,5.97 15.5,5.7 15,5.5L14.65,3C14.62,2.82 14.47,2.7 14.29,2.7H9.71C9.53,2.7 9.38,2.82 9.35,3L9,5.5C8.5,5.7 8.03,5.97 7.61,6.3L5.16,5.34C5,5.28 4.81,5.34 4.72,5.5L2.72,9C2.63,9.16 2.67,9.36 2.81,9.47L4.86,11.06C4.81,11.38 4.78,11.69 4.78,12C4.78,12.31 4.81,12.62 4.86,12.94L2.81,14.53C2.67,14.64 2.63,14.84 2.72,15L4.72,18.5C4.81,18.66 5,18.72 5.16,18.66L7.61,17.7C8.03,18.03 8.5,18.3 9,18.5L9.35,21C9.38,21.18 9.53,21.3 9.71,21.3H14.29C14.47,21.3 14.62,21.18 14.65,21L15,18.5C15.5,18.3 15.97,18.03 16.39,17.7L18.84,18.66C19,18.72 19.19,18.66 19.28,18.5L21.28,15C21.37,14.84 21.33,14.64 21.19,14.53L19.14,12.94M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5Z"/></svg>
         </div>
-
         <div id="btnHelp" class="btn-icon" title="Ajuda">
             <svg viewBox="0 0 24 24"><path d="M11,18H13V16H11V18M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20M12,6A4,4 0 0,0 8,10H10A2,2 0 0,1 12,8A2,2 0 0,1 14,10C14,12 11,11.75 11,15H13C13,12.75 16,12.5 16,10A4,4 0 0,0 12,6Z"/></svg>
         </div>
@@ -149,51 +140,18 @@
         </div>
     </header>
 
-    <textarea id="editor" wrap="off" spellcheck="false" placeholder="Comece a digitar 2..."></textarea>
+    <textarea id="editor" wrap="off" spellcheck="false" placeholder="Comece a digitar 3..."></textarea>
     <input type="file" id="fileInput" accept=".txt,.xml" style="display:none;">
-</div>
-
-<div id="modalHelp">
-    <div class="modal-content">
-        <h2>µPen Editor</h2>
-        <h5>Versão 0.6</h5>
-        <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 15px 0;">
-        <ul>
-            <li><strong>Fix:</strong> Removido caracteres duplicados no topo/fim.</li>
-            <li><strong>Auto-Format:</strong> XMLs ficam legíveis ao abrir.</li>
-            <li><strong>Smart-Save:</strong> XMLs são compactados ao salvar.</li>
-        </ul>
-        <button class="close-modal" onclick="closeHelp()">Fechar</button>
-    </div>
 </div>
 
 <div id="modalSettings">
     <div class="modal-content">
         <h2>Configurações</h2>
-        <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 15px 0;">
-        
         <div class="setting-group">
             <label for="themeSelector">Tema:</label>
-            <select id="themeSelector">
-                <option value="dark">Modo Escuro</option>
-                <option value="light">Modo Claro</option>
-            </select>
+            <select id="themeSelector"><option value="dark">Escuro</option><option value="light">Claro</option></select>
         </div>
-
-        <div class="setting-group">
-            <label for="fontSizeSelector">Fonte:</label>
-            <select id="fontSizeSelector">
-                <option value="12px">Pequena</option>
-                <option value="16px" selected>Padrão</option>
-                <option value="20px">Grande</option>
-            </select>
-        </div>
-
-        <div class="setting-group">
-            <label><input type="checkbox" id="wrapCheck"> Quebra de linha</label>
-        </div>
-
-        <button class="close-modal" onclick="closeSettings()">Salvar e Fechar</button>
+        <button class="close-modal" onclick="modalSettings.style.display='none'">Fechar</button>
     </div>
 </div>
 
@@ -202,40 +160,23 @@
     const fileNameDisplay = document.getElementById('fileName');
     const cursorPosDisplay = document.getElementById('cursorPos');
     const fileInput = document.getElementById('fileInput');
-    const themeSelector = document.getElementById('themeSelector');
-    const fontSizeSelector = document.getElementById('fontSizeSelector');
-    const wrapCheck = document.getElementById('wrapCheck');
 
-    const STORAGE_KEY_CONTENT = 'upen_draft_content';
-    const STORAGE_KEY_NAME = 'upen_draft_name';
+    // ESTADO DO ARQUIVO: Controla se deve minificar ao salvar
+    let shouldMinifyOnSave = false;
 
-    /* Lógica de XML Corrigida para evitar < no início e > no final duplicados */
     function formatXML(xml) {
         let formatted = '';
         let indent = '';
         const tab = '    ';
-        
-        // Limpeza inicial
         xml = xml.trim().replace(/>\s+</g, '><'); 
-        
-        // Divide as tags
         const nodes = xml.split(/>\s*</);
-
-        nodes.forEach((node, index) => {
-            // Se for a tag de fechamento, reduz o recuo
+        nodes.forEach((node) => {
             if (node.match(/^\/\w/)) indent = indent.substring(tab.length);
-            
-            // Reconstrói a tag cuidando para não duplicar < e >
             let line = node;
             if (!line.startsWith('<')) line = '<' + line;
             if (!line.endsWith('>')) line = line + '>';
-            
             formatted += indent + line + '\r\n';
-            
-            // Se for tag de abertura (e não auto-fechamento), aumenta recuo
-            if (node.match(/^<?\w[^>]*[^\/]$/) && !node.startsWith("?") && !node.startsWith("/")) {
-                indent += tab;
-            }
+            if (node.match(/^<?\w[^>]*[^\/]$/) && !node.startsWith("?") && !node.startsWith("/")) indent += tab;
         });
         return formatted.trim();
     }
@@ -244,49 +185,25 @@
         return xml.replace(/>\s+</g, '><').trim();
     }
 
-    function applyTheme(theme) { document.documentElement.classList.toggle('light-theme', theme === 'light'); }
-
-    window.onload = () => {
-        const theme = localStorage.getItem('upen_theme') || 'dark';
-        applyTheme(theme);
-        themeSelector.value = theme;
-
-        const font = localStorage.getItem('upen_font') || '16px';
-        editor.style.fontSize = font;
-        fontSizeSelector.value = font;
-
-        const wrap = localStorage.getItem('upen_wrap') === 'true';
-        editor.wrap = wrap ? 'on' : 'off';
-        wrapCheck.checked = wrap;
-
-        const c = localStorage.getItem(STORAGE_KEY_CONTENT);
-        const n = localStorage.getItem(STORAGE_KEY_NAME);
-        if (c) editor.value = c;
-        if (n) fileNameDisplay.textContent = n;
-        updateCursorInfo();
-    };
-
-    themeSelector.onchange = () => { localStorage.setItem('upen_theme', themeSelector.value); applyTheme(themeSelector.value); };
-    fontSizeSelector.onchange = () => { editor.style.fontSize = fontSizeSelector.value; localStorage.setItem('upen_font', fontSizeSelector.value); };
-    wrapCheck.onchange = () => { editor.wrap = wrapCheck.checked ? 'on' : 'off'; localStorage.setItem('upen_wrap', wrapCheck.checked); };
-
-    document.getElementById('btnSettings').onclick = () => modalSettings.style.display = 'flex';
-    function closeSettings(){ modalSettings.style.display = 'none'; }
-    document.getElementById('btnHelp').onclick = () => modalHelp.style.display = 'flex';
-    function closeHelp(){ modalHelp.style.display = 'none'; }
-
-    document.getElementById('btnNew').onclick = () => {
-        if(confirm("Limpar tudo?")) updateEditor("", "sem-titulo.txt");
-    };
-
-    document.getElementById('btnOpen').onclick = () => fileInput.click();
     fileInput.onchange = (e) => {
         const file = e.target.files[0];
         if(!file) return;
         const reader = new FileReader();
         reader.onload = (ev) => {
             let content = ev.target.result;
-            if(file.name.toLowerCase().endsWith('.xml')) content = formatXML(content);
+            
+            if(file.name.toLowerCase().endsWith('.xml')) {
+                // DETECÇÃO: Se o arquivo original tiver menos que 5 linhas, 
+                // consideramos que ele é um arquivo minificado (ex: NF-e)
+                const lineCount = (content.match(/\n/g) || []).length + 1;
+                shouldMinifyOnSave = (lineCount < 5);
+                
+                // Sempre formatamos para o editor, para ficar legível
+                content = formatXML(content);
+            } else {
+                shouldMinifyOnSave = false;
+            }
+            
             updateEditor(content, file.name);
         };
         reader.readAsText(file);
@@ -296,7 +213,10 @@
         let contentToSave = editor.value;
         const isXML = fileNameDisplay.textContent.toLowerCase().endsWith('.xml');
         
-        if (isXML) contentToSave = minifyXML(contentToSave);
+        // Só minifica se o arquivo original foi detectado como minificado
+        if (isXML && shouldMinifyOnSave) {
+            contentToSave = minifyXML(contentToSave);
+        }
 
         const blob = new Blob([contentToSave], {type: isXML ? 'text/xml' : 'text/plain'});
         const url = URL.createObjectURL(blob);
@@ -307,31 +227,21 @@
         URL.revokeObjectURL(url);
     };
 
+    // Funções Auxiliares
+    function updateEditor(content, name){
+        editor.value = content;
+        fileNameDisplay.textContent = name;
+        updateCursorInfo();
+    }
+
     function updateCursorInfo(){
         const pos = editor.selectionStart;
         const lines = editor.value.substr(0, pos).split("\n");
         cursorPosDisplay.textContent = `Lin ${lines.length}, Col ${lines[lines.length-1].length + 1}`;
     }
 
-    editor.oninput = () => {
-        localStorage.setItem(STORAGE_KEY_CONTENT, editor.value);
-        localStorage.setItem(STORAGE_KEY_NAME, fileNameDisplay.textContent);
-        updateCursorInfo();
-    };
-
+    editor.oninput = updateCursorInfo;
     ['keyup','click', 'focus'].forEach(ev => editor.addEventListener(ev, updateCursorInfo));
-
-    function updateEditor(content, name){
-        editor.value = content;
-        fileNameDisplay.textContent = name;
-        localStorage.setItem(STORAGE_KEY_CONTENT, content);
-        localStorage.setItem(STORAGE_KEY_NAME, name);
-        updateCursorInfo();
-    }
-
-    window.onkeydown = (e) => {
-        if(e.ctrlKey && e.key === 's'){ e.preventDefault(); document.getElementById('btnSave').click(); }
-    };
 </script>
 
 </body>
