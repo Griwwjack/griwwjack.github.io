@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>µPen Editor | v0.2</title>
+    <title>µPen Editor | v0.9.1</title>
 
     <style>
         :root {
@@ -99,10 +99,22 @@
             max-width: 400px;
             width: 90%;
             box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            text-align: center; /* Centraliza o conteúdo no modal */
+        }
+
+        /* Estilização da Ilustração do Logotipo no Modal */
+        .help-logo {
+            width: 100px; height: 100px;
+            margin: 0 auto 15px auto;
+            display: block;
+        }
+        .help-logo svg {
+            width: 100%; height: 100%;
+            fill: var(--text-color); /* Glifo preenchido na cor do texto */
         }
 
         .modal-content h2 { margin-top: 0; color: var(--interactive-accent); font-size: 1.5rem; }
-        .setting-group { margin-bottom: 15px; }
+        .setting-group { margin-bottom: 15px; text-align: left; } /* Esquerda para configurações */
         label { display: block; margin-bottom: 5px; font-size: 14px; font-weight: bold; }
 
         input[type="checkbox"] {
@@ -165,16 +177,27 @@
 
 <div id="modalHelp">
     <div class="modal-content">
+        <div class="help-logo">
+            <svg viewBox="0 0 200 200">
+                <path d="M100 135c3.5 0 6.6-1.5 8.7-3.9 1.4-1.6 2.3-3.6 2.3-5.8 0-4.9-4-8.9-8.9-8.9h-.1v18.6z"/>
+                <path d="M100 144v-1h.1v-17h2c3 0 5.6-1.3 7.5-3.3l1.8-2 2 2 1.7 2c1.8 2 4.4 3.3 7.5 3.3h2v17h.1v1c0 5 4 9 9 9s9-4 9-9v-1c0-.2 0-.3-.1-.5v-.1L100 127l12-14c1.8-2 4.4-3.3 7.5-3.3h2V93h2V64.6c0-1.8-1.5-3.3-3.3-3.3H112v2.3h-2v23.4h-2V73c0-1.8-1.5-3.3-3.3-3.3h-1.1c-1.8 0-3.3 1.5-3.3 3.3v17.4H98V73c0-1.8-1.5-3.3-3.3-3.3h-1.1C91.8 69.7 90.3 71.2 90.3 73v2.3H88.3V62c0-1.8-1.5-3.3-3.3-3.3H83.9c-1.8 0-3.3 1.5-3.3 3.3v27.7h2V110h2v17.3c0 .2 0 .3-.1.5v.1L100 144z"/>
+                <path d="M100 127h-.1v-18.6c-4.9 0-8.9 4-8.9 8.9v.1c0 2.2.9 4.2 2.3 5.8 2.1 2.4 5.2 3.9 8.7 3.9h2c3 0 5.6-1.3 7.5-3.3l1.8-2v-.1l-1.8 2.1c-1.9 2-4.5 3.3-7.5 3.3h-2v-1z"/>
+                <path d="M127 127l.1-.1v-17c-4.9 0-8.9 4-8.9 8.9v.1c0 2.2.9 4.2 2.3 5.8 2.1 2.4 5.2 3.9 8.7 3.9h2c3 0 5.6-1.3 7.5-3.3l1.8-2 1.7 2c1.8 2 4.4 3.3 7.5 3.3h2v17h.1v1c0 5 4 9 9 9s9-4 9-9v-1c0-.2 0-.3-.1-.5v-.1L127 127zm.1-.1l1.8 2.1c1.9 2 4.5 3.3 7.5 3.3h2v1z"/>
+                <path d="M127 108.4v-.1c0-4.9 4-8.9 8.9-8.9H127l12-14c1.8-2 4.4-3.3 7.5-3.3h2V93h2V64.6c0-1.8-1.5-3.3-3.3-3.3H112v2.3h-2v23.4h-2V73c0-1.8-1.5-3.3-3.3-3.3h-1.1c-1.8 0-3.3 1.5-3.3 3.3v17.4H98V73c0-1.8-1.5-3.3-3.3-3.3h-1.1C91.8 69.7 90.3 71.2 90.3 73v2.3H88.3V62c0-1.8-1.5-3.3-3.3-3.3H83.9c-1.8 0-3.3 1.5-3.3 3.3v27.7h2V110h2v17.3c0 .2 0 .3-.1.5v.1l.1-.1v-17c0-4.9 4-8.9 8.9-8.9H127zm11.2 22.5c-2.1 2.4-5.2 3.9-8.7 3.9h-2c-3 0-5.6-1.3-7.5-3.3l-1.8-2 1.7 2c1.8 2 4.4 3.3 7.5 3.3h2v1zM116 100c3.5 0 6.6 1.5 8.7 3.9l1.8 2 1.7-2c1.9-2 4.5-3.3 7.5-3.3h2v1h-.1c0 4.9-4 8.9-8.9 8.9H116zm-7 100c-2.2 0-4.2-.9-5.8-2.3L100 144v-1h.1v-17h2c3 0 5.6-1.3 7.5-3.3l1.8-2 2 2 1.7 2c1.8 2 4.4 3.3 7.5 3.3h2v17h.1v1c0 5 4 9 9 9s9-4 9-9v-1c0-.2 0-.3-.1-.5v-.1L100 127zm5 0h2v-1h-.1c0-4.9 4-8.9 8.9-8.9H114zm0-1h2v-1h-.1c0-4.9 4-8.9 8.9-8.9H114z"/>
+                <path d="M100 135c3.5 0 6.6-1.5 8.7-3.9 1.4-1.6 2.3-3.6 2.3-5.8 0-4.9-4-8.9-8.9-8.9h-.1v18.6z"/>
+                <path d="M100 144l12-14c1.8-2 4.4-3.3 7.5-3.3h2V93h2V64.6c0-1.8-1.5-3.3-3.3-3.3H112v2.3h-2v23.4h-2V73c0-1.8-1.5-3.3-3.3-3.3h-1.1c-1.8 0-3.3 1.5-3.3 3.3v17.4H98V73c0-1.8-1.5-3.3-3.3-3.3h-1.1C91.8 69.7 90.3 71.2 90.3 73v2.3H88.3V62c0-1.8-1.5-3.3-3.3-3.3H83.9c-1.8 0-3.3 1.5-3.3 3.3v27.7h2V110h2v17.3c0 .2 0 .3-.1.5v.1L100 144v-1h.1v-17h2c3 0 5.6-1.3 7.5-3.3l1.8-2 2 2 1.7 2c1.8 2 4.4 3.3 7.5 3.3h2v17h.1v1c0 5 4 9 9 9s9-4 9-9v-1c0-.2 0-.3-.1-.5v-.1L100 127z"/>
+                <path d="M112.5 131.2c-1.9 2-4.5 3.3-7.5 3.3h-2c-3.5 0-6.6-1.5-8.7-3.9-1.4-1.6-2.3-3.6-2.3-5.8 0-4.9 4-8.9 8.9-8.9h.1v18.6L116.2 131.2c-1.8-2.1-4.4-3.3-7.5-3.3h-2c-3.5 0-6.6 1.5-8.7 3.9v-.1l1.8 2.1z"/>
+            </svg>
+        </div>
+        
         <h2>µPen Editor</h2>
-        <h5>Versão 0.2</h5>
+        <h5>Versão 0.9.1</h5>
         <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 15px 0;">
-        <ul>
-            Editor simples e leve, escrito em JavaScript.
-            
-            <li>Suporte a leitura e escrita de arquivos .xml minificados, útil para NF-e.</li>
+        <ul style="text-align: left;">
+            <li><strong>Smart XML:</strong> Toggle para auto-formatação/minificação.</li>
             <li><strong>Fix Open:</strong> Permite reabrir o mesmo arquivo após limpar.</li>
         </ul>
-        <button class="close-modal" onclick="document.getElementById('modalHelp').style.display='none'">Fechar</button>
+        <button class="close-modal" onclick="document.getElementById('modalHelp').style.display='none'">Fechar Ajuda</button>
     </div>
 </div>
 
@@ -184,8 +207,8 @@
         <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 15px 0;">
         
         <div class="setting-group">
-            <label><input type="checkbox" id="minifyCheck"> XML minificação.</label>
-            <small style="font-size: 10px; color: var(--info-color); display: block; margin-top: 4px;">Útil para NF-e. Se desativado, o arquivo será lido e salvo como texto comum.</small>
+            <label><input type="checkbox" id="minifyCheck"> Ativar Smart XML (Auto-formatar ao abrir / Minificar ao salvar)</label>
+            <small style="font-size: 10px; color: var(--info-color); display: block; margin-top: 4px;">Útil para NF-e. Se desativado, o arquivo é lido como texto comum.</small>
         </div>
 
         <div class="setting-group">
@@ -233,6 +256,7 @@
         return xml.replace(/>\s+</g, '><').trim();
     }
 
+    // AÇÕES DE ARQUIVO
     document.getElementById('btnOpen').onclick = () => fileInput.click();
 
     fileInput.onchange = (e) => {
@@ -248,7 +272,7 @@
             }
             
             updateEditor(content, file.name);
-            fileInput.value = "";
+            fileInput.value = ""; // RESET: permite reabrir o mesmo arquivo
         };
         reader.readAsText(file);
     };
@@ -270,10 +294,11 @@
         URL.revokeObjectURL(url);
     };
 
+    // INTERFACE
     document.getElementById('btnNew').onclick = () => {
         if(confirm("Limpar tudo?")) {
             updateEditor("", "sem-titulo.txt");
-            fileInput.value = "";
+            fileInput.value = ""; // RESET: limpa a seleção pendente no navegador
         }
     };
 
