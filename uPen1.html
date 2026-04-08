@@ -103,17 +103,15 @@
             text-align: center;
         }
 
-        /* Área do Logotipo */
         .help-logo {
             width: 128px; height: 128px;
             margin: 0 auto 10px auto;
             display: block;
         }
         
-        /* O SVG herda a cor do texto para funcionar em ambos os temas */
         .help-logo svg {
             width: 100%; height: 100%;
-            fill: var(--text-color); /* Força o preenchimento com a cor do tema atual */
+            fill: var(--text-color); 
         }
 
         .modal-content h2 { margin: 0; color: var(--interactive-accent); font-size: 1.5rem; }
@@ -190,9 +188,9 @@
         <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 15px 0;">
         <ul>
             <li><strong>Minimalista:</strong> Editor simples e leve, sem firulas.</li>
-            <li><strong>Smart XML:  </strong> Função para auto-formatação/minificação.</li>
-            <li><strong>Fix Open:   </strong> Permite reabrir o mesmo arquivo após limpar.</li>
-
+            <li><strong>Smart XML:</strong> Função para auto-formatação/minificação.</li>
+            <li><strong>Fix Open:</strong> Permite reabrir o mesmo arquivo após limpar.</li>
+            <br>
             By Jurimar M. C. Joazeiro
         </ul>
         <button class="close-modal" onclick="document.getElementById('modalHelp').style.display='none'">Fechar Ajuda</button>
@@ -220,13 +218,15 @@
 <script>
     const editor = document.getElementById('editor');
     const fileInput = document.getElementById('fileInput');
+    const fileNameDisplay = document.getElementById('fileName');
+    const cursorPosDisplay = document.getElementById('cursorPos');
 
+    // Modais
     document.getElementById('btnHelp').onclick = () => document.getElementById('modalHelp').style.display = 'flex';
     document.getElementById('btnSettings').onclick = () => document.getElementById('modalSettings').style.display = 'flex';
     
     document.getElementById('btnSaveSettings').onclick = () => {
-        const selectedTheme = document.getElementById('themeSelector').value;
-        applyTheme(selectedTheme);
+        applyTheme(document.getElementById('themeSelector').value);
         document.getElementById('modalSettings').style.display = 'none';
     };
 
@@ -234,13 +234,45 @@
         document.documentElement.classList.toggle('light-theme', theme === 'light'); 
     }
     
+    // ABRIR ARQUIVO (A lógica restaurada)
     document.getElementById('btnOpen').onclick = () => fileInput.click();
+
+    fileInput.onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            editor.value = e.target.result;
+            fileNameDisplay.textContent = file.name;
+            updateCursor();
+            editor.focus();
+        };
+        reader.readAsText(file);
+    };
+
+    // NOVO ARQUIVO
     document.getElementById('btnNew').onclick = () => { 
         if(confirm("Deseja limpar o editor?")) {
             editor.value = ""; 
             fileInput.value = ""; 
+            fileNameDisplay.textContent = "sem-titulo.txt";
+            updateCursor();
         }
     };
+
+    // POSIÇÃO DO CURSOR
+    function updateCursor() {
+        const textBefore = editor.value.substring(0, editor.selectionStart);
+        const lines = textBefore.split('\n');
+        const line = lines.length;
+        const col = lines[lines.length - 1].length + 1;
+        cursorPosDisplay.textContent = `Lin ${line}, Col ${col}`;
+    }
+
+    editor.addEventListener('keyup', updateCursor);
+    editor.addEventListener('click', updateCursor);
+    editor.addEventListener('input', updateCursor);
 </script>
 
 </body>
