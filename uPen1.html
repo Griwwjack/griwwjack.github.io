@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>µPen Editor | v0.9.1</title>
+    <title>µPen Editor | v0.2</title>
 
     <style>
         :root {
@@ -16,7 +16,7 @@
             --icon-fill: #cccccc;
             --danger-hover: #8e2e2e;
             --info-color: #777;
-            --interactive-accent: #007acc; /* Cor base dos botões e destaque */
+            --interactive-accent: #007acc;
         }
 
         .light-theme {
@@ -28,7 +28,7 @@
             --border-color: #bbbbbb;
             --icon-fill: #333333;
             --info-color: #555;
-            --interactive-accent: #007acc; /* Mantém azul no claro para coerência */
+            --interactive-accent: #007acc;
         }
 
         body, html {
@@ -105,9 +105,8 @@
         .setting-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-size: 14px; font-weight: bold; }
 
-        /* Estilização coesa do Checkbox */
         input[type="checkbox"] {
-            accent-color: var(--interactive-accent); /* Cor de destaque quando marcado */
+            accent-color: var(--interactive-accent);
             cursor: pointer;
             vertical-align: middle;
             margin-right: 5px;
@@ -160,17 +159,18 @@
         </div>
     </header>
 
-    <textarea id="editor" wrap="off" spellcheck="false" placeholder="Comece a digitar 2..."></textarea>
+    <textarea id="editor" wrap="off" spellcheck="false" placeholder="Comece a digitar..."></textarea>
     <input type="file" id="fileInput" accept=".txt,.xml" style="display:none;">
 </div>
 
 <div id="modalHelp">
     <div class="modal-content">
         <h2>µPen Editor</h2>
-        <h5>Versão 0.9.1</h5>
+        <h5>Versão 0.1</h5>
         <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 15px 0;">
         <ul>
-            <li><strong>Smart XML:</strong> Toggle para auto-formatação/minificação.</li>
+            Editor simples e leve, escrito em JavaScript.</li>
+            <li>Suporte a leitura e escrita de arquivos .xml minificados, útil para NF-e.</li>
             <li><strong>Fix Open:</strong> Permite reabrir o mesmo arquivo após limpar.</li>
         </ul>
         <button class="close-modal" onclick="document.getElementById('modalHelp').style.display='none'">Fechar</button>
@@ -183,8 +183,8 @@
         <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 15px 0;">
         
         <div class="setting-group">
-            <label><input type="checkbox" id="minifyCheck"> Ativar Smart XML (Auto-formatar ao abrir / Minificar ao salvar)</label>
-            <small style="font-size: 10px; color: var(--info-color); display: block; margin-top: 4px;">Útil para NF-e. Se desativado, o arquivo é lido como texto comum.</small>
+            <label><input type="checkbox" id="minifyCheck"> XML minificação.</label>
+            <small style="font-size: 10px; color: var(--info-color); display: block; margin-top: 4px;">Útil para NF-e. Se desativado, o arquivo será lido e salvo como texto comum.</small>
         </div>
 
         <div class="setting-group">
@@ -232,7 +232,6 @@
         return xml.replace(/>\s+</g, '><').trim();
     }
 
-    // AÇÕES DE ARQUIVO
     document.getElementById('btnOpen').onclick = () => fileInput.click();
 
     fileInput.onchange = (e) => {
@@ -248,7 +247,7 @@
             }
             
             updateEditor(content, file.name);
-            fileInput.value = ""; // RESET: permite reabrir o mesmo arquivo
+            fileInput.value = "";
         };
         reader.readAsText(file);
     };
@@ -270,11 +269,10 @@
         URL.revokeObjectURL(url);
     };
 
-    // INTERFACE
     document.getElementById('btnNew').onclick = () => {
         if(confirm("Limpar tudo?")) {
             updateEditor("", "sem-titulo.txt");
-            fileInput.value = ""; // RESET: limpa a seleção pendente no navegador
+            fileInput.value = "";
         }
     };
 
