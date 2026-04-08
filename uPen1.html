@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>µPen Editor | Smart Detection</title>
+    <title>µPen Editor | Smart Save 0.7</title>
 
     <style>
         :root {
@@ -99,6 +99,7 @@
             box-shadow: 0 10px 25px rgba(0,0,0,0.5);
         }
 
+        .modal-content h2 { margin-top: 0; color: #007acc; font-size: 1.5rem; }
         .setting-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-size: 14px; font-weight: bold; }
 
@@ -111,6 +112,10 @@
             width: 100%; padding: 10px; background: var(--bg-color); color: var(--text-color);
             border: 1px solid var(--border-color); border-radius: 4px;
         }
+
+        textarea::-webkit-scrollbar { width: 10px; height: 10px; }
+        textarea::-webkit-scrollbar-track { background: var(--bg-color); }
+        textarea::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 5px; }
     </style>
 </head>
 
@@ -140,8 +145,21 @@
         </div>
     </header>
 
-    <textarea id="editor" wrap="off" spellcheck="false" placeholder="Comece a digitar 3..."></textarea>
+    <textarea id="editor" wrap="off" spellcheck="false" placeholder="Comece a digitar 4..."></textarea>
     <input type="file" id="fileInput" accept=".txt,.xml" style="display:none;">
+</div>
+
+<div id="modalHelp">
+    <div class="modal-content">
+        <h2>µPen Editor</h2>
+        <h5>Versão 0.7</h5>
+        <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 15px 0;">
+        <ul>
+            <li><strong>Auto-Detect:</strong> Salva minificado apenas se o original era minificado.</li>
+            <li><strong>Safe XML:</strong> Formatação sem erros de caracteres duplicados.</li>
+        </ul>
+        <button class="close-modal" onclick="document.getElementById('modalHelp').style.display='none'">Fechar</button>
+    </div>
 </div>
 
 <div id="modalSettings">
@@ -151,7 +169,7 @@
             <label for="themeSelector">Tema:</label>
             <select id="themeSelector"><option value="dark">Escuro</option><option value="light">Claro</option></select>
         </div>
-        <button class="close-modal" onclick="modalSettings.style.display='none'">Fechar</button>
+        <button class="close-modal" onclick="document.getElementById('modalSettings').style.display='none'">Fechar</button>
     </div>
 </div>
 
@@ -160,8 +178,10 @@
     const fileNameDisplay = document.getElementById('fileName');
     const cursorPosDisplay = document.getElementById('cursorPos');
     const fileInput = document.getElementById('fileInput');
+    const STORAGE_KEY_CONTENT = 'upen_draft_content';
+    const STORAGE_KEY_NAME = 'upen_draft_name';
 
-    // ESTADO DO ARQUIVO: Controla se deve minificar ao salvar
+    // ESTADO: Detecta se deve minificar ao salvar
     let shouldMinifyOnSave = false;
 
     function formatXML(xml) {
@@ -185,38 +205,32 @@
         return xml.replace(/>\s+</g, '><').trim();
     }
 
+    // BOTÃO ABRIR (Corrigido)
+    document.getElementById('btnOpen').onclick = () => fileInput.click();
+
     fileInput.onchange = (e) => {
         const file = e.target.files[0];
         if(!file) return;
         const reader = new FileReader();
         reader.onload = (ev) => {
             let content = ev.target.result;
-            
             if(file.name.toLowerCase().endsWith('.xml')) {
-                // DETECÇÃO: Se o arquivo original tiver menos que 5 linhas, 
-                // consideramos que ele é um arquivo minificado (ex: NF-e)
                 const lineCount = (content.match(/\n/g) || []).length + 1;
-                shouldMinifyOnSave = (lineCount < 5);
-                
-                // Sempre formatamos para o editor, para ficar legível
+                shouldMinifyOnSave = (lineCount < 5); // Detecta se era minificado
                 content = formatXML(content);
             } else {
                 shouldMinifyOnSave = false;
             }
-            
             updateEditor(content, file.name);
         };
         reader.readAsText(file);
     };
 
+    // BOTÃO SALVAR (Com detecção inteligente)
     document.getElementById('btnSave').onclick = () => {
         let contentToSave = editor.value;
         const isXML = fileNameDisplay.textContent.toLowerCase().endsWith('.xml');
-        
-        // Só minifica se o arquivo original foi detectado como minificado
-        if (isXML && shouldMinifyOnSave) {
-            contentToSave = minifyXML(contentToSave);
-        }
+        if (isXML && shouldMinifyOnSave) contentToSave = minifyXML(contentToSave);
 
         const blob = new Blob([contentToSave], {type: isXML ? 'text/xml' : 'text/plain'});
         const url = URL.createObjectURL(blob);
@@ -227,10 +241,19 @@
         URL.revokeObjectURL(url);
     };
 
-    // Funções Auxiliares
+    // OUTROS BOTÕES
+    document.getElementById('btnNew').onclick = () => {
+        if(confirm("Limpar tudo?")) updateEditor("", "sem-titulo.txt");
+    };
+    document.getElementById('btnSettings').onclick = () => document.getElementById('modalSettings').style.display = 'flex';
+    document.getElementById('btnHelp').onclick = () => document.getElementById('modalHelp').style.display = 'flex';
+
+    // AUXILIARES E PERSISTÊNCIA
     function updateEditor(content, name){
         editor.value = content;
         fileNameDisplay.textContent = name;
+        localStorage.setItem(STORAGE_KEY_CONTENT, content);
+        localStorage.setItem(STORAGE_KEY_NAME, name);
         updateCursorInfo();
     }
 
@@ -240,7 +263,19 @@
         cursorPosDisplay.textContent = `Lin ${lines.length}, Col ${lines[lines.length-1].length + 1}`;
     }
 
-    editor.oninput = updateCursorInfo;
+    window.onload = () => {
+        const c = localStorage.getItem(STORAGE_KEY_CONTENT);
+        const n = localStorage.getItem(STORAGE_KEY_NAME);
+        if (c) editor.value = c;
+        if (n) fileNameDisplay.textContent = n;
+        updateCursorInfo();
+    };
+
+    editor.oninput = () => {
+        localStorage.setItem(STORAGE_KEY_CONTENT, editor.value);
+        updateCursorInfo();
+    };
+
     ['keyup','click', 'focus'].forEach(ev => editor.addEventListener(ev, updateCursorInfo));
 </script>
 
