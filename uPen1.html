@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>µPen Editor | XML Manual Control</title>
+    <title>µPen Editor | v0.9.1</title>
 
     <style>
         :root {
@@ -145,18 +145,18 @@
         </div>
     </header>
 
-    <textarea id="editor" wrap="off" spellcheck="false" placeholder="Comece a digitar 2..."></textarea>
+    <textarea id="editor" wrap="off" spellcheck="false" placeholder="Comece a digitar..."></textarea>
     <input type="file" id="fileInput" accept=".txt,.xml" style="display:none;">
 </div>
 
 <div id="modalHelp">
     <div class="modal-content">
         <h2>µPen Editor</h2>
-        <h5>Versão 0.9</h5>
+        <h5>Versão 0.9.1</h5>
         <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 15px 0;">
         <ul>
-            <li><strong>Auto-Format:</strong> Só ocorre se o checkbox de NFe estiver ativo em Configurações.</li>
-            <li><strong>Raw Mode:</strong> Se o checkbox estiver desativado, o XML é lido e salvo como texto puro.</li>
+            <li><strong>Smart XML:</strong> Toggle para auto-formatação/minificação.</li>
+            <li><strong>Fix Open:</strong> Permite reabrir o mesmo arquivo após limpar.</li>
         </ul>
         <button class="close-modal" onclick="document.getElementById('modalHelp').style.display='none'">Fechar</button>
     </div>
@@ -217,7 +217,7 @@
         return xml.replace(/>\s+</g, '><').trim();
     }
 
-    // Ações de Arquivo
+    // AÇÕES DE ARQUIVO
     document.getElementById('btnOpen').onclick = () => fileInput.click();
 
     fileInput.onchange = (e) => {
@@ -228,12 +228,12 @@
             let content = ev.target.result;
             const isXML = file.name.toLowerCase().endsWith('.xml');
             
-            // LÓGICA DE LEITURA: Só formata se o checkbox estiver ligado
             if(isXML && minifyCheck.checked) {
                 content = formatXML(content);
             }
             
             updateEditor(content, file.name);
+            fileInput.value = ""; // RESET: permite reabrir o mesmo arquivo
         };
         reader.readAsText(file);
     };
@@ -242,7 +242,6 @@
         let contentToSave = editor.value;
         const isXML = fileNameDisplay.textContent.toLowerCase().endsWith('.xml');
         
-        // LÓGICA DE SALVAMENTO: Só minifica se o checkbox estiver ligado
         if (isXML && minifyCheck.checked) {
             contentToSave = minifyXML(contentToSave);
         }
@@ -256,8 +255,14 @@
         URL.revokeObjectURL(url);
     };
 
-    // Interface e Modais
-    document.getElementById('btnNew').onclick = () => { if(confirm("Limpar tudo?")) updateEditor("", "sem-titulo.txt"); };
+    // INTERFACE
+    document.getElementById('btnNew').onclick = () => {
+        if(confirm("Limpar tudo?")) {
+            updateEditor("", "sem-titulo.txt");
+            fileInput.value = ""; // RESET: limpa a seleção pendente no navegador
+        }
+    };
+
     document.getElementById('btnSettings').onclick = () => document.getElementById('modalSettings').style.display = 'flex';
     document.getElementById('btnSaveSettings').onclick = () => {
         localStorage.setItem(STORAGE_KEY_MINIFY, minifyCheck.checked);
