@@ -4,7 +4,7 @@
     AUTOR: Jurimar M. C. Joazeiro
     DATA: Abril / 2026
     DESCRIÇÃO: Editor de texto simples e leve.
-    TECNOLOGIAS: HTML, CSS, JacaScript.
+    TECNOLOGIAS: HTML, CSS, JavaScript.
 ============================================================================= -->
 
 <!DOCTYPE html>
@@ -87,9 +87,16 @@
             line-height: 1.6;
             outline: none; overflow: auto;
             scrollbar-gutter: stable;
-        }
+			caret-color: var(--interactive-accent); /* Cor do cursor piscante */
+			}
+			
+			/* Efeito de pulse no botão save se houver alteração não salva (opcional) */
+			.unsaved::after {
+				content: ' *';
+				color: #ffca28;
+				font-weight: bold;
+			}
 
-        
         #modalHelp, #modalSettings {
             display: none;
             position: fixed;
@@ -303,6 +310,9 @@
         a.download = fileNameDisplay.textContent;
         a.click();
         URL.revokeObjectURL(url);
+
+		// Remove a marca de "não salvo" após o download
+		fileNameDisplay.classList.remove('unsaved');
     };
 
     // INTERFACE
@@ -327,6 +337,10 @@
         fileNameDisplay.textContent = name;
         localStorage.setItem(STORAGE_KEY_CONTENT, content);
         localStorage.setItem(STORAGE_KEY_NAME, name);
+		
+		// Garante que o nome do arquivo comece sem o asterisco ao abrir/limpar
+		fileNameDisplay.classList.remove('unsaved');
+		
         updateCursorInfo();
     }
 
@@ -354,13 +368,41 @@
     editor.oninput = () => {
         localStorage.setItem(STORAGE_KEY_CONTENT, editor.value);
         updateCursorInfo();
+
+		fileNameDisplay.classList.add('unsaved');
     };
 
     ['keyup','click', 'focus'].forEach(ev => editor.addEventListener(ev, updateCursorInfo));
 
-    window.onkeydown = (e) => {
-        if(e.ctrlKey && e.key === 's'){ e.preventDefault(); document.getElementById('btnSave').click(); }
-    };
+	editor.onkeydown = (e) => {
+		// Atalho Ctrl+S, para salvar arquivos.
+		if(e.ctrlKey && e.key === 's'){ 
+			e.preventDefault(); 
+			document.getElementById('btnSave').click();
+		}
+		
+		// Suporte ao Tab, para inserir tabulação com espaços.
+		if(e.key === 'Tab') {
+			e.preventDefault();
+			const start = editor.selectionStart;
+			const end = editor.selectionEnd;
+	
+			// Insere 4 espaços
+			editor.value = editor.value.substring(0, start) + "    " + editor.value.substring(end);
+			editor.selectionStart = editor.selectionEnd = start + 4;
+		}
+	};	
+
+	// Fechar modais com um clique fora ja janela.
+	window.onclick = (event) => {
+		if (event.target == document.getElementById('modalHelp')) {
+			document.getElementById('modalHelp').style.display = "none";
+		}
+		if (event.target == document.getElementById('modalSettings')) {
+			document.getElementById('modalSettings').style.display = "none";
+		}
+	}
+
 </script>
 
 </body>
