@@ -1,9 +1,18 @@
+<!-- =============================================================================
+    PROJETO: uPen Editor
+    VERSÃO: 0.2.3
+    AUTOR: Jurimar M. C. Joazeiro
+    DATA: Abril / 2026
+    DESCRIÇÃO: Editor de texto simples e leve.
+    TECNOLOGIAS: HTML, CSS, JavaScript.
+============================================================================= -->
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>µPen Editor v0.2.1</title>
+    <title>µPen Editor v0.2.3</title>
 
     <style>
         :root {
@@ -37,10 +46,14 @@
             background-color: var(--bg-color);
             color: var(--text-color);
             overflow: hidden;
-            transition: background-color 0.3s, color 0.3s;
+            transition: background-color 0.3s;
         }
 
-        .container { display: flex; flex-direction: column; height: 100vh; }
+        .container {
+			display: flex;
+			flex-direction: column;
+			height: 100vh;
+		}
 
         header {
             background-color: var(--toolbar-color);
@@ -78,7 +91,13 @@
             line-height: 1.6;
             outline: none; overflow: auto;
             scrollbar-gutter: stable;
-            transition: background-color 0.3s, color 0.3s;
+            caret-color: var(--interactive-accent);
+        }
+            
+        .unsaved::after {
+            content: ' *';
+            color: #ffca28;
+            font-weight: bold;
         }
 
         #modalHelp, #modalSettings {
@@ -103,34 +122,45 @@
             text-align: center;
         }
 
-        .help-logo {
-            width: 128px; height: 128px;
-            margin: 0 auto 10px auto;
-            display: block;
-        }
-        
-        .help-logo svg {
-            width: 100%; height: 100%;
-            fill: var(--text-color); 
-        }
-
-        .modal-content h2 { margin: 0; color: var(--interactive-accent); font-size: 1.5rem; }
+        .modal-content h2 { margin-top: 0; color: var(--interactive-accent); font-size: 1.5rem; }
         .modal-content h5 { margin: 0 0 15px 0; font-weight: normal; color: var(--info-color); }
         .modal-content ul { text-align: left; margin: 15px 0; padding-left: 20px; font-size: 14px; }
+        .modal-content u2 { text-align: right; margin: 15px 0; font-size: 14px; font-style: italic; }
+        .setting-group { margin-bottom: 15px; text-align: left; }
+        label { display: block; margin-bottom: 5px; font-size: 14px; font-weight: bold; }
+
+
+        input[type="checkbox"] {
+            accent-color: var(--interactive-accent);
+            cursor: pointer;
+            vertical-align: middle;
+            margin-right: 5px;
+        }
 
         .close-modal {
-            margin-top: 10px; width: 100%; 
+            margin-top: 20px; width: 100%; 
             background: var(--interactive-accent); 
             color: white;
             border: none; padding: 12px; cursor: pointer; border-radius: 4px; font-weight: bold;
+            transition: background-color 0.2s;
         }
         
         .close-modal:hover { background-color: #005a9e; }
 
-        select {
+        select, input[type="number"] {
             width: 100%; padding: 10px; background: var(--bg-color); color: var(--text-color);
             border: 1px solid var(--border-color); border-radius: 4px;
+            box-sizing: border-box;
         }
+
+        /* Remove setas do input number */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0;}
+        input[type=number] { -moz-appearance: textfield;}
+
+        textarea::-webkit-scrollbar { width: 10px; height: 10px; }
+        textarea::-webkit-scrollbar-track { background: var(--bg-color); }
+        textarea::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 5px; }
     </style>
 </head>
 
@@ -167,7 +197,7 @@
 <div id="modalHelp">
     <div class="modal-content">
         <div class="help-logo">
-            <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="128px" height="128px" viewBox="0 0 128 128">
+            <svg width="128px" height="128px" viewBox="0 0 128 128">
                 <g transform="translate(0,128) scale(0.1,-0.1)" fill="currentColor" stroke="none">
                     <path d="M445 1219 c-299 -31 -311 -33 -318 -52 -3 -7 2 -51 9 -97 59 -350 130 -643 163 -671 17 -14 29 -15 113 -3 151 22 158 24 158 41 0 12 -7 14 -32 9 -18 -3 -73 -11 -122 -17 -81 -11 -90 -11 -101 5 -38 52 -177 707 -153 722 9 6 408 50 508 56 l55 3 10 -55 c14 -80 17 -82 93 -78 66 3 67 3 70 -24 6 -52 32 -25 32 33 0 24 -13 38 -87 94 -48 36 -95 64 -107 64 -12 -1 -142 -14 -291 -30z m381 -51 c48 -36 53 -43 38 -49 -26 -11 -82 -11 -88 -1 -9 15 -19 92 -12 92 4 0 32 -19 62 -42z"/>
                     <path d="M1075 1151 c-29 -12 -96 -87 -214 -238 -56 -73 -100 -137 -96 -143 4 -6 -7 -27 -23 -48 -53 -68 -61 -103 -20 -87 22 8 68 -33 68 -60 0 -41 -11 -54 -64 -81 -28 -14 -61 -34 -72 -45 l-21 -20 1 50 c1 28 1 49 -1 47 -7 -7 -31 -111 -27 -118 3 -4 19 -1 37 7 18 8 111 25 207 40 96 14 180 31 187 38 9 9 6 34 -15 114 -15 57 -30 103 -34 103 -18 0 -17 -46 3 -114 12 -42 20 -79 17 -82 -6 -5 -180 -34 -212 -34 -13 0 -16 3 -9 13 6 6 13 24 17 40 3 15 12 27 20 27 7 0 30 24 51 54 20 30 45 56 54 59 18 4 132 188 195 314 41 82 45 124 16 153 -21 21 -34 23 -65 11z m-76 -153 c-86 -114 -129 -158 -129 -133 0 9 141 194 178 233 16 17 35 32 40 32 6 0 -34 -60 -89 -132z m90 -15 c-52 -86 -109 -173 -114 -173 -3 0 11 26 31 58 21 31 50 78 66 105 17 26 32 47 35 47 2 0 -6 -17 -18 -37z m-156 -188 c31 -32 31 -33 11 -60 -15 -19 -16 -19 -26 -2 -5 10 -30 31 -53 46 -42 27 -43 29 -29 49 14 20 17 21 42 8 15 -8 40 -26 55 -41z m-103 -31 c0 -12 -72 -104 -81 -104 -13 0 -12 4 22 59 18 28 38 51 45 51 8 0 14 -3 14 -6z m39 -109 c-33 -46 -53 -63 -27 -22 8 12 21 32 29 45 8 12 18 22 22 22 5 0 -6 -20 -24 -45z"/>
@@ -184,16 +214,17 @@
             </svg>
         </div>
         
-        <h5>Versão 0.2.1</h5>
+        <h5>Versão 0.2.3</h5>
         <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 15px 0;">
         <ul>
             <li><strong>Minimalista:</strong> Editor simples e leve, sem firulas.</li>
-            <li><strong>Smart XML:</strong> Função para auto-formatação/minificação.</li>
-            <li><strong>Fix Open:</strong> Permite reabrir o mesmo arquivo após limpar.</li>
-            <br>
-            By Jurimar M. C. Joazeiro
+            <li><strong>Smart XML:</strong> Função para minificação/identação.</li>
+            <li><strong>Tabulação:</strong> Tabulação configurável (espaços ou \t).</li>
         </ul>
-        <button class="close-modal" onclick="document.getElementById('modalHelp').style.display='none'">Fechar Ajuda</button>
+        <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 15px 0;">
+        <u2><br>By Jurimar M. C. Joazeiro</u2>
+        
+        <button class="close-modal" onclick="document.getElementById('modalHelp').style.display='none'">Fechar</button>
     </div>
 </div>
 
@@ -201,78 +232,196 @@
     <div class="modal-content">
         <h2>Configurações</h2>
         <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 15px 0;">
-        <div style="text-align: left; margin-bottom: 15px;">
-            <label><input type="checkbox" id="minifyCheck"> Ativar Smart XML</label>
+        
+        <div class="setting-group">
+            <label>
+                <input type="checkbox" id="minifyCheck"> Ativar Smart XML.
+            </label>
         </div>
-        <div style="text-align: left; margin-bottom: 15px;">
+
+        <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 15px 0;">
+
+        <div class="setting-group">
             <label for="themeSelector">Tema:</label>
             <select id="themeSelector">
                 <option value="dark">Escuro</option>
                 <option value="light">Claro</option>
             </select>
         </div>
+
+        <div class="setting-group">
+            <label for="tabTypeSelector">Tipo de Tabulação:</label>
+            <select id="tabTypeSelector">
+                <option value="spaces">Espaços</option>
+                <option value="tabChar">Caractere de Tabulação (\t)</option>
+            </select>
+        </div>
+
+        <div id="spaceCountGroup" class="setting-group">
+            <label for="tabSizeInput">Espaços por Tabulação:</label>
+            <input type="number" id="tabSizeInput" value="4">
+        </div>
+
         <button class="close-modal" id="btnSaveSettings">Salvar e Fechar</button>
     </div>
 </div>
 
 <script>
     const editor = document.getElementById('editor');
-    const fileInput = document.getElementById('fileInput');
     const fileNameDisplay = document.getElementById('fileName');
     const cursorPosDisplay = document.getElementById('cursorPos');
-
-    // Modais
-    document.getElementById('btnHelp').onclick = () => document.getElementById('modalHelp').style.display = 'flex';
-    document.getElementById('btnSettings').onclick = () => document.getElementById('modalSettings').style.display = 'flex';
+    const fileInput = document.getElementById('fileInput');
+    const minifyCheck = document.getElementById('minifyCheck');
+    const themeSelector = document.getElementById('themeSelector');
+    const tabTypeSelector = document.getElementById('tabTypeSelector');
+    const tabSizeInput = document.getElementById('tabSizeInput');
+    const spaceCountGroup = document.getElementById('spaceCountGroup');
     
-    document.getElementById('btnSaveSettings').onclick = () => {
-        applyTheme(document.getElementById('themeSelector').value);
-        document.getElementById('modalSettings').style.display = 'none';
+    const STORAGE_KEY_CONTENT = 'upen_draft_content';
+    const STORAGE_KEY_NAME = 'upen_draft_name';
+    const STORAGE_KEY_MINIFY = 'upen_minify_xml';
+    const STORAGE_KEY_TAB_TYPE = 'upen_tab_type';
+    const STORAGE_KEY_TAB_SIZE = 'upen_tab_size';
+
+    tabTypeSelector.onchange = () => {
+        spaceCountGroup.style.display = tabTypeSelector.value === 'spaces' ? 'block' : 'none';
     };
 
-    function applyTheme(theme) { 
-        document.documentElement.classList.toggle('light-theme', theme === 'light'); 
+    function getTabText() {
+        if (tabTypeSelector.value === 'tabChar') return "\t";
+        const size = parseInt(tabSizeInput.value) || 4;
+        return " ".repeat(size);
     }
-    
-    // ABRIR ARQUIVO (A lógica restaurada)
+
+    function formatXML(xml) {
+        let formatted = '';
+        let indent = '';
+        const tab = getTabText();
+        xml = xml.trim().replace(/>\s+</g, '><'); 
+        const nodes = xml.split(/>\s*</);
+        nodes.forEach((node) => {
+            if (node.match(/^\/\w/)) indent = indent.substring(tab.length);
+            let line = node;
+            if (!line.startsWith('<')) line = '<' + line;
+            if (!line.endsWith('>')) line = line + '>';
+            formatted += indent + line + '\r\n';
+            if (node.match(/^<?\w[^>]*[^\/]$/) && !node.startsWith("?") && !node.startsWith("/")) indent += tab;
+        });
+        return formatted.trim();
+    }
+
+    function minifyXML(xml) {
+        return xml.replace(/>\s+</g, '><').trim();
+    }
+
     document.getElementById('btnOpen').onclick = () => fileInput.click();
 
     fileInput.onchange = (e) => {
         const file = e.target.files[0];
-        if (!file) return;
-
+        if(!file) return;
         const reader = new FileReader();
-        reader.onload = (e) => {
-            editor.value = e.target.result;
-            fileNameDisplay.textContent = file.name;
-            updateCursor();
-            editor.focus();
+        reader.onload = (ev) => {
+            let content = ev.target.result;
+            const isXML = file.name.toLowerCase().endsWith('.xml');
+            if(isXML && minifyCheck.checked) content = formatXML(content);
+            updateEditor(content, file.name);
+            fileInput.value = "";
         };
         reader.readAsText(file);
     };
 
-    // NOVO ARQUIVO
-    document.getElementById('btnNew').onclick = () => { 
-        if(confirm("Deseja limpar o editor?")) {
-            editor.value = ""; 
-            fileInput.value = ""; 
-            fileNameDisplay.textContent = "sem-titulo.txt";
-            updateCursor();
-        }
+    document.getElementById('btnSave').onclick = () => {
+        let contentToSave = editor.value;
+        const isXML = fileNameDisplay.textContent.toLowerCase().endsWith('.xml');
+        if (isXML && minifyCheck.checked) contentToSave = minifyXML(contentToSave);
+        const blob = new Blob([contentToSave], {type: isXML ? 'text/xml' : 'text/plain'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileNameDisplay.textContent;
+        a.click();
+        URL.revokeObjectURL(url);
+        fileNameDisplay.classList.remove('unsaved');
     };
 
-    // POSIÇÃO DO CURSOR
-    function updateCursor() {
-        const textBefore = editor.value.substring(0, editor.selectionStart);
-        const lines = textBefore.split('\n');
-        const line = lines.length;
-        const col = lines[lines.length - 1].length + 1;
-        cursorPosDisplay.textContent = `Lin ${line}, Col ${col}`;
+    document.getElementById('btnNew').onclick = () => {
+        if(confirm("Limpar tudo?")) updateEditor("", "sem-titulo.txt");
+    };
+
+    document.getElementById('btnSettings').onclick = () => document.getElementById('modalSettings').style.display = 'flex';
+    
+    document.getElementById('btnSaveSettings').onclick = () => {
+        localStorage.setItem(STORAGE_KEY_MINIFY, minifyCheck.checked);
+        localStorage.setItem('upen_theme', themeSelector.value);
+        localStorage.setItem(STORAGE_KEY_TAB_TYPE, tabTypeSelector.value);
+        localStorage.setItem(STORAGE_KEY_TAB_SIZE, tabSizeInput.value);
+        applyTheme(themeSelector.value);
+        document.getElementById('modalSettings').style.display = 'none';
+    };
+
+    function updateEditor(content, name){
+        editor.value = content;
+        fileNameDisplay.textContent = name;
+        localStorage.setItem(STORAGE_KEY_CONTENT, content);
+        localStorage.setItem(STORAGE_KEY_NAME, name);
+        fileNameDisplay.classList.remove('unsaved');
+        updateCursorInfo();
     }
 
-    editor.addEventListener('keyup', updateCursor);
-    editor.addEventListener('click', updateCursor);
-    editor.addEventListener('input', updateCursor);
+    function updateCursorInfo(){
+        const pos = editor.selectionStart;
+        const lines = editor.value.substr(0, pos).split("\n");
+        cursorPosDisplay.textContent = `Lin ${lines.length}, Col ${lines[lines.length-1].length + 1}`;
+    }
+
+    function applyTheme(theme) { document.documentElement.classList.toggle('light-theme', theme === 'light'); }
+
+    window.onload = () => {
+        const theme = localStorage.getItem('upen_theme') || 'dark';
+        applyTheme(theme);
+        themeSelector.value = theme;
+        minifyCheck.checked = localStorage.getItem(STORAGE_KEY_MINIFY) === 'true';
+        tabTypeSelector.value = localStorage.getItem(STORAGE_KEY_TAB_TYPE) || 'spaces';
+        tabSizeInput.value = localStorage.getItem(STORAGE_KEY_TAB_SIZE) || '4';
+        tabTypeSelector.onchange();
+        const c = localStorage.getItem(STORAGE_KEY_CONTENT);
+        const n = localStorage.getItem(STORAGE_KEY_NAME);
+        if (c) editor.value = c;
+        if (n) fileNameDisplay.textContent = n;
+        updateCursorInfo();
+    };
+
+    editor.oninput = () => {
+        localStorage.setItem(STORAGE_KEY_CONTENT, editor.value);
+        updateCursorInfo();
+        fileNameDisplay.classList.add('unsaved');
+    };
+
+    ['keyup','click', 'focus'].forEach(ev => editor.addEventListener(ev, updateCursorInfo));
+
+    editor.onkeydown = (e) => {
+        if(e.ctrlKey && e.key === 's'){ 
+            e.preventDefault(); 
+            document.getElementById('btnSave').click();
+        }
+        
+        if(e.key === 'Tab') {
+            e.preventDefault();
+            const start = editor.selectionStart;
+            const end = editor.selectionEnd;
+            const tabText = getTabText();
+            editor.value = editor.value.substring(0, start) + tabText + editor.value.substring(end);
+            editor.selectionStart = editor.selectionEnd = start + tabText.length;
+            editor.oninput();
+        }
+    };  
+
+    document.getElementById('btnHelp').onclick = () => document.getElementById('modalHelp').style.display = 'flex';
+
+    window.onclick = (event) => {
+        if (event.target == document.getElementById('modalHelp')) document.getElementById('modalHelp').style.display = "none";
+        if (event.target == document.getElementById('modalSettings')) document.getElementById('modalSettings').style.display = "none";
+    }
 </script>
 
 </body>
