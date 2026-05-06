@@ -16,7 +16,8 @@
             --warning: #fbbf24;
             --info: #38bdf8;
             --avaria: #a855f7;
-            --inversao: #6366f1;
+/*            --inversao: #6366f1;*/
+            --inversao: #FFFFFF;
             --border: #444;
         }
 
@@ -29,26 +30,28 @@
             flex-direction: column;
             align-items: center;
             padding: 10px;
+            overflow-y: auto; /* Garante o scroll para o histórico */
         }
 
         .container {
-            max-width: 98%;
-            width: 1250px;
+            width: calc(100% - 1px); 
+            max-width: none; 
             background: var(--bg-container);
-            padding: 15px;
+            padding: 12px;
             border-radius: 15px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.5);
             border: 1px solid var(--border);
+            box-sizing: border-box;
         }
 
-        h1 { text-align: center; margin: 10px 0 5px 0; font-size: 1.6rem; letter-spacing: 1px; }
+        h1 { text-align: center; margin: 5px 0; font-size: 1.4rem; letter-spacing: 1px; }
         
         .onda-seletor-container {
             text-align: center;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             font-weight: bold;
             color: var(--info);
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -59,73 +62,86 @@
             background: #2d2d2d;
             color: var(--info);
             border: 1px solid var(--info);
-            padding: 5px 10px;
+            padding: 3px 8px;
             border-radius: 5px;
-            font-size: 1.1rem;
+            font-size: 1rem;
             font-weight: bold;
             cursor: pointer;
         }
 
         .layout-principal {
             display: grid;
-            grid-template-columns: 420px 1fr 260px;
-            gap: 15px;
-            margin-bottom: 20px;
-            align-items: start;
+            grid-template-columns: 400px 1fr 240px;
+            gap: 12px;
+            margin-bottom: 15px;
+            align-items: stretch; 
         }
 
         #monitor-abnet-lista {
             background: #000;
             border-radius: 12px;
             border: 1px solid #444;
-            padding: 10px;
-            height: 650px;
+            padding: 8px;
+            height: 580px; 
             overflow-y: auto;
         }
 
-        .lista-shuts { display: flex; flex-direction: column; gap: 6px; }
+        .lista-shuts { display: flex; flex-direction: column; gap: 4px; }
 
-        .shut-line {
-            display: grid;
-            grid-template-columns: 65px 100px 90px 1fr;
-            background: #1a1a1a;
-            border-left: 5px solid #444;
-            padding: 10px;
-            border-radius: 6px;
-            font-size: 12px;
-            align-items: center;
-            color: #fff;
+		.shut-line {
+			display: grid;
+			/* Divide o espaço em 4 colunas iguais (25% cada) */
+			grid-template-columns: repeat(4, 1fr); 
+			background: #1a1a1a;
+			border-left: 4px solid #444;
+			padding: 8px;
+			border-radius: 5px;
+			font-size: 11px;
+			align-items: center;
+			color: #fff;
+		}
+
+        .grid-contadores {
+			display: grid;
+			grid-template-columns: repeat(2, 1fr);
+			gap: 10px;
+		}
+
+        .coluna-indicadores {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 10px;
         }
-
-        .grid-contadores { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
 
         .painel-status {
             background: #000;
-            padding: 15px;
+            padding: 12px;
             border-radius: 12px;
             border: 1px solid #444;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 8px;
         }
 
-        .status-item { display: flex; flex-direction: column; border-bottom: 1px solid #333; padding-bottom: 8px; }
-        .status-label { font-size: 11px; color: var(--text-sub); text-transform: uppercase; font-weight: bold; }
-        .status-valor { font-size: 22px; font-weight: bold; }
+        .status-item { display: flex; flex-direction: column; border-bottom: 1px solid #333; padding-bottom: 5px; }
+        .status-label { font-size: 10px; color: var(--text-sub); text-transform: uppercase; font-weight: bold; }
+        .status-valor { font-size: 20px; font-weight: bold; }
 
         .card {
             background: var(--bg-card);
-            padding: 15px 5px;
+            padding: 10px 5px;
             border-radius: 12px;
             text-align: center;
-            border-bottom: 6px solid #555;
+            border-bottom: 5px solid #555;
         }
 
-        .card .numero { font-size: 34px; font-weight: bold; display: block; margin: 5px 0; color: #fff; }
+        .card h3 { font-size: 13px; margin: 5px 0; }
+        .card .numero { font-size: 28px; font-weight: bold; display: block; margin: 2px 0; color: #fff; }
 
-        .controles { display: flex; justify-content: center; gap: 8px; padding: 0 10px; }
+        .controles { display: flex; justify-content: center; gap: 6px; padding: 0 5px; }
 
-        .btn { border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 18px; color: white; }
+        .btn { border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 16px; color: white; }
         .btn-add { background-color: #2e7d32; flex-grow: 2; }
         .btn-sub { background-color: #444; color: #eee; flex-grow: 1; }
 
@@ -134,40 +150,79 @@
         .card.avaria-card { border-color: var(--avaria); }
         .card.inversao-card { border-color: var(--inversao); }
 
+        /* Animação para o Auto-Save */
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .badge-autosave {
+			font-size: 9px;
+			padding: 2px 5px;
+			border-radius: 4px;
+			margin-left: 10px;
+			text-transform: uppercase;
+			background: #333;
+		}
+        
+		.active-save { 
+            background-color: var(--success); 
+            color: #000; 
+            font-weight: bold;
+            animation: pulse 2s infinite; 
+        }
+
         .modal-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center;
         }
 
-        .modal-content { background: #2d2d2d; padding: 25px; border-radius: 15px; width: 300px; border: 2px solid var(--info); }
-        .modal-input { width: 100%; padding: 15px; background: #1e1e1e; border: 1px solid #555; color: white; border-radius: 8px; margin-bottom: 20px; font-size: 18px; text-align: center; }
-
-        .acoes-final { border-top: 1px solid var(--border); padding-top: 15px; display: flex; flex-direction: column; gap: 12px; width: 100%; }
-        .btn-salvar-onda { background-color: #15803d; padding: 15px; font-size: 18px; width: 100%; color: white; cursor: pointer; border: none; font-weight: bold; border-radius: 10px; }
-        .btn-finalizar-geral { background-color: #334155; padding: 18px; font-size: 20px; width: 100%; border: 2px solid #475569; color: white; cursor: pointer; font-weight: bold; border-radius: 10px; }
-
-        .relatorio-area { margin-top: 30px; width: 100%; }
-        table { width: 100%; border-collapse: collapse; background: #1a1a1a; color: #eee; border-radius: 10px; overflow: hidden; }
-        th { background: #334155; color: #fff; padding: 12px; text-align: left; font-size: 14px; }
-        td { padding: 12px; border-bottom: 1px solid #333; font-family: 'Courier New', Courier, monospace; font-size: 11px; white-space: pre-wrap; }
-
-        .status-hash {
-            font-size: 12px;
-            padding: 5px 10px;
-            border-radius: 5px;
-            background: #000;
-            border: 1px solid #444;
-        }
+        .modal-content {
+			background: #2d2d2d;
+			padding: 20px;
+			border-radius: 15px;
+			width: 300px; border: 2px solid var(--info);
+		}
         
-        .badge-autosave {
-            font-size: 10px;
-            padding: 2px 6px;
-            border-radius: 4px;
-            margin-left: 10px;
-            text-transform: uppercase;
+		.modal-label {
+			display: block;
+			font-size: 11px;
+			color: var(--info);
+			margin-bottom: 4px;
+			text-transform: uppercase;
+			font-weight: bold;
+		}
+        
+        .modal-input { 
+            width: 100%; padding: 10px; background: #1e1e1e; border: 1px solid #555; 
+            color: white; border-radius: 8px; margin-bottom: 12px; font-size: 16px; 
+            text-align: center; box-sizing: border-box; text-transform: uppercase; 
         }
-        .active-save { background: #065f46; color: #34d399; border: 1px solid #059669; }
-        .blocked-save { background: #7f1d1d; color: #f87171; border: 1px solid #991b1b; }
+
+        .acoes-final { margin-top: auto; display: flex; flex-direction: column; gap: 8px; width: 100%; padding-top: 10px; }
+        .btn-salvar-onda { background-color: #15803d; padding: 12px; font-size: 12px; width: 100%; color: white; cursor: pointer; border: none; font-weight: bold; border-radius: 8px; }
+        .btn-finalizar-geral { background-color: #334155; padding: 14px; font-size: 14px; width: 100%; border: 2px solid #475569; color: white; cursor: pointer; font-weight: bold; border-radius: 8px; }
+
+        .relatorio-area { margin-top: 25px; width: 100%; padding-bottom: 50px; }
+        table { width: 100%; border-collapse: collapse; background: #1a1a1a; color: #eee; border-radius: 10px; overflow: hidden; }
+        th { background: #334155; color: #fff; padding: 10px; text-align: left; font-size: 13px; }
+        td { padding: 10px; border-bottom: 1px solid #333; font-family: 'Courier New', Courier, monospace; font-size: 11px; white-space: pre-wrap; }
+
+        .status-hash { font-size: 11px; padding: 4px 8px; border-radius: 5px; background: #000; border: 1px solid #444; }
+		
+		.shut-label-row {
+			display: grid;
+			grid-template-columns: repeat(4, 1fr);
+			padding: 5px 8px;
+			margin-bottom: 5px;
+			border-bottom: 1px solid #333;
+			color: var(--info);
+			font-size: 11px;
+			font-weight: bold;
+			text-align: center;
+			text-transform: uppercase;
+		}
     </style>
 </head>
 <body>
@@ -182,46 +237,69 @@
         </div>
         
         <div class="layout-principal">
-            <div id="monitor-abnet-lista">
-                <div style="color:var(--info); font-size:14px; font-weight:bold; margin-bottom:12px; text-align:center;">Monitor de Shuts</div>
-                <div id="shuts-box-lista" class="lista-shuts"></div>
-            </div>
+			<div id="monitor-abnet-lista">
+				<div style="color:var(--info); font-size:13px; font-weight:bold; margin-bottom:5px; text-align:center;">MONITOR DE CHUTES</div>
+				
+				<div class="shut-label-row">
+					<span>Chute</span>
+					<span>Itens</span>
+					<span>Caminho</span>
+					<span>Faltam</span>
+				</div>
+			
+				<div id="shuts-box-lista" class="lista-shuts"></div>
+			</div>
 
             <div class="grid-contadores">
-                <div class="card devolvida"><h3>Devolvidas p/ Shut</h3><span class="numero" id="v-boa">0</span><div class="controles"><button class="btn btn-sub" onclick="alterar('boa', -1)">-</button><button class="btn btn-add" onclick="alterar('boa', 1)">+</button></div></div>
-                <div class="card rejeito"><h3>Etiqueta Ruim</h3><span class="numero" id="v-ruim">0</span><div class="controles"><button class="btn btn-sub" onclick="alterar('ruim', -1)">-</button><button class="btn btn-add" onclick="abrirModal('ruim')">+</button></div></div>
                 <div class="card rejeito"><h3>Etiqueta Rasgada</h3><span class="numero" id="v-rasgada">0</span><div class="controles"><button class="btn btn-sub" onclick="alterar('rasgada', -1)">-</button><button class="btn btn-add" onclick="abrirModal('rasgada')">+</button></div></div>
                 <div class="card rejeito"><h3>Etiqueta Amassada</h3><span class="numero" id="v-amassada">0</span><div class="controles"><button class="btn btn-sub" onclick="alterar('amassada', -1)">-</button><button class="btn btn-add" onclick="abrirModal('amassada')">+</button></div></div>
-                <div class="card rejeito"><h3>Sem Etiqueta</h3><span class="numero" id="v-sem">0</span><div class="controles"><button class="btn btn-sub" onclick="alterar('sem', -1)">-</button><button class="btn btn-add" onclick="alterar('sem', 1)">+</button></div></div>
+                <div class="card rejeito"><h3>Etiqueta Ruim</h3><span class="numero" id="v-ruim">0</span><div class="controles"><button class="btn btn-sub" onclick="alterar('ruim', -1)">-</button><button class="btn btn-add" onclick="abrirModal('ruim')">+</button></div></div>
+                <div class="card rejeito"><h3>Sem Etiqueta</h3><span class="numero" id="v-sem">0</span><div class="controles"><button class="btn btn-sub" onclick="alterar('sem', -1)">-</button><button class="btn btn-add" onclick="abrirModal('sem')">+</button></div></div>
+                <div class="card devolvida"><h3>Devolvidas p/ Shut</h3><span class="numero" id="v-boa">0</span><div class="controles"><button class="btn btn-sub" onclick="alterar('boa', -1)">-</button><button class="btn btn-add" onclick="abrirModal('boa')">+</button></div></div>
+                <div class="card inversao-card"><h3>Inversão</h3><span class="numero" id="v-inversao">0</span><div class="controles"><button class="btn btn-sub" onclick="alterar('inversao', -1)">-</button><button class="btn btn-add" onclick="abrirModal('inversao')">+</button></div></div>
                 <div class="card avaria-card"><h3>Avaria Refrio</h3><span class="numero" id="v-avaria_refrio">0</span><div class="controles"><button class="btn btn-sub" onclick="alterar('avaria_refrio', -1)">-</button><button class="btn btn-add" onclick="abrirModal('avaria_refrio')">+</button></div></div>
                 <div class="card avaria-card"><h3>Avaria Cliente</h3><span class="numero" id="v-avaria_cliente">0</span><div class="controles"><button class="btn btn-sub" onclick="alterar('avaria_cliente', -1)">-</button><button class="btn btn-add" onclick="abrirModal('avaria_cliente')">+</button></div></div>
-                <div class="card inversao-card"><h3>Inversão</h3><span class="numero" id="v-inversao">0</span><div class="controles"><button class="btn btn-sub" onclick="alterar('inversao', -1)">-</button><button class="btn btn-add" onclick="abrirModal('inversao')">+</button></div></div>
             </div>
 
             <div class="coluna-indicadores">
                 <div class="painel-status">
-                    <div class="status-item"><span class="status-label">Total Sorter</span><span class="status-valor" id="abnet-total">0</span></div>
-                    <div class="status-item"><span class="status-label">Classificado</span><span class="status-valor" id="abnet-classif" style="color: var(--success)">0</span></div>
-                    <div class="status-item"><span class="status-label">Faltam</span><span class="status-valor" id="abnet-faltam-geral" style="color: var(--warning)">0</span></div>
                     <div class="status-item" style="border:none"><span class="status-label">Progresso</span><span class="status-valor" id="abnet-porcentagem" style="color: var(--success)">0%</span></div>
                 </div>
+				<div class="painel-status">
+					<div class="status-item" style="border:none">
+						<span class="status-label">Total Rejeitos</span>
+						<span class="status-valor" id="total-rejeitos-geral" style="color: var(--danger)">0</span>
+					</div>
+				</div>				
+				<div class="painel-status">
+					<div class="status-item"><span class="status-label">Total Sorter</span><span class="status-valor" id="abnet-total">0</span></div>
+					<div class="status-item"><span class="status-label">Classificado</span><span class="status-valor" id="abnet-classif" style="color: var(--success)">0</span></div>
+					<div class="status-item"><span class="status-label">Faltam</span><span class="status-valor" id="abnet-faltam-geral" style="color: var(--warning)">0</span></div>
+					<div class="status-item" style="border:none">
+						<span class="status-label">Sobras</span>
+						<span class="status-valor" id="abnet-sobra-geral" style="color: var(--info)">0</span>
+					</div>
+				</div>                <div class="acoes-final">
+                    <button class="btn btn-salvar-onda" onclick="salvarOnda(false)">Atualizar Relatório</button>
+                    <button class="btn btn-finalizar-geral" onclick="finalizarOperacaoCompleta()">Finalizar Dia</button>
+                </div>
             </div>
-        </div>
-
-        <div class="acoes-final">
-            <button class="btn btn-salvar-onda" onclick="salvarOnda(false)">GERAR RELATÓRIO ONDA (MANUAL)</button>
-            <button class="btn btn-finalizar-geral" onclick="finalizarOperacaoCompleta()">BAIXAR TUDO E FINALIZAR DIA</button>
         </div>
     </div>
 
     <div id="modalInfo" class="modal-overlay">
         <div class="modal-content">
-            <h2 id="modalTitle" style="text-align:center; color:var(--info); font-size:1.1rem;">Registrar</h2>
-            <div style="display:flex; justify-content: space-around; margin-bottom: 15px;">
+            <h2 id="modalTitle" style="text-align:center; color:var(--info); font-size:1.1rem; margin-top:0;">Registrar</h2>
+            <div id="wrapper-opcoes" style="display:flex; justify-content: space-around; margin-bottom: 15px;">
                 <label><input type="radio" name="opcao" value="RUA" id="radioRua" checked> RUA</label>
-                <label><input type="radio" name="opcao" value="CHUTE"> CHUTE</label>
+                <label id="label-chute"><input type="radio" name="opcao" value="CHUTE" id="radioChute"> CHUTE</label>
             </div>
-            <input type="text" id="modalInput" class="modal-input" placeholder="Número...">
+            <div id="secao-local">
+                <label class="modal-label" id="label-dinamica">RUA</label>
+                <input type="text" id="modalInput" class="modal-input" placeholder="Ex: W12">
+            </div>
+            <label class="modal-label">Quantidade:</label>
+            <input type="number" id="modalQtd" class="modal-input" placeholder="QTD" min="1">
             <div style="display:flex; gap:10px;">
                 <button style="background:#444; flex:1;" class="btn" onclick="fecharModal()">VOLTAR</button>
                 <button style="background:var(--success); color:#000; flex:1;" class="btn" onclick="confirmarModal()">OK</button>
@@ -238,47 +316,48 @@
     </div>
 
     <script>
-        let dadosOndas = {}; 
-        let ondaSelecionada = 1; 
-        let ondaAtivaNoSorter = 1; 
-        let historicoFinalizado = []; 
-        let realTimeAbnet = { shuts: [], total: 0, classif: 0, caminho: 0, falta: 0, porc: "0%", hash: 0 };
-        let hashEmMemoria = 0; 
-        let emEsperaDeNovaOnda = false;
-        let tipoModal = "";
+        let dadosOndas = {}; let ondaSelecionada = 1; let ondaAtivaNoSorter = 1; 
+        let historicoFinalizado = []; let realTimeAbnet = { shuts: [], total: 0, classif: 0, caminho: 0, falta: 0, porc: "0%", hash: 0 };
+        let hashEmMemoria = 0; let emEsperaDeNovaOnda = false; let tipoModal = "";
+
+        window.addEventListener('keydown', function(event) {
+            const modal = document.getElementById('modalInfo');
+            if (modal.style.display === "flex") {
+                if (event.key === "Enter") confirmarModal();
+                else if (event.key === "Escape") fecharModal();
+            }
+        });
 
         window.onload = function() {
             const savedDados = localStorage.getItem('dadosOndas');
             const savedHistorico = localStorage.getItem('historicoOndas');
             const savedOndaAtiva = localStorage.getItem('ondaAtivaNoSorter');
-            
             if (savedDados) dadosOndas = JSON.parse(savedDados);
             if (savedHistorico) historicoFinalizado = JSON.parse(savedHistorico);
             if (savedOndaAtiva) {
                 ondaAtivaNoSorter = parseInt(savedOndaAtiva);
                 ondaSelecionada = ondaAtivaNoSorter;
             }
-
             garantirOndaExistente(ondaAtivaNoSorter);
             atualizarSelectOndas();
             atualizarTela();
             renderizarHistorico();
-            
             setInterval(executarCicloMonitoramento, 5000);
             executarCicloMonitoramento();
         };
 
-        function garantirOndaExistente(num) {
-            if (!dadosOndas[num]) {
-                dadosOndas[num] = {
-                    contagem: { boa: 0, ruim: 0, rasgada: 0, amassada: 0, sem: 0, avaria_refrio: 0, avaria_cliente: 0, inversao: 0 },
-                    obs: [],
-                    sorterSnapshot: null,
-                    hashGravado: 0,
-                    finalizada: false
-                };
-            }
-        }
+		function garantirOndaExistente(num) {
+			if (!dadosOndas[num]) {
+				dadosOndas[num] = {
+					contagem: { boa: 0, ruim: 0, rasgada: 0, amassada: 0, sem: 0, avaria_refrio: 0, avaria_cliente: 0, inversao: 0 },
+					obs: [], 
+					sorterSnapshot: null, 
+					hashGravado: 0, 
+					horaAssociada: null, // Campo para guardar a hora de início
+					finalizada: false
+				};
+			}
+		}
 
         function executarCicloMonitoramento() {
             fetch('dados_abnet.txt?t=' + new Date().getTime())
@@ -287,10 +366,8 @@
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(data, 'text/html');
                     const rows = doc.querySelectorAll('table tr');
-                    
                     let totalGeral = 0, classifGeral = 0, caminhoGeral = 0, somaHash = 0;
                     let tempShuts = [];
-
                     if (rows.length > 1) {
                         rows.forEach((row, index) => {
                             if (index > 0) {
@@ -309,41 +386,38 @@
                             }
                         });
                     }
-
                     hashEmMemoria = somaHash;
                     realTimeAbnet = {
-                        shuts: tempShuts,
-                        total: totalGeral, classif: classifGeral, caminho: caminhoGeral,
-                        falta: (totalGeral - classifGeral),
-                        porc: totalGeral > 0 ? ((classifGeral / totalGeral) * 100).toFixed(1) + "%" : "0%",
-                        hash: somaHash
+                        shuts: tempShuts, total: totalGeral, classif: classifGeral, caminho: caminhoGeral,
+                        falta: (totalGeral - classifGeral), porc: totalGeral > 0 ? ((classifGeral / totalGeral) * 100).toFixed(1) + "%" : "0%", hash: somaHash
                     };
-
                     processarLogicaHash();
                     atualizarTela();
                 });
         }
 
-        function processarLogicaHash() {
-            const statusLabel = document.getElementById('hash-status-display');
-            const infoOnda = dadosOndas[ondaAtivaNoSorter];
-            const hashAtual = hashEmMemoria;
-
-            if (infoOnda.hashGravado === 0 && hashAtual > 0) {
-                infoOnda.hashGravado = hashAtual;
-                emEsperaDeNovaOnda = false; 
-            }
-
+		function processarLogicaHash() {
+			const statusLabel = document.getElementById('hash-status-display');
+			const infoOnda = dadosOndas[ondaAtivaNoSorter];
+			const hashAtual = hashEmMemoria;
+		
+			if (infoOnda.hashGravado === 0 && hashAtual > 0) {
+				infoOnda.hashGravado = hashAtual;
+					
+				// GRAVA AQUI: Apenas uma vez, quando associa o hash
+				infoOnda.horaAssociada = new Date().toLocaleString('pt-BR'); 
+					
+				emEsperaDeNovaOnda = false; 
+			}
             if (hashAtual === 0) {
                 if (infoOnda.hashGravado !== 0) {
                     infoOnda.finalizada = true;
                     emEsperaDeNovaOnda = true;
                 }
-                statusLabel.innerText = "Sorter Limpo (Preservando Últimos Dados)";
+                statusLabel.innerText = "Sorter Limpo";
                 statusLabel.style.color = "var(--warning)";
                 return; 
             }
-
             if (emEsperaDeNovaOnda && hashAtual > 0 && hashAtual !== infoOnda.hashGravado) {
                 ondaAtivaNoSorter++;
                 ondaSelecionada = ondaAtivaNoSorter; 
@@ -352,7 +426,6 @@
                 emEsperaDeNovaOnda = false;
                 atualizarSelectOndas();
             }
-
             if (hashAtual === infoOnda.hashGravado) {
                 if (ondaSelecionada === ondaAtivaNoSorter) {
                     infoOnda.sorterSnapshot = JSON.parse(JSON.stringify(realTimeAbnet));
@@ -360,82 +433,117 @@
                     statusLabel.innerText = "Hash OK: " + hashAtual;
                     statusLabel.style.color = "var(--success)";
                 } else {
-                    statusLabel.innerText = "Sorter em Onda " + ondaAtivaNoSorter;
+                    statusLabel.innerText = "Onda Atual: " + ondaAtivaNoSorter;
                     statusLabel.style.color = "var(--info)";
-                }
-            } else {
-                if (hashAtual > 0 && !emEsperaDeNovaOnda) {
-                    statusLabel.innerText = "Hash Divergente";
-                    statusLabel.style.color = "var(--danger)";
                 }
             }
         }
 
-        function salvarOndaNoHistorico(numOnda, silencioso) {
-            let info = dadosOndas[numOnda];
-            if (!info.sorterSnapshot) return;
+		function formatarNome(tipo) {
+			return tipo.split('_')
+					.map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+					.join(' ');
+		}
 
-            let agora = new Date().toLocaleString('pt-BR');
-            let c = info.contagem;
-            let s = info.sorterSnapshot;
-            let totalRejeitos = c.ruim + c.rasgada + c.amassada + c.sem;
-            
-            let texto = `RELATÓRIO ONDA ${numOnda.toString().padStart(2, '0')} (Sinc: ${agora})\n`;
-            texto += `HASH DA ONDA (ID): ${info.hashGravado}\n`;
-            texto += `------------------------------------------------------------\n`;
-            texto += `REJEITOS: Ruim: ${c.ruim} | Rasgada: ${c.rasgada} | Amassada: ${c.amassada} | Sem: ${c.sem}\n`;
-            texto += `TOTAL REJEITOS: ${totalRejeitos}\n`;
-            texto += `AVARIAS/INVERSÃO: Refrio: ${c.avaria_refrio} | Cliente: ${c.avaria_cliente} | Inv: ${c.inversao}\n\n`;
-            
-            if (info.obs.length > 0) {
-                texto += `REGISTROS DETALHADOS:\n`;
-                info.obs.forEach(o => texto += `- ${o.tipo}: ${o.subtipo} ${o.valor}\n`);
-                texto += `\n`;
-            }
+		function salvarOndaNoHistorico(numOnda, silencioso) {
+			let info = dadosOndas[numOnda];
+			if (!info.sorterSnapshot) return;
+			
+			// Recupera a hora que foi gravada lá no processarLogicaHash
+			let dataInicio = info.horaAssociada || new Date().toLocaleString('pt-BR');
+			
+			let c = info.contagem;
+			let s = info.sorterSnapshot;
+			let totalRejeitos = c.ruim + c.rasgada + c.amassada + c.sem;
+		
+			// Cabeçalho atualizado
+//			let texto = `RELATÓRIO ONDA ${numOnda.toString().padStart(2, '0')} (Associada: ${dataInicio})\n`;
+			let texto = `RELATÓRIO ONDA ${numOnda.toString().padStart(2, '0')}               Associada: ${dataInicio}\n`;
 
-            texto += `DADOS SORTER:\n`;
+            texto += `-----------------------------------------------------------------\n`;
+            texto += `  REJEITOS:\n`;
+            texto += `    Etiqueta Ruim:     ${c.ruim}\n    Etiqueta Rasgada:  ${c.rasgada}\n    Etiqueta Amassada: ${c.amassada}\n    Sem Etiqueta:      ${c.sem}\n`;
+            texto += `    Total de Rejeitos: ${totalRejeitos}\n\n`;
+            texto += `  AVARIAS/INVERSÕES:\n    Avaria Refrio:     ${c.avaria_refrio}\n    Avaria Cliente:    ${c.avaria_cliente}\n    Inversão:          ${c.inversao}\n\n`;
+
+			if (info.obs.length > 0) {
+				const registrosFiltrados = info.obs.filter(o => o.tipo !== 'boa' && o.tipo !== 'sem');
+			
+				if (registrosFiltrados.length > 0) {
+					texto += `  REGISTROS DE RUAS:\n`;
+					registrosFiltrados.forEach(o => {
+						// Formata o tipo (ex: Ruim, Avaria Refrio)
+						let nomeFormatado = formatarNome(o.tipo);
+						
+						// Alinha a coluna: Nome do Tipo (18 espaços) + Subtipo (RUA/CHUTE) + Valor
+						texto += `    ${(nomeFormatado + ":").padEnd(18)} ${o.subtipo} ${o.valor}\n`;
+					});
+					texto += ``;
+				}
+			}
+			
+            texto += `-----------------------------------------------------------------\n`;
+            texto += `  DADOS SORTER:\n`;
+            texto += `    Chute       Itens        Classif.     Falta\n`;
             if (s.shuts) {
                 s.shuts.forEach(sh => {
-                    texto += `S${sh.chute.padEnd(3)} T:${sh.total.toString().padEnd(4)} C:${sh.classif.toString().padEnd(4)} F:${sh.falta}\n`;
+                    texto += `    ${sh.chute.padEnd(3)}         ${sh.total.toString().padEnd(4)}         ${sh.classif.toString().padEnd(4)}         ${sh.falta}\n`;
                 });
             }
-            texto += `------------------------------------------------------------\n`;
-            texto += `TOTAL: ${s.total} | CLASS: ${s.classif} | FALTAM: ${s.falta} | %: ${s.porc}\n\n`;
-
+            texto += `-----------------------------------------------------------------\n`;
+            texto += `TOTAL: ${s.total}     CLASS: ${s.classif}     FALTAM: ${s.falta}     PROGRESSO: ${s.porc}\n\n`;
             let index = historicoFinalizado.findIndex(h => h.id === numOnda);
-            if (index !== -1) {
-                historicoFinalizado[index].conteudo = texto;
-            } else {
-                historicoFinalizado.unshift({ id: numOnda, conteudo: texto });
-            }
-            
+            if (index !== -1) historicoFinalizado[index].conteudo = texto;
+            else historicoFinalizado.unshift({ id: numOnda, conteudo: texto });
             salvarNoNavegador();
             renderizarHistorico();
         }
 
         function salvarOnda(silencioso) {
-            if (!silencioso && !confirm("Gerar relatório manual da onda " + ondaSelecionada + "?")) return;
+            if (!silencioso && !confirm("Gerar relatório da onda " + ondaSelecionada + "?")) return;
             salvarOndaNoHistorico(ondaSelecionada, false);
         }
 
-        function renderizarMonitor(dados) {
-            if (!dados || !dados.shuts) return;
-            let htmlLista = "";
-            dados.shuts.forEach(s => {
-                let cor = s.falta <= 0 ? 'var(--success)' : 'var(--warning)';
-                htmlLista += `<div class="shut-line" style="border-color: ${cor};">
-                                <b>S${s.chute}</b>
-                                <div style="text-align:center">${s.classif}/${s.total}</div>
-                                <div style="color:var(--avaria); font-size:10px">CAM: ${s.caminho}</div>
-                                <div style="text-align:right; font-weight:bold">F: ${s.falta}</div>
-                              </div>`;
-            });
-            document.getElementById('shuts-box-lista').innerHTML = htmlLista;
-            document.getElementById('abnet-total').innerText = dados.total;
-            document.getElementById('abnet-classif').innerText = dados.classif;
-            document.getElementById('abnet-faltam-geral').innerText = dados.falta;
-            document.getElementById('abnet-porcentagem').innerText = dados.porc;
-        }
+		function renderizarMonitor(dados) {
+			if (!dados || !dados.shuts) return;
+			
+			const info = dadosOndas[ondaSelecionada];
+			const c = info.contagem;
+			const totalRejeitos = c.ruim + c.rasgada + c.amassada + c.sem;
+		
+			let	htmlLista = "";
+			dados.shuts.forEach(s => {
+				let cor = s.falta <= 0 ? 'var(--success)' : 'var(--warning)';
+				htmlLista += `<div class="shut-line" style="border-color: ${cor};">
+								<div style="text-align:center; font-weight:bold">${s.chute}</div>
+								<div style="text-align:center">${s.classif}/${s.total}</div>
+								<div style="color:var(--avaria); font-size:11px; text-align:center">${s.caminho}</div>
+								<div style="text-align:center; font-weight:bold">${s.falta}</div>
+							</div>`;
+			});
+		
+			document.getElementById('shuts-box-lista').innerHTML = htmlLista;
+			document.getElementById('abnet-total').innerText = dados.total;
+			document.getElementById('abnet-classif').innerText = dados.classif;
+			
+			const diff = dados.falta - totalRejeitos;
+			const elFalta = document.getElementById('abnet-faltam-geral');
+			const elSobra = document.getElementById('abnet-sobra-geral');
+			
+			if (diff < 0) {
+				// Se a diferença é negativa, temos SOBRA
+				elFalta.innerText = 0;
+				elSobra.innerText = Math.abs(diff); // Transforma o negativo em positivo para exibição
+				elFalta.style.color = "var(--success)"; // Se a falta é 0, está OK
+			} else {
+				// Se a diferença é positiva, ainda temos FALTA
+				elFalta.innerText = diff;
+				elSobra.innerText = 0;
+				elFalta.style.color = diff === 0 ? "var(--success)" : "var(--warning)";
+			}
+		
+			document.getElementById('abnet-porcentagem').innerText = dados.porc;
+		}
 
         function atualizarTela() {
             const info = dadosOndas[ondaSelecionada];
@@ -449,26 +557,24 @@
             document.getElementById('v-avaria_cliente').innerText = c.avaria_cliente;
             document.getElementById('v-inversao').innerText = c.inversao;
 
+			const somaRejeitos = c.ruim + c.rasgada + c.amassada + c.sem;
+			document.getElementById('total-rejeitos-geral').innerText = somaRejeitos;
+	
             const indicator = document.getElementById('save-indicator');
-            
             if (ondaSelecionada === ondaAtivaNoSorter) {
                 if (hashEmMemoria === 0 && info.sorterSnapshot) {
-                    indicator.innerText = "Sorter Limpo (Snapshot)";
-                    indicator.className = "badge-autosave blocked-save";
+                    indicator.innerText = "Snapshot";
+                    indicator.className = "badge-autosave";
                     renderizarMonitor(info.sorterSnapshot);
                 } else {
-                    indicator.innerText = "Auto-Save Ativo";
+                    indicator.innerText = "Auto-Save";
                     indicator.className = "badge-autosave active-save";
                     renderizarMonitor(realTimeAbnet);
                 }
             } else {
-                indicator.innerText = "Manual (Concluída)";
-                indicator.className = "badge-autosave blocked-save";
-                if (info.sorterSnapshot) {
-                    renderizarMonitor(info.sorterSnapshot);
-                } else {
-                    document.getElementById('shuts-box-lista').innerHTML = "<div style='text-align:center; padding:20px; color:#666'>Sem dados gravados.</div>";
-                }
+                indicator.innerText = "Concluída";
+                indicator.className = "badge-autosave";
+                if (info.sorterSnapshot) renderizarMonitor(info.sorterSnapshot);
             }
         }
 
@@ -510,50 +616,72 @@
         function abrirModal(tipo) {
             tipoModal = tipo;
             document.getElementById('modalInput').value = "";
+            document.getElementById('modalQtd').value = "";
+            const wrapperOpcoes = document.getElementById('wrapper-opcoes');
+            const secaoLocal = document.getElementById('secao-local');
+            const radioRua = document.getElementById('radioRua');
+            const labelChute = document.getElementById('label-chute');
+            const labelDinamica = document.getElementById('label-dinamica');
+
+            if (tipo === 'sem' || tipo === 'boa') {
+                wrapperOpcoes.style.display = "none";
+                secaoLocal.style.display = "none";
+            } else {
+                wrapperOpcoes.style.display = "flex";
+                secaoLocal.style.display = "block";
+                const aceitaChute = ['inversao', 'avaria_refrio', 'avaria_cliente'].includes(tipo);
+                labelChute.style.display = aceitaChute ? "inline-block" : "none";
+                labelDinamica.innerText = aceitaChute ? "RUA ou CHUTE" : "RUA";
+                if (!aceitaChute) radioRua.checked = true;
+            }
             document.getElementById('modalInfo').style.display = "flex";
-            document.getElementById('modalInput').focus();
-        }
-        function fecharModal() { document.getElementById('modalInfo').style.display = "none"; }
-        function confirmarModal() {
-            const v = document.getElementById('modalInput').value.trim();
-            if (v) {
-                const sub = document.querySelector('input[name="opcao"]:checked').value;
-                dadosOndas[ondaSelecionada].obs.push({ tipo: tipoModal, subtipo: sub, valor: v });
-                dadosOndas[ondaSelecionada].contagem[tipoModal]++;
-                fecharModal(); atualizarTela(); salvarNoNavegador();
-            }
-        }
-        function alterar(tipo, n) {
-            if (dadosOndas[ondaSelecionada].contagem[tipo] + n >= 0) {
-                dadosOndas[ondaSelecionada].contagem[tipo] += n;
-                atualizarTela(); salvarNoNavegador();
-            }
+            setTimeout(() => {
+                if(secaoLocal.style.display !== "none") document.getElementById('modalInput').focus();
+                else document.getElementById('modalQtd').focus();
+            }, 50);
         }
 
-        // --- NOVA FUNÇÃO PARA FORMATAR NOME DO ARQUIVO ---
-        function formatarDataHoraArquivo() {
-            const agora = new Date();
-            const dia = String(agora.getDate()).padStart(2, '0');
-            const mes = String(agora.getMonth() + 1).padStart(2, '0');
-            const ano = agora.getFullYear();
-            const horas = String(agora.getHours()).padStart(2, '0');
-            const minutos = String(agora.getMinutes()).padStart(2, '0');
-            return `${dia}-${mes}-${ano}_${horas}-${minutos}`;
+        function fecharModal() { document.getElementById('modalInfo').style.display = "none"; }
+
+        function confirmarModal() {
+            let local = document.getElementById('modalInput').value.trim().toUpperCase();
+            let qtd = parseInt(document.getElementById('modalQtd').value.trim());
+            if (isNaN(qtd) || qtd <= 0) return alert("Quantidade inválida.");
+            if (['sem', 'boa'].includes(tipoModal)) local = "N/A";
+            else if (!local) return alert("Informe o local.");
+
+            const sub = document.querySelector('input[name="opcao"]:checked').value;
+            const onda = dadosOndas[ondaSelecionada];
+            if (!onda.obs) onda.obs = [];
+            for(let i = 0; i < qtd; i++) {
+                onda.obs.push({ tipo: tipoModal, subtipo: (local === "N/A" ? 'GERAL' : sub), valor: local });
+            }
+            onda.contagem[tipoModal] += qtd;
+            fecharModal(); atualizarTela(); salvarNoNavegador();
+        }
+
+        function alterar(tipo, n) {
+            const onda = dadosOndas[ondaSelecionada];
+            if (n > 0) onda.contagem[tipo] += n;
+            else if (n < 0 && onda.contagem[tipo] > 0) {
+                onda.contagem[tipo] += n;
+                if (onda.obs) {
+                    for (let i = onda.obs.length - 1; i >= 0; i--) {
+                        if (onda.obs[i].tipo === tipo) { onda.obs.splice(i, 1); break; }
+                    }
+                }
+            }
+            atualizarTela(); salvarNoNavegador();
         }
 
         function finalizarOperacaoCompleta() {
-            if (confirm("Baixar relatório consolidado e LIMPAR TUDO?")) {
+            if (confirm("Finalizar dia e baixar relatórios?")) {
                 let res = "REPORTE DIA - FINALIZADO\n\n";
                 [...historicoFinalizado].sort((a,b) => a.id - b.id).forEach(h => res += h.conteudo + "\n\n");
-                
                 const blob = new Blob([res], { type: 'text/plain' });
                 const a = document.createElement('a');
                 a.href = URL.createObjectURL(blob);
-                
-                // --- NOME DO ARQUIVO DINÂMICO ---
-                const nomeArquivo = `Relatorio_Sorter_${formatarDataHoraArquivo()}.txt`;
-                a.download = nomeArquivo; 
-                
+                a.download = `Relatorio_Sorter_${new Date().getTime()}.txt`;
                 a.click();
                 localStorage.clear();
                 location.reload();
