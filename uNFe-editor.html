@@ -1,0 +1,303 @@
+<!-- =============================================================================
+    PROJETO: µNFe Editor
+    VERSÃO: 0.1.0
+    DATA: Outubro / 2026
+    DESCRIÇÃO: Editor de NF-e (.xml) em formato de formulário. Baseado no µPen Editor.
+    TECNOLOGIAS: HTML, CSS, JavaScript (sem dependências).
+============================================================================= -->
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>µNFe Editor v0.1.0</title>
+<style>
+:root{--bg-color:#1e1e1e;--toolbar-color:#2d2d2d;--text-color:#d4d4d4;--accent-color:#333;--accent-hover:#454545;--border-color:#3c3c3c;--icon-fill:#ccc;--danger-hover:#8e2e2e;--info-color:#777;--interactive-accent:#007acc}
+.light-theme{--bg-color:#fff;--toolbar-color:#f0f0f0;--text-color:#000;--accent-color:#ddd;--accent-hover:#ccc;--border-color:#bbb;--icon-fill:#333;--info-color:#555}
+body,html{margin:0;padding:0;height:100%;font-family:'Segoe UI',Tahoma,sans-serif;background:var(--bg-color);color:var(--text-color);overflow:hidden;transition:background-color .3s}
+[hidden]{display:none!important}
+.container{display:flex;flex-direction:column;height:100vh}
+header{background:var(--toolbar-color);padding:8px 15px;display:flex;gap:8px;border-bottom:1px solid var(--border-color);align-items:center}
+.btn-icon{background:var(--accent-color);border:1px solid var(--border-color);border-radius:4px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s}
+.btn-icon:hover{background:var(--accent-hover);border-color:#555}
+.btn-icon svg{width:20px;height:20px;fill:var(--icon-fill)}
+.btn-danger:hover{background:var(--danger-hover);border-color:#a00}
+.info-panel{margin-left:auto;text-align:right}
+.filename-display{font-size:11px;font-family:Consolas,monospace;display:block}
+.cursor-pos{font-size:10px;color:var(--info-color);font-family:Consolas,monospace;display:block}
+.unsaved::after{content:' *';color:#ffca28;font-weight:bold}
+#searchPanel{background:var(--toolbar-color);padding:8px 15px;display:none;gap:10px;border-bottom:1px solid var(--border-color);align-items:center}
+.search-input{background:var(--bg-color);border:1px solid var(--border-color);color:var(--text-color);padding:4px 8px;border-radius:3px;font-size:13px;outline:none}
+.search-input:focus,.fld input:focus,.fld textarea:focus,.ihead input:focus{border-color:var(--interactive-accent)}
+.tb{background:var(--accent-color);border:1px solid var(--border-color);border-radius:4px;color:var(--text-color);padding:6px 12px;font-size:12px;font-weight:bold;cursor:pointer}
+.tb:hover{background:var(--accent-hover)}
+#tabs{display:flex;background:var(--toolbar-color);border-bottom:1px solid var(--border-color);overflow-x:auto;padding:0 10px;flex-shrink:0}
+#tabs button{background:none;border:none;border-bottom:2px solid transparent;color:var(--text-color);padding:9px 14px;cursor:pointer;font:13px 'Segoe UI',Tahoma,sans-serif;white-space:nowrap}
+#tabs button:hover{background:var(--accent-hover)}
+#tabs button.on{border-bottom-color:var(--interactive-accent);color:var(--interactive-accent);font-weight:bold}
+#warn{display:none;background:#5a4a12;color:#ffe9a6;font-size:12px;padding:5px 15px}
+main{flex:1;overflow:auto;padding:15px;scrollbar-gutter:stable}
+main::-webkit-scrollbar,.iwrap::-webkit-scrollbar{width:10px;height:10px}
+main::-webkit-scrollbar-thumb,.iwrap::-webkit-scrollbar-thumb{background:var(--border-color);border-radius:5px}
+.empty{color:var(--info-color);text-align:center;margin-top:20vh}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px 12px}
+fieldset{grid-column:1/-1;border:1px solid var(--border-color);border-radius:6px;margin:0 0 12px;padding:10px 12px}
+.ibody fieldset{margin:0}
+legend{color:var(--interactive-accent);font-size:12px;font-weight:bold;padding:0 6px}
+.fld{display:block}.fld.wide{grid-column:1/-1}
+.fld span{display:block;font-size:11px;color:var(--info-color);margin-bottom:3px}
+.fld input,.fld textarea,.ihead input{width:100%;box-sizing:border-box;background:var(--bg-color);color:var(--text-color);border:1px solid var(--border-color);border-radius:3px;padding:6px 8px;font:13px Consolas,Monaco,monospace;outline:none}
+.fld textarea{resize:vertical}
+.bar{display:flex;gap:8px;align-items:center;margin-bottom:10px}.cnt{color:var(--info-color);font-size:12px}
+.iwrap{overflow-x:auto}.items{min-width:1010px;--cols:48px 100px minmax(220px,1fr) 90px 60px 50px 90px 110px 110px 168px}
+.ihead{display:grid;grid-template-columns:var(--cols);gap:6px;align-items:center;padding:6px}
+.hd{font-size:11px;color:var(--info-color);padding:0 6px 4px}
+.item{border:1px solid var(--border-color);border-radius:6px;margin-bottom:6px}
+.ibody{padding:10px 12px;border-top:1px solid var(--border-color);background:rgba(127,127,127,.07)}
+.acts{display:flex;gap:4px}
+.mini{background:var(--accent-color);border:1px solid var(--border-color);border-radius:4px;color:var(--text-color);height:26px;min-width:28px;cursor:pointer;font-size:12px}
+.mini:hover{background:var(--accent-hover)}.mini.del:hover{background:var(--danger-hover)}.tg{font-weight:bold}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;align-items:center;justify-content:center}
+.modal-content{background:var(--toolbar-color);color:var(--text-color);padding:25px;border-radius:8px;border:1px solid var(--border-color);max-width:420px;width:90%;box-shadow:0 10px 25px rgba(0,0,0,.5);text-align:center}
+.modal-content h2{margin-top:0;color:var(--interactive-accent);font-size:1.5rem}
+.modal-content h5{margin:0 0 15px;font-weight:normal;color:var(--info-color)}
+.modal-content ul{text-align:left;margin:15px 0;padding-left:20px;font-size:14px}
+.modal-content label{display:block;margin-bottom:5px;font-size:14px;font-weight:bold;text-align:left}
+.modal-content select{width:100%;padding:10px;background:var(--bg-color);color:var(--text-color);border:1px solid var(--border-color);border-radius:4px}
+.close-modal{margin-top:20px;width:100%;background:var(--interactive-accent);color:#fff;border:none;padding:12px;cursor:pointer;border-radius:4px;font-weight:bold}
+.close-modal:hover{background:#005a9e}
+</style>
+</head>
+<body>
+<div class="container">
+<header>
+<div id="btnNew" class="btn-icon btn-danger" title="Limpar tudo">
+            <svg viewBox="0 0 24 24"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19V4M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg>
+        </div>
+        <div id="btnOpen" class="btn-icon" title="Abrir">
+            <svg viewBox="0 0 24 24"><path d="M20,18H4V8H20M20,6H12L10,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V8C22,6.89 21.1,6 20,6Z"/></svg>
+        </div>
+        <div id="btnSave" class="btn-icon" title="Salvar">
+            <svg viewBox="0 0 24 24"><path d="M15,9H5V5H15M12,19A3,3 0 0,1 9,16A3,3 0 0,1 12,13A3,3 0 0,1 15,16A3,3 0 0,1 12,19M17,3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V7L17,3Z"/></svg>
+        </div>
+        
+        <div style="width: 1px; height: 24px; background: var(--border-color); margin: 0 5px;"></div>
+        
+        <div id="btnSearch" class="btn-icon" title="Localizar (Ctrl+F)">
+            <svg viewBox="0 0 24 24"><path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z"/></svg>
+        </div>
+
+        <div id="btnSettings" class="btn-icon" title="Configurações">
+            <svg viewBox="0 0 24 24"><path d="M19.14,12.94A7.49,7.49 0 0,0 19.19,12A7.49,7.49 0 0,0 19.14,11.06L21.19,9.47C21.33,9.36 21.37,9.16 21.28,9L19.28,5.5C19.19,5.34 19,5.28 18.84,5.34L16.39,6.3C15.97,5.97 15.5,5.7 15,5.5L14.65,3C14.62,2.82 14.47,2.7 14.29,2.7H9.71C9.53,2.7 9.38,2.82 9.35,3L9,5.5C8.5,5.7 8.03,5.97 7.61,6.3L5.16,5.34C5,5.28 4.81,5.34 4.72,5.5L2.72,9C2.63,9.16 2.67,9.36 2.81,9.47L4.86,11.06C4.81,11.38 4.78,11.69 4.78,12C4.78,12.31 4.81,12.62 4.86,12.94L2.81,14.53C2.67,14.64 2.63,14.84 2.72,15L4.72,18.5C4.81,18.66 5,18.72 5.16,18.66L7.61,17.7C8.03,18.03 8.5,18.3 9,18.5L9.35,21C9.38,21.18 9.53,21.3 9.71,21.3H14.29C14.47,21.3 14.62,21.18 14.65,21L15,18.5C15.5,18.3 15.97,18.03 16.39,17.7L18.84,18.66C19,18.72 19.19,18.66 19.28,18.5L21.28,15C21.37,14.84 21.33,14.64 21.19,14.53L19.14,12.94M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5Z"/></svg>
+        </div>
+        <div id="btnHelp" class="btn-icon" title="Ajuda">
+            <svg viewBox="0 0 24 24"><path d="M11,18H13V16H11V18M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20M12,6A4,4 0 0,0 8,10H10A2,2 0 0,1 12,8A2,2 0 0,1 14,10C14,12 11,11.75 11,15H13C13,12.75 16,12.5 16,10A4,4 0 0,0 12,6Z"/></svg>
+        </div>
+
+        
+<div class="info-panel">
+<span id="fileName" class="filename-display">sem-titulo.xml</span>
+<span id="info" class="cursor-pos"></span>
+</div>
+</header>
+
+<div id="searchPanel">
+<input type="text" id="findInput" class="search-input" placeholder="Localizar...">
+<button id="btnFindNext" class="tb">Buscar</button>
+<div style="width:1px;height:18px;background:var(--border-color);margin:0 5px"></div>
+<input type="text" id="replaceInput" class="search-input" placeholder="Substituir por...">
+<button id="btnReplaceAll" class="tb">Substituir</button>
+<button id="btnCloseSearch" class="btn-icon" style="width:28px;height:28px;margin-left:auto;background:none;border:none;color:var(--text-color)">✕</button>
+</div>
+
+<nav id="tabs"></nav>
+<div id="warn">⚠ O arquivo foi alterado: a assinatura digital (Signature) e o protocolo de autorização deixam de ser válidos.</div>
+<main id="form"></main>
+<input type="file" id="fileInput" accept=".xml" style="display:none">
+</div>
+
+<div id="modalHelp" class="modal"><div class="modal-content">
+<div class="help-logo">
+            <svg width="128px" height="128px" viewBox="0 0 128 128">
+                <g transform="translate(0,128) scale(0.1,-0.1)" fill="currentColor" stroke="none">
+                    <path d="M445 1219 c-299 -31 -311 -33 -318 -52 -3 -7 2 -51 9 -97 59 -350 130 -643 163 -671 17 -14 29 -15 113 -3 151 22 158 24 158 41 0 12 -7 14 -32 9 -18 -3 -73 -11 -122 -17 -81 -11 -90 -11 -101 5 -38 52 -177 707 -153 722 9 6 408 50 508 56 l55 3 10 -55 c14 -80 17 -82 93 -78 66 3 67 3 70 -24 6 -52 32 -25 32 33 0 24 -13 38 -87 94 -48 36 -95 64 -107 64 -12 -1 -142 -14 -291 -30z m381 -51 c48 -36 53 -43 38 -49 -26 -11 -82 -11 -88 -1 -9 15 -19 92 -12 92 4 0 32 -19 62 -42z"/>
+                    <path d="M1075 1151 c-29 -12 -96 -87 -214 -238 -56 -73 -100 -137 -96 -143 4 -6 -7 -27 -23 -48 -53 -68 -61 -103 -20 -87 22 8 68 -33 68 -60 0 -41 -11 -54 -64 -81 -28 -14 -61 -34 -72 -45 l-21 -20 1 50 c1 28 1 49 -1 47 -7 -7 -31 -111 -27 -118 3 -4 19 -1 37 7 18 8 111 25 207 40 96 14 180 31 187 38 9 9 6 34 -15 114 -15 57 -30 103 -34 103 -18 0 -17 -46 3 -114 12 -42 20 -79 17 -82 -6 -5 -180 -34 -212 -34 -13 0 -16 3 -9 13 6 6 13 24 17 40 3 15 12 27 20 27 7 0 30 24 51 54 20 30 45 56 54 59 18 4 132 188 195 314 41 82 45 124 16 153 -21 21 -34 23 -65 11z m-76 -153 c-86 -114 -129 -158 -129 -133 0 9 141 194 178 233 16 17 35 32 40 32 6 0 -34 -60 -89 -132z m90 -15 c-52 -86 -109 -173 -114 -173 -3 0 11 26 31 58 21 31 50 78 66 105 17 26 32 47 35 47 2 0 -6 -17 -18 -37z m-156 -188 c31 -32 31 -33 11 -60 -15 -19 -16 -19 -26 -2 -5 10 -30 31 -53 46 -42 27 -43 29 -29 49 14 20 17 21 42 8 15 -8 40 -26 55 -41z m-103 -31 c0 -12 -72 -104 -81 -104 -13 0 -12 4 22 59 18 28 38 51 45 51 8 0 14 -3 14 -6z m39 -109 c-33 -46 -53 -63 -27 -22 8 12 21 32 29 45 8 12 18 22 22 22 5 0 -6 -20 -24 -45z"/>
+                    <path d="M426 1031 c-98 -10 -151 -20 -154 -28 -5 -16 -9 -16 183 3 187 18 205 21 205 34 0 13 -52 11 -234 -9z"/>
+                    <path d="M481 936 c-123 -14 -186 -25 -189 -33 -5 -16 -22 -17 203 7 232 25 255 28 255 40 0 14 -58 11 -269 -14z"/>
+                    <path d="M485 835 c-210 -26 -192 -22 -179 -35 11 -11 353 22 375 35 10 7 3 26 -9 24 -4 -1 -88 -12 -187 -24z"/>
+                    <path d="M461 734 c-124 -14 -149 -20 -135 -33 15 -15 294 20 294 36 0 15 -5 15 -159 -3z"/>
+                    <path d="M667 513 c-15 -25 -26 -47 -25 -49 2 -2 20 19 40 46 21 28 32 50 25 50 -7 0 -25 -21 -40 -47z"/>
+                    <path d="M457 343 c-4 -3 -7 -57 -7 -120 l0 -113 30 0 c27 0 30 3 30 34 0 31 3 34 36 40 50 10 74 38 74 85 0 55 -34 81 -105 81 -28 0 -55 -3 -58 -7z m109 -60 c8 -32 -6 -57 -35 -61 -19 -3 -21 1 -21 42 0 42 2 46 25 46 18 0 26 -7 31 -27z"/>
+                    <path d="M250 302 c0 -4 -7 -62 -15 -127 -18 -148 -18 -145 0 -145 16 0 19 5 29 52 4 19 11 25 23 22 10 -3 27 2 38 9 17 13 21 13 31 -1 10 -14 16 -14 38 -4 31 14 33 28 6 35 -16 4 -20 11 -16 29 3 13 7 49 11 81 5 56 5 58 -17 55 -21 -3 -24 -10 -30 -72 -7 -73 -30 -113 -57 -97 -10 7 -11 25 -4 90 9 81 9 81 -14 81 -13 0 -23 -4 -23 -8z"/>
+                    <path d="M684 278 c-22 -5 -37 -19 -49 -43 -39 -85 31 -159 119 -125 44 16 32 36 -21 36 -37 -1 -48 3 -51 17 -3 13 3 17 26 17 44 0 77 30 69 62 -8 32 -50 48 -93 36z m51 -57 c-6 -5 -22 -13 -37 -16 -34 -9 -37 6 -7 36 19 19 22 20 37 5 10 -10 13 -19 7 -25z"/>
+                    <path d="M886 275 c-15 -8 -28 -10 -31 -4 -4 5 -15 9 -26 9 -17 0 -19 -8 -19 -85 0 -84 0 -85 25 -85 24 0 25 3 25 54 0 56 17 83 45 72 11 -4 15 -21 15 -66 0 -57 1 -60 25 -60 24 0 25 2 25 74 0 47 -5 77 -12 83 -25 19 -46 21 -72 8z"/>
+                </g>
+            </svg>
+        </div>
+<h2>µNFe Editor</h2><h5>v0.1.0 · Editor de NF-e em formulário</h5>
+<ul>
+<li>Abra um XML pelo botão da pasta ou arrastando o arquivo.</li>
+<li>Cada aba é uma seção da nota; os itens ficam em lista editável.</li>
+<li>Itens: ▸ expande todos os campos, Σ calcula vProd, ▲▼ move, ⧉ duplica, ✕ exclui.</li>
+<li>"Recalcular totais" soma os itens e atualiza ICMSTot, vNF e vNFTot.</li>
+<li>Ctrl+S salva, Ctrl+F localiza e substitui em todos os campos.</li>
+<li>Um rascunho é guardado automaticamente no navegador.</li>
+</ul>
+<button class="close-modal" onclick="this.closest('.modal').style.display='none'">Fechar</button>
+</div></div>
+
+<div id="modalSettings" class="modal"><div class="modal-content">
+<h2>Configurações</h2>
+<label for="themeSelector">Tema</label>
+<select id="themeSelector"><option value="dark">Escuro</option><option value="light">Claro</option></select>
+<button id="btnSaveSettings" class="close-modal">Salvar</button>
+</div></div>
+
+<script>
+const $=i=>document.getElementById(i),KEY={c:'nfe_draft',n:'nfe_name',t:'nfe_theme'};
+const main=$('form'),tabsEl=$('tabs'),open=new Set();
+let doc=null,tabs=[],cur=0,cursor=-1,saveT;
+
+const L={det:'Dados do item',ide:'Identificação',emit:'Emitente',dest:'Destinatário',enderEmit:'Endereço do emitente',enderDest:'Endereço do destinatário',retirada:'Retirada',entrega:'Entrega',prod:'Produto',imposto:'Impostos',rastro:'Rastreabilidade',total:'Totais',ICMSTot:'Totais ICMS',IBSCBSTot:'Totais IBS/CBS',transp:'Transporte',transporta:'Transportadora',vol:'Volumes',pag:'Pagamento',detPag:'Forma de pagamento',infAdic:'Informações adicionais',compra:'Compra',infRespTec:'Responsável técnico',infProt:'Protocolo',protNFe:'Protocolo de autorização',
+cUF:'UF (cód.)',cNF:'Cód. numérico',natOp:'Natureza da operação',mod:'Modelo',serie:'Série',nNF:'Número',dhEmi:'Emissão',dhSaiEnt:'Saída/Entrada',tpNF:'Tipo (0=Ent, 1=Saí)',idDest:'Destino da operação',cMunFG:'Mun. fato gerador',tpImp:'Formato DANFE',tpEmis:'Tipo de emissão',cDV:'Dígito verif.',tpAmb:'Ambiente',finNFe:'Finalidade',indFinal:'Consumidor final',indPres:'Presença do comprador',procEmi:'Processo de emissão',verProc:'Versão do processo',
+xNome:'Nome / Razão social',xFant:'Nome fantasia',xLgr:'Logradouro',nro:'Número',xCpl:'Complemento',xBairro:'Bairro',cMun:'Cód. município',xMun:'Município',CEP:'CEP',cPais:'Cód. país',xPais:'País',fone:'Telefone',indIEDest:'Ind. IE destinatário',CRT:'Regime tributário',xEnder:'Endereço',
+cProd:'Código',cEAN:'EAN comercial',xProd:'Descrição',uCom:'Un. comercial',qCom:'Qtd. comercial',vUnCom:'Vl. unit. comercial',vProd:'Valor dos produtos',cEANTrib:'EAN tributável',uTrib:'Un. tributável',qTrib:'Qtd. tributável',vUnTrib:'Vl. unit. tributável',indTot:'Compõe total',nLote:'Lote',qLote:'Qtd. lote',dFab:'Fabricação',dVal:'Validade',vItem:'Valor do item',vTotTrib:'Total de tributos',orig:'Origem',modBC:'Mod. base cálculo',vBC:'Base de cálculo',pICMS:'Alíq. ICMS (%)',vICMS:'Valor ICMS',vNF:'Valor da NF-e',vNFTot:'Valor total NF-e',vFrete:'Frete',vSeg:'Seguro',vDesc:'Desconto',vOutro:'Outras despesas',modFrete:'Modalidade do frete',esp:'Espécie',qVol:'Qtd. volumes',nVol:'Numeração',pesoL:'Peso líquido',pesoB:'Peso bruto',tPag:'Meio de pagamento',vPag:'Valor pago',infCpl:'Informações complementares',infAdFisco:'Informações ao fisco',xCont:'Contrato',xContato:'Contato',chNFe:'Chave de acesso',dhRecbto:'Recebimento',nProt:'Nº do protocolo',cStat:'Status',xMotivo:'Motivo',verAplic:'Versão do aplicativo',digVal:'Digest value'};
+const lbl=t=>L[t]||t,TA=new Set(['infCpl','infAdFisco']);
+const SUM=[['cProd','Código'],['xProd','Descrição'],['NCM','NCM'],['CFOP','CFOP'],['uCom','Un'],['qCom','Qtd'],['vUnCom','Vl. unit.'],['vProd','Total']];
+const HANDLED=new Set(['ide','emit','dest','retirada','entrega','det','total','transp','cobr','pag','infAdic','compra','infRespTec','exporta']);
+
+const h=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e};
+const sub=(e,p)=>p.split('/').reduce((x,n)=>x&&[...x.children].find(c=>c.localName===n),e);
+const infNFe=()=>doc.getElementsByTagName('infNFe')[0];
+const items=()=>[...infNFe().children].filter(c=>c.localName==='det');
+const btn=(t,f)=>{const b=h('button','tb',t);b.onclick=f;return b};
+function status(m){$('info').textContent=m;setTimeout(info,3500)}
+function info(){const n=doc&&sub(infNFe(),'ide/nNF'),s=doc&&sub(infNFe(),'ide/serie');$('info').textContent=n?`NF-e nº ${n.textContent} · Série ${s?s.textContent:''} · ${items().length} itens`:''}
+
+/* ---------- Documento ---------- */
+function load(txt,name){
+  const d=new DOMParser().parseFromString(txt,'application/xml');
+  if(d.getElementsByTagName('parsererror').length||!d.getElementsByTagName('infNFe').length){alert('Arquivo inválido: não foi encontrado um XML de NF-e (infNFe).');return false}
+  doc=d;open.clear();cur=0;cursor=-1;build();render();info();
+  $('fileName').textContent=name;$('fileName').classList.remove('unsaved');$('warn').style.display='none';
+  try{localStorage.setItem(KEY.c,txt);localStorage.setItem(KEY.n,name)}catch(e){}
+  return true}
+function serialize(){
+  const c=doc.cloneNode(true);
+  c.querySelectorAll('infCpl,infAdFisco').forEach(e=>{if(!e.textContent.trim())e.remove()});
+  const s=new XMLSerializer().serializeToString(c);
+  return s.startsWith('<?xml')?s:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+s}
+function touch(){
+  $('fileName').classList.add('unsaved');$('warn').style.display='block';info();
+  clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem(KEY.c,serialize());localStorage.setItem(KEY.n,$('fileName').textContent)}catch(e){}},500)}
+function build(){
+  const ch=n=>[...infNFe().children].filter(c=>c.localName===n),pr=[...doc.getElementsByTagName('protNFe')];
+  tabs=[['Identificação',()=>ch('ide')],['Emitente',()=>ch('emit')],['Destinatário',()=>ch('dest')],
+  ['Retirada / Entrega',()=>[...ch('retirada'),...ch('entrega')]],['Itens',()=>ch('det'),1],['Totais',()=>ch('total')],
+  ['Transporte',()=>ch('transp')],['Pagamento',()=>[...ch('cobr'),...ch('pag')]],
+  ['Adicionais',()=>[...ch('infAdic'),...ch('compra'),...ch('infRespTec'),...ch('exporta')]],
+  ['Outros',()=>[...infNFe().children].filter(c=>!HANDLED.has(c.localName))],['Protocolo',()=>pr]]
+  .map(([n,get,items])=>({n,get,items})).filter(t=>t.items||t.get().length)}
+
+/* ---------- Renderização ---------- */
+function renderTabs(){tabsEl.replaceChildren(...tabs.map((t,i)=>{const b=h('button',i===cur?'on':'',t.n);b.onclick=()=>{cur=i;renderTabs();render()};return b}))}
+function render(){
+  const y=main.scrollTop;main.replaceChildren();
+  if(!doc){tabsEl.replaceChildren();main.append(h('div','empty','Abra um arquivo XML de NF-e (ou arraste-o para cá).'));return}
+  renderTabs();const t=tabs[cur];
+  if(t.items)itemsView(main);else t.get().forEach(e=>main.append(group(e)));
+  main.scrollTop=y}
+function field(c){
+  const ta=TA.has(c.localName),w=h('label','fld'+(ta?' wide':'')),i=h(ta?'textarea':'input'),s=h('span','',lbl(c.localName));
+  s.title=c.localName;if(ta)i.rows=3;i.value=c.textContent;i._el=c;
+  i.oninput=()=>{c.textContent=i.value;touch()};w.append(s,i);return w}
+function group(e,skip){
+  const f=h('fieldset'),g=h('div','grid');f.append(h('legend','',lbl(e.localName)),g);
+  if(e.localName==='infAdic'&&!e.children.length)e.append(doc.createElementNS(e.namespaceURI,'infCpl'));
+  for(const c of e.children){if(skip&&skip.has(c))continue;g.append(c.children.length?group(c,skip):field(c))}
+  return f}
+
+/* ---------- Lista de itens ---------- */
+function op(fn){fn();items().forEach((d,i)=>d.setAttribute('nItem',i+1));touch();render()}
+function calc(d){
+  const p=sub(d,'prod'),q=parseFloat(sub(p,'qCom').textContent),u=parseFloat(sub(p,'vUnCom').textContent);
+  if(isNaN(q)||isNaN(u))return status('Qtd/valor unitário inválidos');
+  const v=(Math.round(q*u*100)/100).toFixed(2),vi=sub(d,'vItem');
+  sub(p,'vProd').textContent=v;if(vi)vi.textContent=v;touch();render()}
+function recalc(){
+  const T=infNFe().getElementsByTagName('ICMSTot')[0];if(!T)return status('ICMSTot não encontrado');
+  const g=(e,t)=>parseFloat((e.getElementsByTagName(t)[0]||{}).textContent)||0,s={vProd:0,vBC:0,vICMS:0,vTotTrib:0};
+  items().forEach(d=>{s.vProd+=g(d,'vProd');s.vTotTrib+=g(d,'vTotTrib');const ic=d.getElementsByTagName('ICMS')[0];if(ic){s.vBC+=g(ic,'vBC');s.vICMS+=g(ic,'vICMS')}});
+  const set=(t,v)=>{const e=T.getElementsByTagName(t)[0];if(e)e.textContent=v.toFixed(2)};
+  Object.entries(s).forEach(([k,v])=>set(k,v));
+  const vNF=s.vProd-g(T,'vDesc')-g(T,'vICMSDeson')+g(T,'vST')+g(T,'vFrete')+g(T,'vSeg')+g(T,'vOutro')+g(T,'vII')+g(T,'vIPI')+g(T,'vIPIDevol')+g(T,'vFCPST');
+  set('vNF',vNF);const tot=infNFe().getElementsByTagName('vNFTot')[0];if(tot)tot.textContent=vNF.toFixed(2);
+  touch();render();status('Totais recalculados: vNF = '+vNF.toFixed(2))}
+function itemsView(box){
+  const ds=items(),bar=h('div','bar'),wrap=h('div','iwrap'),list=h('div','items'),hd=h('div','ihead hd');
+  bar.append(btn('+ Adicionar item',()=>ds.length&&op(()=>{const l=ds[ds.length-1];l.after(l.cloneNode(true))})),btn('Recalcular totais',recalc),h('span','cnt',ds.length+' itens'));
+  hd.append(h('span','','#'),...SUM.map(s=>h('span','',s[1])),h('span'));list.append(hd);
+  ds.forEach((d,i)=>{
+    const p=sub(d,'prod'),skip=new Set(),it=h('div','item'),r=h('div','ihead'),body=h('div','ibody'),tg=h('button','mini tg');
+    const sync=()=>{const o=open.has(d);tg.textContent=(o?'▾ ':'▸ ')+(i+1);body.hidden=!o;if(o&&!body.firstChild)body.append(group(d,skip))};
+    tg.onclick=()=>{open.has(d)?open.delete(d):open.add(d);sync()};r.append(tg);
+    SUM.forEach(([t])=>{const e=sub(p,t);if(!e)return r.append(h('span'));skip.add(e);const x=h('input');x.value=e.textContent;x._el=e;x.oninput=()=>{e.textContent=x.value;touch()};r.append(x)});
+    const a=h('div','acts');
+    [['Σ','vProd = qtd × valor unitário',()=>calc(d)],
+     ['▲','Subir',()=>op(()=>{const v=d.previousElementSibling;if(v&&v.localName==='det')v.before(d)})],
+     ['▼','Descer',()=>op(()=>{const v=d.nextElementSibling;if(v&&v.localName==='det')v.after(d)})],
+     ['⧉','Duplicar',()=>op(()=>d.after(d.cloneNode(true)))],
+     ['✕','Excluir',()=>confirm('Excluir o item '+(i+1)+'?')&&op(()=>d.remove())]
+    ].forEach(([s,t,f])=>{const b=h('button','mini'+(s==='✕'?' del':''),s);b.title=t;b.onclick=f;a.append(b)});
+    r.append(a);it.append(r,body);list.append(it);sync()});
+  wrap.append(list);box.append(bar,wrap)}
+
+/* ---------- Busca ---------- */
+function toggleSearch(){const p=$('searchPanel'),v=p.style.display==='flex';p.style.display=v?'none':'flex';if(!v)$('findInput').focus()}
+function findNext(){
+  const n=$('findInput').value.toLowerCase();if(!n||!doc)return;
+  const all=[];tabs.forEach((t,ti)=>t.get().forEach(e=>[...e.getElementsByTagName('*')].forEach(l=>{if(!l.children.length)all.push([ti,l,e])})));
+  const hit=all.map((x,i)=>x[1].textContent.toLowerCase().includes(n)?i:-1).filter(i=>i>=0);
+  if(!hit.length)return status('Nenhuma ocorrência');
+  const k=hit.find(i=>i>cursor);cursor=k===undefined?hit[0]:k;
+  const [ti,l,e]=all[cursor];cur=ti;if(tabs[ti].items)open.add(e);render();
+  const inp=[...main.querySelectorAll('input,textarea')].find(x=>x._el===l);
+  if(inp){inp.focus();inp.select();inp.scrollIntoView({block:'center'})}
+  status(`${hit.indexOf(cursor)+1} de ${hit.length}`)}
+$('btnSearch').onclick=$('btnCloseSearch').onclick=toggleSearch;
+$('btnFindNext').onclick=findNext;
+$('findInput').onkeydown=e=>{if(e.key==='Enter')findNext()};
+$('btnReplaceAll').onclick=()=>{
+  const f=$('findInput').value,r=$('replaceInput').value;if(!f||!doc)return;let n=0;
+  [...doc.getElementsByTagName('*')].forEach(e=>{if(!e.children.length&&!e.closest('Signature')&&e.textContent.includes(f)){e.textContent=e.textContent.split(f).join(r);n++}});
+  if(n){touch();render()}status(n+' campo(s) alterado(s)')};
+
+/* ---------- Arquivo, tema e atalhos ---------- */
+function readFile(f){if(!f)return;const r=new FileReader();r.onload=ev=>load(ev.target.result,f.name);r.readAsText(f)}
+$('btnOpen').onclick=()=>$('fileInput').click();
+$('fileInput').onchange=e=>{readFile(e.target.files[0]);e.target.value=''};
+document.ondragover=e=>e.preventDefault();
+document.ondrop=e=>{e.preventDefault();readFile(e.dataTransfer.files[0])};
+$('btnSave').onclick=()=>{
+  if(!doc)return;let n=$('fileName').textContent;if(!/\.xml$/i.test(n))n+='.xml';
+  const a=h('a');a.href=URL.createObjectURL(new Blob([serialize()],{type:'application/xml'}));a.download=n;a.click();
+  $('fileName').classList.remove('unsaved')};
+$('btnNew').onclick=()=>{if(!confirm('Fechar a nota e limpar tudo?'))return;doc=null;tabs=[];
+  try{localStorage.removeItem(KEY.c);localStorage.removeItem(KEY.n)}catch(e){}
+  $('fileName').textContent='sem-titulo.xml';$('fileName').classList.remove('unsaved');$('warn').style.display='none';$('info').textContent='';render()};
+$('btnHelp').onclick=()=>$('modalHelp').style.display='flex';
+$('btnSettings').onclick=()=>$('modalSettings').style.display='flex';
+$('btnSaveSettings').onclick=()=>{const t=$('themeSelector').value;try{localStorage.setItem(KEY.t,t)}catch(e){}applyTheme(t);$('modalSettings').style.display='none'};
+function applyTheme(t){document.documentElement.classList.toggle('light-theme',t==='light')}
+document.addEventListener('keydown',e=>{
+  if(e.ctrlKey&&e.key==='s'){e.preventDefault();$('btnSave').click()}
+  if(e.ctrlKey&&e.key==='f'){e.preventDefault();toggleSearch()}});
+window.onclick=e=>{if(e.target.classList.contains('modal'))e.target.style.display='none'};
+window.onload=()=>{
+  let t='dark',c=null,n=null;
+  try{t=localStorage.getItem(KEY.t)||'dark';c=localStorage.getItem(KEY.c);n=localStorage.getItem(KEY.n)}catch(e){}
+  applyTheme(t);$('themeSelector').value=t;
+  if(!(c&&load(c,n||'sem-titulo.xml')))render()};
+</script>
+</body>
+</html>
