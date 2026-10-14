@@ -186,7 +186,7 @@ function validarNumerica(df, j, nome) {
       if (f <= 0) tipo = 'negativo ou zero';
       else if (!Number.isInteger(f)) tipo = 'valor não inteiro';
     }
-    if (tipo) erros.push({ linha: i + 2, valor: `'${s}'`, tipo, coluna: nome });
+    if (tipo) erros.push({ linha: i + 1, valor: `'${s}'`, tipo, coluna: nome });
   });
   return erros;
 }
@@ -194,7 +194,7 @@ function validarFormato(df, j, nome, re) {
   const info = infoColuna(df, j), erros = [];
   df.rows.forEach((row, i) => {
     const s = pyStr(row[j], info);
-    if (!re.test(s.trim())) erros.push({ linha: i + 2, valor: `'${s}'`, tipo: 'formato inválido', coluna: nome });
+    if (!re.test(s.trim())) erros.push({ linha: i + 1, valor: `'${s}'`, tipo: 'formato inválido', coluna: nome });
   });
   return erros;
 }
@@ -202,8 +202,8 @@ function validarData(df, j, nome) {
   const info = infoColuna(df, j), erros = [];
   df.rows.forEach((row, i) => {
     const v = row[j];
-    if (isNulo(v)) erros.push({ linha: i + 2, valor: `'${pyStr(v, info)}'`, tipo: 'data nula', coluna: nome });
-    else if (!dataValida(v)) erros.push({ linha: i + 2, valor: `'${pyStr(v, info)}'`, tipo: 'data inválida', coluna: nome });
+    if (isNulo(v)) erros.push({ linha: i + 1, valor: `'${pyStr(v, info)}'`, tipo: 'data nula', coluna: nome });
+    else if (!dataValida(v)) erros.push({ linha: i + 1, valor: `'${pyStr(v, info)}'`, tipo: 'data inválida', coluna: nome });
   });
   return erros;
 }
@@ -213,7 +213,7 @@ function processar(dfOrig) {
   const n = dfOrig.rows.length;
   if (n <= 11) throw new Error('O arquivo é muito pequeno (11 registros ou menos).');
   if (dfOrig.rows.slice(-5).some(r => r.every(isNulo)))
-    throw new Error(`A última linha (${n + 1}) ou uma das últimas linhas do arquivo contém um rascunho\nou dados inválidos. Por favor, remova-o.`);
+    throw new Error(`A última linha (${n}) ou uma das últimas linhas do arquivo contém um rascunho\nou dados inválidos. Por favor, remova-o.`);
 
   const df = { cols: dfOrig.cols.map(c => c.trim()), rows: dfOrig.rows };
   const det = {
