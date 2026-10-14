@@ -280,7 +280,7 @@ function setStatus(t) { $('status').textContent = t; }
 
 function tabela(cols, linhas) {
   const cab = '<th class="i"></th>' + cols.map(c => `<th>${esc(c)}</th>`).join('');
-  const corpo = linhas.map(l => `<tr data-i="${l.idx}"><td class="i">${l.idx}</td>${l.c.map(v => `<td>${esc(v)}</td>`).join('')}</tr>`).join('');
+  const corpo = linhas.map(l => `<tr data-i="${l.idx}"><td class="i">${l.idx + 1}</td>${l.c.map(v => `<td>${esc(v)}</td>`).join('')}</tr>`).join('');
   return `<table><thead><tr>${cab}</tr></thead><tbody>${corpo}</tbody></table>`;
 }
 
