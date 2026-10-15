@@ -23,7 +23,7 @@ header{display:flex;gap:12px;align-items:stretch;flex-wrap:wrap}
 #salvar:hover:not(:disabled){filter:brightness(.92)}
 #salvar:disabled{background:var(--line);color:var(--mut);cursor:not-allowed}
 section{flex:1 1 0;min-height:160px;display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:8px;overflow:hidden}
-section h2{margin:0;padding:8px 12px;font-size:13px;font-weight:700;border-bottom:1px solid var(--line);background:var(--head)}
+section h2{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin:0;padding:8px 12px;font-size:13px;font-weight:700;border-bottom:1px solid var(--line);background:var(--head)}
 .box{flex:1;overflow:auto;position:relative}
 .box.erro{background:var(--errbg);color:var(--errink)}
 pre{margin:0;padding:12px;font:14px/1.5 "Ubuntu Mono","DejaVu Sans Mono",Consolas,monospace;tab-size:8;white-space:pre}
@@ -35,11 +35,13 @@ tbody tr{cursor:pointer}
 tbody tr:hover{background:color-mix(in srgb,var(--sel) 40%,transparent)}
 tbody tr.sel{background:var(--sel)}
 tbody tr.sel td.cell{background:var(--cel);color:var(--celink);font-weight:700}
+.stats{display:flex;gap:28px;font-weight:400}
+.stats b{font-weight:700}
 .vazio{padding:14px;color:var(--mut)}
 </style>
 </head>
 <body>
-<div id="barra">Processador de Pós Faturados</div>
+<div id="barra">Processador de Arquivo Excel</div>
 <main>
 <header>
   <div id="drop" tabindex="0" role="button" aria-label="Escolher ou arrastar arquivo .xlsx">
@@ -49,8 +51,8 @@ tbody tr.sel td.cell{background:var(--cel);color:var(--celink);font-weight:700}
   </div>
   <button id="salvar" disabled>Salvar como .txt</button>
 </header>
-<section><h2>Planilha original</h2><div class="box" id="orig"><div class="vazio">A prévia da planilha original aparecerá aqui.</div></div></section>
-<section><h2>Arquivo processado</h2><div class="box" id="proc"><div class="vazio">A prévia do arquivo processado aparecerá aqui.</div></div></section>
+<section><h2><span>Planilha original</span><span class="stats" id="st-orig"></span></h2><div class="box" id="orig"><div class="vazio">A prévia da planilha original aparecerá aqui.</div></div></section>
+<section><h2><span>Arquivo processado</span><span class="stats" id="st-proc"></span></h2><div class="box" id="proc"><div class="vazio">A prévia do arquivo processado aparecerá aqui.</div></div></section>
 </main>
 
 <script>/*! xlsx.js (C) 2013-present SheetJS -- http://sheetjs.com */
@@ -208,6 +210,17 @@ function validarData(df, j, nome) {
   return erros;
 }
 
+/* Detecta as colunas pelo conteúdo (índices; -1 = não achou) */
+function detectarColunas(df) {
+  return {
+    'Data': detectarData(df),
+    'Nota Fiscal': detectarPorPadrao(df, RE_NF),
+    'Material': detectarPorPadrao(df, RE_MAT),
+    'Transporte': detectarPorPadrao(df, RE_TRP),
+    'Quantidade': detectarPorPadrao(df, RE_QTD),
+  };
+}
+
 /* ----- Processador ----- */
 function processar(dfOrig) {
   const n = dfOrig.rows.length;
@@ -216,13 +229,7 @@ function processar(dfOrig) {
     throw new Error(`A última linha (${n}) ou uma das últimas linhas do arquivo contém um rascunho\nou dados inválidos. Por favor, remova-o.`);
 
   const df = { cols: dfOrig.cols.map(c => c.trim()), rows: dfOrig.rows };
-  const det = {
-    'Data': detectarData(df),
-    'Nota Fiscal': detectarPorPadrao(df, RE_NF),
-    'Material': detectarPorPadrao(df, RE_MAT),
-    'Transporte': detectarPorPadrao(df, RE_TRP),
-    'Quantidade': detectarPorPadrao(df, RE_QTD),
-  };
+  const det = detectarColunas(df);
   const faltando = Object.keys(det).filter(k => det[k] < 0);
   if (faltando.length) throw new Error(`Erro: Colunas não detectadas - ${faltando.join(', ')}`);
 
@@ -321,10 +328,24 @@ for (const id of ['orig', 'proc']) $(id).addEventListener('click', e => {
   if (td) realcar(td.parentElement.dataset.i, id, td.cellIndex - 1);
 });
 
+const fmt = n => n.toLocaleString('pt-BR');
+const num = v => { const n = typeof v === 'number' ? v : parseFloat(String(v).trim().replace(',', '.')); return Number.isFinite(n) ? n : 0; };
+function stats(id, reg, notas, qtd) {
+  $(id).innerHTML = reg === null ? '' : `<span>Registros: <b>${fmt(reg)}</b></span><span>Notas: <b>${notas === null ? '—' : fmt(notas)}</b></span><span>Qtd. Total: <b>${qtd === null ? '—' : fmt(qtd)}</b></span>`;
+}
+function statsOriginal(df) {
+  const det = detectarColunas(df), jn = det['Nota Fiscal'], jq = det['Quantidade'];
+  const notas = jn < 0 ? null : new Set(df.rows.map(r => r[jn]).filter(v => !isNulo(v)).map(v => String(v).trim())).size;
+  const qtd = jq < 0 ? null : df.rows.reduce((s, r) => s + (isNulo(r[jq]) ? 0 : num(r[jq])), 0);
+  stats('st-orig', df.rows.length, notas, qtd);
+}
+const statsProcessado = linhas => stats('st-proc', linhas.length, new Set(linhas.map(l => l.c[1])).size, linhas.reduce((s, l) => s + num(l.c[5]), 0));
+
 async function tratar(file) {
   $('salvar').disabled = true; txtPronto = '';
   if (!/\.xlsx$/i.test(file.name)) { setStatus('Formato inválido: solte um arquivo .xlsx'); return; }
   setStatus('Processando...');
+  stats('st-orig', null); stats('st-proc', null);
   $('orig').innerHTML = '<div class="vazio">Processando...</div>';
   $('proc').className = 'box'; $('proc').innerHTML = '';
   await new Promise(r => setTimeout(r, 30)); // deixa a tela atualizar
@@ -332,9 +353,11 @@ async function tratar(file) {
   try {
     df = lerPlanilha(XLSX, await file.arrayBuffer());
     prevOriginal(df);
+    statsOriginal(df);
     const res = processar(df), linhas = res.linhas;
     mapa = res.mapa;
     $('proc').innerHTML = tabela(CABECALHO, linhas);
+    statsProcessado(linhas);
     txtPronto = gerarTxt(linhas);
     nomeSaida = file.name.replace(/\.[^.]+$/, '') + '.txt';
     setStatus(`Arquivo carregado:\n${file.name}`);
