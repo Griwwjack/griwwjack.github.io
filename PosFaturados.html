@@ -37,6 +37,8 @@ tbody tr.sel{background:var(--sel)}
 tbody tr.sel td.cell{background:var(--cel);color:var(--celink);font-weight:700}
 .stats{display:flex;gap:28px;font-weight:400}
 .stats b{font-weight:700}
+.stats .dif,.stats .dif b{color:#c7162b}
+@media (prefers-color-scheme:dark){.stats .dif,.stats .dif b{color:#ff6b6b}}
 .vazio{padding:14px;color:var(--mut)}
 </style>
 </head>
@@ -330,8 +332,19 @@ for (const id of ['orig', 'proc']) $(id).addEventListener('click', e => {
 
 const fmt = n => n.toLocaleString('pt-BR');
 const num = v => { const n = typeof v === 'number' ? v : parseFloat(String(v).trim().replace(',', '.')); return Number.isFinite(n) ? n : 0; };
+const resumo = {};
 function stats(id, reg, notas, qtd) {
-  $(id).innerHTML = reg === null ? '' : `<span>Registros: <b>${fmt(reg)}</b></span><span>Notas: <b>${notas === null ? '—' : fmt(notas)}</b></span><span>Qtd. Total: <b>${qtd === null ? '—' : fmt(qtd)}</b></span>`;
+  resumo[id] = reg === null ? null : { reg, notas, qtd };
+  $(id).innerHTML = reg === null ? '' : [['reg', 'Registros', reg], ['notas', 'Notas', notas], ['qtd', 'Qtd. Total', qtd]]
+    .map(([k, r, v]) => `<span data-k="${k}">${r}: <b>${v === null ? '—' : fmt(v)}</b></span>`).join('');
+}
+// Indicadores que divergem entre original e processado ficam em vermelho nas duas tabelas
+function compararStats() {
+  const a = resumo['st-orig'], b = resumo['st-proc'];
+  for (const k of ['reg', 'notas', 'qtd']) {
+    const dif = !!a && !!b && a[k] !== null && b[k] !== null && Math.abs(a[k] - b[k]) > 1e-9;
+    document.querySelectorAll(`.stats [data-k="${k}"]`).forEach(s => s.classList.toggle('dif', dif));
+  }
 }
 function statsOriginal(df) {
   const det = detectarColunas(df), jn = det['Nota Fiscal'], jq = det['Quantidade'];
@@ -339,7 +352,7 @@ function statsOriginal(df) {
   const qtd = jq < 0 ? null : df.rows.reduce((s, r) => s + (isNulo(r[jq]) ? 0 : num(r[jq])), 0);
   stats('st-orig', df.rows.length, notas, qtd);
 }
-const statsProcessado = linhas => stats('st-proc', linhas.length, new Set(linhas.map(l => l.c[1])).size, linhas.reduce((s, l) => s + num(l.c[5]), 0));
+const statsProcessado = linhas => { stats('st-proc', linhas.length, new Set(linhas.map(l => l.c[1])).size, linhas.reduce((s, l) => s + num(l.c[5]), 0)); compararStats(); };
 
 async function tratar(file) {
   $('salvar').disabled = true; txtPronto = '';
