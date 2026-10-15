@@ -12,60 +12,72 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>µNFe Editor v0.1.0</title>
 <style>
-:root{--bg-color:#1e1e1e;--toolbar-color:#2d2d2d;--text-color:#d4d4d4;--accent-color:#333;--accent-hover:#454545;--border-color:#3c3c3c;--icon-fill:#ccc;--danger-hover:#8e2e2e;--info-color:#777;--interactive-accent:#007acc}
-.light-theme{--bg-color:#fff;--toolbar-color:#f0f0f0;--text-color:#000;--accent-color:#ddd;--accent-hover:#ccc;--border-color:#bbb;--icon-fill:#333;--info-color:#555}
-body,html{margin:0;padding:0;height:100%;font-family:'Segoe UI',Tahoma,sans-serif;background:var(--bg-color);color:var(--text-color);overflow:hidden;transition:background-color .3s}
+:root{color-scheme:light dark;--bg:#f6f5f4;--card:#fff;--ink:#3d3d3d;--mut:#77716b;--line:#dcdad6;--acc:#e95420;--accink:#fff;--sel:#fad7c8;--head:#ebe9e7;--bar:#2c001e;--barink:#fff;--danger:#c7162b;--warnbg:#fff1cc;--warnink:#6b4a00}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#2e2e2e;--card:#242424;--ink:#eeeeec;--mut:#a8a39d;--line:#454545;--sel:#5a2f20;--head:#333;--danger:#ff6b6b;--warnbg:#4a3a10;--warnink:#ffe08a}}
+:root[data-theme=dark]{color-scheme:dark;--bg:#2e2e2e;--card:#242424;--ink:#eeeeec;--mut:#a8a39d;--line:#454545;--sel:#5a2f20;--head:#333;--danger:#ff6b6b;--warnbg:#4a3a10;--warnink:#ffe08a}
+:root[data-theme=light]{color-scheme:light}
+*{box-sizing:border-box}
+body,html{margin:0;padding:0;height:100%;background:var(--bg);color:var(--ink);font:14px/1.45 Ubuntu,Cantarell,'Noto Sans','Segoe UI',system-ui,sans-serif;overflow:hidden}
 [hidden]{display:none!important}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 .container{display:flex;flex-direction:column;height:100vh}
-header{background:var(--toolbar-color);padding:8px 15px;display:flex;gap:8px;border-bottom:1px solid var(--border-color);align-items:center}
-.btn-icon{background:var(--accent-color);border:1px solid var(--border-color);border-radius:4px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s}
-.btn-icon:hover{background:var(--accent-hover);border-color:#555}
-.btn-icon svg{width:20px;height:20px;fill:var(--icon-fill)}
-.btn-danger:hover{background:var(--danger-hover);border-color:#a00}
+header{background:var(--bar);color:var(--barink);padding:8px 16px;display:flex;gap:8px;border-bottom:3px solid var(--acc);align-items:center;flex:0 0 auto}
+.btn-icon{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);border-radius:6px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s}
+.btn-icon:hover{background:rgba(255,255,255,.26)}
+.btn-icon svg{width:20px;height:20px;fill:var(--barink)}
+.btn-danger:hover{background:var(--danger);border-color:var(--danger)}
 .info-panel{margin-left:auto;text-align:right}
-.filename-display{font-size:11px;font-family:Consolas,monospace;display:block}
-.cursor-pos{font-size:10px;color:var(--info-color);font-family:Consolas,monospace;display:block}
-.unsaved::after{content:' *';color:#ffca28;font-weight:bold}
-#searchPanel{background:var(--toolbar-color);padding:8px 15px;display:none;gap:10px;border-bottom:1px solid var(--border-color);align-items:center}
-.search-input{background:var(--bg-color);border:1px solid var(--border-color);color:var(--text-color);padding:4px 8px;border-radius:3px;font-size:13px;outline:none}
-.search-input:focus,.fld input:focus,.fld textarea:focus,.ihead input:focus{border-color:var(--interactive-accent)}
-.tb{background:var(--accent-color);border:1px solid var(--border-color);border-radius:4px;color:var(--text-color);padding:6px 12px;font-size:12px;font-weight:bold;cursor:pointer}
-.tb:hover{background:var(--accent-hover)}
-#tabs{display:flex;background:var(--toolbar-color);border-bottom:1px solid var(--border-color);overflow-x:auto;padding:0 10px;flex-shrink:0}
-#tabs button{background:none;border:none;border-bottom:2px solid transparent;color:var(--text-color);padding:9px 14px;cursor:pointer;font:13px 'Segoe UI',Tahoma,sans-serif;white-space:nowrap}
-#tabs button:hover{background:var(--accent-hover)}
-#tabs button.on{border-bottom-color:var(--interactive-accent);color:var(--interactive-accent);font-weight:bold}
-#warn{display:none;background:#5a4a12;color:#ffe9a6;font-size:12px;padding:5px 15px}
-main{flex:1;overflow:auto;padding:15px;scrollbar-gutter:stable}
+.filename-display{font:700 13px 'Ubuntu Mono','DejaVu Sans Mono',Consolas,monospace;display:block}
+.cursor-pos{font-size:11px;color:rgba(255,255,255,.7);display:block}
+.unsaved::after{content:' ●';color:#ff9b73}
+#searchPanel{background:var(--head);padding:8px 16px;display:none;gap:10px;border-bottom:1px solid var(--line);align-items:center}
+.search-input{background:var(--card);border:1px solid var(--line);color:var(--ink);padding:5px 9px;border-radius:6px;font:inherit;outline:none}
+.search-input:focus,.fld input:focus,.fld textarea:focus,.ihead input:focus{border-color:var(--acc)}
+.tb{background:var(--head);border:1px solid var(--line);border-radius:6px;color:var(--ink);padding:6px 14px;font:700 13px Ubuntu,Cantarell,system-ui,sans-serif;cursor:pointer}
+.tb:hover{border-color:var(--acc)}
+#tabs{display:flex;background:var(--card);border-bottom:1px solid var(--line);overflow-x:auto;padding:0 12px;flex-shrink:0}
+#tabs button{background:none;border:none;border-bottom:3px solid transparent;color:var(--ink);padding:9px 14px;cursor:pointer;font:inherit;white-space:nowrap}
+#tabs button:hover{background:var(--head)}
+#tabs button.on{border-bottom-color:var(--acc);color:var(--acc);font-weight:700}
+#warn{display:none;background:var(--warnbg);color:var(--warnink);font-size:13px;padding:6px 16px}
+main{flex:1;overflow:auto;padding:16px;scrollbar-gutter:stable}
 main::-webkit-scrollbar,.iwrap::-webkit-scrollbar{width:10px;height:10px}
-main::-webkit-scrollbar-thumb,.iwrap::-webkit-scrollbar-thumb{background:var(--border-color);border-radius:5px}
-.empty{color:var(--info-color);text-align:center;margin-top:20vh}
+main::-webkit-scrollbar-thumb,.iwrap::-webkit-scrollbar-thumb{background:var(--line);border-radius:5px}
+.empty{color:var(--mut);text-align:center;margin-top:20vh}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px 12px}
-fieldset{grid-column:1/-1;border:1px solid var(--border-color);border-radius:6px;margin:0 0 12px;padding:10px 12px}
+fieldset{grid-column:1/-1;background:var(--card);border:1px solid var(--line);border-radius:8px;margin:0 0 12px;padding:10px 14px 14px}
 .ibody fieldset{margin:0}
-legend{color:var(--interactive-accent);font-size:12px;font-weight:bold;padding:0 6px}
+legend{color:var(--acc);font-size:13px;font-weight:700;padding:0 6px}
 .fld{display:block}.fld.wide{grid-column:1/-1}
-.fld span{display:block;font-size:11px;color:var(--info-color);margin-bottom:3px}
-.fld input,.fld textarea,.ihead input{width:100%;box-sizing:border-box;background:var(--bg-color);color:var(--text-color);border:1px solid var(--border-color);border-radius:3px;padding:6px 8px;font:13px Consolas,Monaco,monospace;outline:none}
+.fld span{display:block;font-size:12px;color:var(--mut);margin-bottom:3px}
+.fld input,.fld textarea,.ihead input{width:100%;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:5px 9px;font:14px 'Ubuntu Mono','DejaVu Sans Mono',Consolas,monospace;outline:none}
 .fld textarea{resize:vertical}
-.bar{display:flex;gap:8px;align-items:center;margin-bottom:10px}.cnt{color:var(--info-color);font-size:12px}
+.bar{display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap}.cnt{color:var(--mut);font-size:13px}
 .iwrap{overflow-x:auto}.items{min-width:1075px;--cols:48px 100px minmax(220px,1fr) 90px 60px 60px 50px 90px 110px 110px 168px}
 .ihead{display:grid;grid-template-columns:var(--cols);gap:6px;align-items:center;padding:6px}
-.hd{font-size:11px;color:var(--info-color);padding:0 6px 4px}
-.item{border:1px solid var(--border-color);border-radius:6px;margin-bottom:6px}
-.ibody{padding:10px 12px;border-top:1px solid var(--border-color);background:rgba(127,127,127,.07)}
+.hd{font-size:13px;font-weight:700;background:var(--head);border:1px solid var(--line);border-radius:8px;margin-bottom:6px;padding:7px 6px}
+.item{background:var(--card);border:1px solid var(--line);border-radius:8px;margin-bottom:6px;overflow:hidden}
+.ibody{padding:12px;border-top:1px solid var(--line);background:var(--bg)}
 .acts{display:flex;gap:4px}
-.mini{background:var(--accent-color);border:1px solid var(--border-color);border-radius:4px;color:var(--text-color);height:26px;min-width:28px;cursor:pointer;font-size:12px}
-.mini:hover{background:var(--accent-hover)}.mini.del:hover{background:var(--danger-hover)}.tg{font-weight:bold}
-.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;align-items:center;justify-content:center}
-.modal-content{background:var(--toolbar-color);color:var(--text-color);padding:25px;border-radius:8px;border:1px solid var(--border-color);max-width:420px;width:90%;box-shadow:0 10px 25px rgba(0,0,0,.5);text-align:center}
-.modal-content h2{margin-top:0;color:var(--interactive-accent);font-size:1.5rem}
-.modal-content h5{margin:0 0 15px;font-weight:normal;color:var(--info-color)}
+.mini{background:var(--head);border:1px solid var(--line);border-radius:6px;color:var(--ink);height:28px;min-width:28px;cursor:pointer;font-size:13px}
+.mini:hover{border-color:var(--acc)}.mini.del:hover{background:var(--danger);border-color:var(--danger);color:#fff}.tg{font-weight:700;color:var(--acc)}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;align-items:center;justify-content:center}
+.modal-content{background:var(--card);color:var(--ink);padding:24px;border-radius:8px;border:1px solid var(--line);border-top:3px solid var(--acc);max-width:420px;width:90%;box-shadow:0 10px 25px rgba(0,0,0,.4);text-align:center}
+.modal-content h2{margin-top:0;color:var(--acc);font-size:1.5rem}
+.modal-content h5{margin:0 0 15px;font-weight:400;color:var(--mut)}
 .modal-content ul{text-align:left;margin:15px 0;padding-left:20px;font-size:14px}
-.modal-content label{display:block;margin-bottom:5px;font-size:14px;font-weight:bold;text-align:left}
-.modal-content select{width:100%;padding:10px;background:var(--bg-color);color:var(--text-color);border:1px solid var(--border-color);border-radius:4px}
-.close-modal{margin-top:20px;width:100%;background:var(--interactive-accent);color:#fff;border:none;padding:12px;cursor:pointer;border-radius:4px;font-weight:bold}
-.close-modal:hover{background:#005a9e}
+.modal-content label{display:block;margin-bottom:5px;font-size:14px;font-weight:700;text-align:left}
+.modal-content select{width:100%;padding:9px;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:6px;font:inherit}
+.modal-content select+label{margin-top:15px}
+.close-modal{margin-top:20px;width:100%;background:var(--acc);color:var(--accink);border:none;padding:12px;cursor:pointer;border-radius:6px;font:700 15px Ubuntu,Cantarell,system-ui,sans-serif}
+.close-modal:hover{filter:brightness(.92)}
+html[data-tabs=side] .container{display:grid;grid-template-columns:190px 1fr;grid-template-rows:auto auto auto minmax(0,1fr)}
+html[data-tabs=side] header,html[data-tabs=side] #searchPanel{grid-column:1/-1}
+html[data-tabs=side] #tabs{grid-column:1;grid-row:3/5;flex-direction:column;border-right:1px solid var(--line);border-bottom:0;padding:8px 0;overflow-x:hidden;overflow-y:auto}
+html[data-tabs=side] #tabs button{text-align:left;border-bottom:0;border-left:3px solid transparent}
+html[data-tabs=side] #tabs button.on{border-left-color:var(--acc)}
+html[data-tabs=side] #warn{grid-column:2;grid-row:3}
+html[data-tabs=side] main{grid-column:2;grid-row:4;min-height:0}
 </style>
 </head>
 <body>
@@ -81,7 +93,7 @@ legend{color:var(--interactive-accent);font-size:12px;font-weight:bold;padding:0
             <svg viewBox="0 0 24 24"><path d="M15,9H5V5H15M12,19A3,3 0 0,1 9,16A3,3 0 0,1 12,13A3,3 0 0,1 15,16A3,3 0 0,1 12,19M17,3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V7L17,3Z"/></svg>
         </div>
         
-        <div style="width: 1px; height: 24px; background: var(--border-color); margin: 0 5px;"></div>
+        <div style="width: 1px; height: 24px; background: rgba(255,255,255,.3); margin: 0 5px;"></div>
         
         <div id="btnSearch" class="btn-icon" title="Localizar (Ctrl+F)">
             <svg viewBox="0 0 24 24"><path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z"/></svg>
@@ -104,10 +116,10 @@ legend{color:var(--interactive-accent);font-size:12px;font-weight:bold;padding:0
 <div id="searchPanel">
 <input type="text" id="findInput" class="search-input" placeholder="Localizar...">
 <button id="btnFindNext" class="tb">Buscar</button>
-<div style="width:1px;height:18px;background:var(--border-color);margin:0 5px"></div>
+<div style="width:1px;height:18px;background:var(--line);margin:0 5px"></div>
 <input type="text" id="replaceInput" class="search-input" placeholder="Substituir por...">
 <button id="btnReplaceAll" class="tb">Substituir</button>
-<button id="btnCloseSearch" class="btn-icon" style="width:28px;height:28px;margin-left:auto;background:none;border:none;color:var(--text-color)">✕</button>
+<button id="btnCloseSearch" class="btn-icon" style="width:28px;height:28px;margin-left:auto;background:none;border:none;color:var(--barink)">✕</button>
 </div>
 
 <nav id="tabs"></nav>
@@ -149,12 +161,14 @@ legend{color:var(--interactive-accent);font-size:12px;font-weight:bold;padding:0
 <div id="modalSettings" class="modal"><div class="modal-content">
 <h2>Configurações</h2>
 <label for="themeSelector">Tema</label>
-<select id="themeSelector"><option value="dark">Escuro</option><option value="light">Claro</option></select>
-<button id="btnSaveSettings" class="close-modal">Salvar</button>
+<select id="themeSelector"><option value="auto">Automático (sistema)</option><option value="light">Claro</option><option value="dark">Escuro</option></select>
+<label for="tabsSelector">Posição das abas</label>
+<select id="tabsSelector"><option value="top">No topo</option><option value="side">Lateral</option></select>
+<button id="btnSaveSettings" class="close-modal">Fechar</button>
 </div></div>
 
 <script>
-const $=i=>document.getElementById(i),KEY={c:'nfe_draft',n:'nfe_name',t:'nfe_theme'};
+const $=i=>document.getElementById(i),KEY={c:'nfe_draft',n:'nfe_name',t:'nfe_theme',l:'nfe_tabs'};
 const main=$('form'),tabsEl=$('tabs'),open=new Set();
 let doc=null,tabs=[],cur=0,cursor=-1,saveT;
 
@@ -339,16 +353,18 @@ $('btnNew').onclick=()=>{if(!confirm('Fechar a nota e limpar tudo?'))return;doc=
   $('fileName').textContent='sem-titulo.xml';$('fileName').classList.remove('unsaved');$('warn').style.display='none';$('info').textContent='';render()};
 $('btnHelp').onclick=()=>$('modalHelp').style.display='flex';
 $('btnSettings').onclick=()=>$('modalSettings').style.display='flex';
-$('btnSaveSettings').onclick=()=>{const t=$('themeSelector').value;try{localStorage.setItem(KEY.t,t)}catch(e){}applyTheme(t);$('modalSettings').style.display='none'};
-function applyTheme(t){document.documentElement.classList.toggle('light-theme',t==='light')}
+const P={theme:'auto',tabs:'top'},SEL={theme:['themeSelector',KEY.t],tabs:['tabsSelector',KEY.l]};
+function applyPrefs(){const r=document.documentElement;r.dataset.theme=P.theme;r.dataset.tabs=P.tabs}
+Object.entries(SEL).forEach(([k,[id,key]])=>$(id).onchange=e=>{P[k]=e.target.value;try{localStorage.setItem(key,P[k])}catch(x){}applyPrefs()});
+$('btnSaveSettings').onclick=()=>$('modalSettings').style.display='none';
 document.addEventListener('keydown',e=>{
   if(e.ctrlKey&&e.key==='s'){e.preventDefault();$('btnSave').click()}
   if(e.ctrlKey&&e.key==='f'){e.preventDefault();toggleSearch()}});
 window.onclick=e=>{if(e.target.classList.contains('modal'))e.target.style.display='none'};
 window.onload=()=>{
-  let t='dark',c=null,n=null;
-  try{t=localStorage.getItem(KEY.t)||'dark';c=localStorage.getItem(KEY.c);n=localStorage.getItem(KEY.n)}catch(e){}
-  applyTheme(t);$('themeSelector').value=t;
+  let c=null,n=null;
+  try{Object.entries(SEL).forEach(([k,[,key]])=>P[k]=localStorage.getItem(key)||P[k]);c=localStorage.getItem(KEY.c);n=localStorage.getItem(KEY.n)}catch(e){}
+  applyPrefs();Object.entries(SEL).forEach(([k,[id]])=>$(id).value=P[k]);
   if(!(c&&load(c,n||'sem-titulo.xml')))render()};
 </script>
 </body>
