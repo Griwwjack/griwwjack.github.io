@@ -15,9 +15,9 @@
     <title>µPen Editor v0.2.4</title>
 
     <style>
-        :root{color-scheme:light dark;--bg:#f6f5f4;--card:#fff;--ink:#3d3d3d;--mut:#77716b;--line:#dcdad6;--acc:#e95420;--accink:#fff;--sel:#fad7c8;--head:#ebe9e7;--bar:#2c001e;--barink:#fff;--danger:#c7162b}
-        @media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#2e2e2e;--card:#242424;--ink:#eeeeec;--mut:#a8a39d;--line:#454545;--sel:#5a2f20;--head:#333;--danger:#ff6b6b}}
-        :root[data-theme=dark]{color-scheme:dark;--bg:#2e2e2e;--card:#242424;--ink:#eeeeec;--mut:#a8a39d;--line:#454545;--sel:#5a2f20;--head:#333;--danger:#ff6b6b}
+        :root{color-scheme:light dark;--bg:#f6f5f4;--card:#fff;--ink:#3d3d3d;--mut:#77716b;--line:#dcdad6;--acc:#e95420;--accink:#fff;--sel:#fad7c8;--head:#ebe9e7;--bar:#2c001e;--barink:#fff;--danger:#c7162b;--x-tag:#c34113;--x-attr:#0b62a4;--x-val:#2e7d32;--x-punct:#8a847d;--x-decl:#7b3fa0;--x-ent:#946200}
+        @media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#2e2e2e;--card:#242424;--ink:#eeeeec;--mut:#a8a39d;--line:#454545;--sel:#5a2f20;--head:#333;--danger:#ff6b6b;--x-tag:#ff8a5c;--x-attr:#8ab4f8;--x-val:#8fd18a;--x-punct:#8f8a84;--x-decl:#c792ea;--x-ent:#e0b341}}
+        :root[data-theme=dark]{color-scheme:dark;--bg:#2e2e2e;--card:#242424;--ink:#eeeeec;--mut:#a8a39d;--line:#454545;--sel:#5a2f20;--head:#333;--danger:#ff6b6b;--x-tag:#ff8a5c;--x-attr:#8ab4f8;--x-val:#8fd18a;--x-punct:#8f8a84;--x-decl:#c792ea;--x-ent:#e0b341}
         :root[data-theme=light]{color-scheme:light}
 
         *{box-sizing:border-box}
@@ -44,7 +44,16 @@
         .filename-display{font:700 13px 'Ubuntu Mono','DejaVu Sans Mono',Consolas,monospace;display:block}
         .cursor-pos{font:11px 'Ubuntu Mono','DejaVu Sans Mono',Consolas,monospace;color:rgba(255,255,255,.7);display:block}
 
-        textarea{flex-grow:1;width:100%;background:var(--card);color:var(--ink);border:none;padding:16px;resize:none;font:16px/1.6 'Ubuntu Mono','DejaVu Sans Mono',Consolas,Monaco,monospace;outline:none;overflow:auto;scrollbar-gutter:stable;caret-color:var(--acc)}
+        /* Editor: textarea transparente sobre uma camada <pre> colorida */
+        .editor-wrap{position:relative;flex:1;min-height:0;background:var(--card)}
+        textarea,#hl{position:absolute;inset:0;width:100%;height:100%;margin:0;border:none;padding:16px;font:16px/1.6 'Ubuntu Mono','DejaVu Sans Mono',Consolas,Monaco,monospace;tab-size:4;letter-spacing:0;font-variant-ligatures:none;white-space:pre;overflow-wrap:normal}
+        textarea{background:transparent;color:var(--ink);resize:none;outline:none;overflow:auto;scrollbar-gutter:stable;caret-color:var(--acc)}
+        #hl{color:var(--ink);overflow:hidden;pointer-events:none;padding-right:30px;padding-bottom:30px}
+        .editor-wrap:not(.hl-on) #hl{display:none}
+        .hl-on textarea{color:transparent}
+        .hl-on textarea::selection{background:rgba(233,84,32,.35);color:transparent}
+        .x-t{color:var(--x-tag);font-weight:700}.x-a{color:var(--x-attr)}.x-v{color:var(--x-val)}.x-p{color:var(--x-punct)}
+        .x-d{color:var(--x-decl)}.x-c{color:var(--x-punct);font-style:italic}.x-cd{color:var(--x-val)}.x-e{color:var(--x-ent)}
         textarea::placeholder{color:var(--mut)}
         textarea::selection{background:var(--sel)}
         textarea::-webkit-scrollbar{width:10px;height:10px}
@@ -120,7 +129,10 @@
         <button id="btnCloseSearch" class="tb" style="margin-left: auto;">✕</button>
     </div>
 
-    <textarea id="editor" wrap="off" spellcheck="false" placeholder="Comece a digitar..."></textarea>
+    <div class="editor-wrap">
+        <pre id="hl" aria-hidden="true"></pre>
+        <textarea id="editor" wrap="off" spellcheck="false" placeholder="Comece a digitar..."></textarea>
+    </div>
     <input type="file" id="fileInput" accept=".txt,.xml" style="display:none;">
 </div>
 
@@ -166,6 +178,9 @@
             <label><input type="checkbox" id="minifyCheck"> Ativar Smart XML (indentar ao abrir, minificar ao salvar).</label>
         </div>
         <div class="setting-group">
+            <label><input type="checkbox" id="syntaxCheck"> Colorir a sintaxe de arquivos .xml.</label>
+        </div>
+        <div class="setting-group">
             <label for="themeSelector">Tema:</label>
             <select id="themeSelector">
                 <option value="auto">Automático (sistema)</option>
@@ -194,6 +209,9 @@
     const cursorPosDisplay = document.getElementById('cursorPos');
     const fileInput = document.getElementById('fileInput');
     const minifyCheck = document.getElementById('minifyCheck');
+    const syntaxCheck = document.getElementById('syntaxCheck');
+    const hl = document.getElementById('hl');
+    const editorWrap = document.querySelector('.editor-wrap');
     const themeSelector = document.getElementById('themeSelector');
     const tabTypeSelector = document.getElementById('tabTypeSelector');
     const tabSizeInput = document.getElementById('tabSizeInput');
@@ -204,6 +222,7 @@
     const STORAGE_KEY_CONTENT = 'upen_draft_content';
     const STORAGE_KEY_NAME = 'upen_draft_name';
     const STORAGE_KEY_MINIFY = 'upen_minify_xml';
+    const STORAGE_KEY_SYNTAX = 'upen_syntax';
     const STORAGE_KEY_TAB_TYPE = 'upen_tab_type';
     const STORAGE_KEY_TAB_SIZE = 'upen_tab_size';
 
@@ -250,6 +269,36 @@
         if (tabTypeSelector.value === 'tabChar') return "\t";
         return " ".repeat(parseInt(tabSizeInput.value) || 4);
     }
+
+    // --- COLORAÇÃO DE SINTAXE XML ---
+    const HL_MAX = 400000; // acima disso a coloração é desligada para manter a digitação fluida
+    let hlFrame = 0;
+
+    function highlightXML(src) {
+        const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const sp = (c, s) => `<span class="${c}">${esc(s)}</span>`;
+        const attrs = a => a.replace(/("[^"]*"|'[^']*')|([^\s="']+)|([\s\S])/g,
+            (m, v, n, o) => v ? sp('x-v', v) : n ? sp('x-a', n) : esc(o));
+        return src.replace(/(<!--[\s\S]*?-->)|(<!\[CDATA\[[\s\S]*?\]\]>)|(<\?[\s\S]*?\?>)|(<\/?)([^\s<>\/]+)((?:"[^"]*"|'[^']*'|[^<>"'])*?)(\/?>)|([^<]+)|([\s\S])/g,
+            (m, com, cd, decl, open, name, at, close, txt, other) =>
+                com ? sp('x-c', com) : cd ? sp('x-cd', cd) : decl ? sp('x-d', decl)
+                : name !== undefined ? sp('x-p', open) + sp('x-t', name) + attrs(at) + sp('x-p', close)
+                : txt !== undefined ? esc(txt).replace(/&amp;(#?\w+);/g, '<span class="x-e">&amp;$1;</span>')
+                : esc(other)) + '\n';
+    }
+
+    function syncScroll() { hl.scrollTop = editor.scrollTop; hl.scrollLeft = editor.scrollLeft; }
+
+    function refreshHL() {
+        cancelAnimationFrame(hlFrame);
+        hlFrame = requestAnimationFrame(() => {
+            const on = /\.xml$/i.test(fileNameDisplay.textContent) && syntaxCheck.checked && editor.value.length <= HL_MAX;
+            editorWrap.classList.toggle('hl-on', on);
+            hl.innerHTML = on ? highlightXML(editor.value) : '';
+            syncScroll();
+        });
+    }
+    editor.addEventListener('scroll', syncScroll);
 
     function minifyXML(xml) { return xml.replace(/>\s+</g, '><').trim(); }
 
@@ -323,6 +372,8 @@
 
     document.getElementById('btnSaveSettings').onclick = () => {
         localStorage.setItem(STORAGE_KEY_MINIFY, minifyCheck.checked);
+        localStorage.setItem(STORAGE_KEY_SYNTAX, syntaxCheck.checked);
+        refreshHL();
         localStorage.setItem('upen_theme', themeSelector.value);
         localStorage.setItem(STORAGE_KEY_TAB_TYPE, tabTypeSelector.value);
         localStorage.setItem(STORAGE_KEY_TAB_SIZE, tabSizeInput.value);
@@ -335,6 +386,7 @@
         fileNameDisplay.textContent = name;
         localStorage.setItem(STORAGE_KEY_CONTENT, content);
         localStorage.setItem(STORAGE_KEY_NAME, name);
+        refreshHL();
         fileNameDisplay.classList.remove('unsaved');
         updateCursorInfo();
     }
@@ -352,6 +404,7 @@
         applyTheme(theme);
         themeSelector.value = theme;
         minifyCheck.checked = localStorage.getItem(STORAGE_KEY_MINIFY) === 'true';
+        syntaxCheck.checked = localStorage.getItem(STORAGE_KEY_SYNTAX) !== 'false';
         tabTypeSelector.value = localStorage.getItem(STORAGE_KEY_TAB_TYPE) || 'spaces';
         tabSizeInput.value = localStorage.getItem(STORAGE_KEY_TAB_SIZE) || '4';
         tabTypeSelector.onchange();
@@ -360,12 +413,14 @@
         if (c) editor.value = c;
         if (n) fileNameDisplay.textContent = n;
         updateCursorInfo();
+        refreshHL();
     };
 
     editor.oninput = () => {
         localStorage.setItem(STORAGE_KEY_CONTENT, editor.value);
         updateCursorInfo();
         fileNameDisplay.classList.add('unsaved');
+        refreshHL();
     };
 
     editor.onkeydown = (e) => {
