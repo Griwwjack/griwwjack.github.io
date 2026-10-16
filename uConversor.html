@@ -14,68 +14,74 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>uConversor</title>
     <style>
+        :root { color-scheme: light dark; --bg:#f6f5f4; --card:#fff; --ink:#3d3d3d; --mut:#77716b; --line:#dcdad6; --acc:#e95420; --bar:#2c001e; --barink:#fff; }
+        @media (prefers-color-scheme: dark) {
+            :root { --bg:#2e2e2e; --card:#242424; --ink:#eeeeec; --mut:#a8a39d; --line:#454545; }
+        }
+
         * {
             box-sizing: border-box;
         }
 
         body {
-            font-family: Arial, sans-serif;
-            background-color: #000; /* Fundo preto */
-            color: #C9D1D9; /* Branco acinzentado */
+            font: 14px/1.45 Ubuntu, Cantarell, 'Noto Sans', 'Segoe UI', system-ui, sans-serif;
+            background-color: var(--bg);
+            color: var(--ink);
             margin: 0;
             padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            min-height: 100vh;
         }
 
-        .title-container, .container {
-            width: calc(100% - 20px); /* Preenche 100% menos 10px de cada lado */
-            margin: 10px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-
+        /* Barra superior (estilo Ubuntu) */
         .title-container {
-            background-color: #222; /* Cinza escuro */
-            padding: 10px;
-            text-align: center;
+            background-color: var(--bar);
+            color: var(--barink);
+            padding: 10px 16px;
+            border-bottom: 3px solid var(--acc);
         }
 
         .title-container h1 {
             margin: 0;
-            font-size: 24px;
-            color: #58A6FF; /* Azul claro */
+            font-size: 18px;
+            font-weight: 700;
         }
 
         .container {
-            background-color: #222; /* Cinza escuro */
+            width: calc(100% - 32px);
+            max-width: 720px;
+            margin: 16px auto;
             padding: 20px;
+            background-color: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 8px;
         }
 
         label {
             display: block;
             margin-bottom: 5px;
-            color: #C9D1D9; /* Branco acinzentado */
+            font-weight: 700;
+            color: var(--mut);
         }
 
         input {
             width: 100%;
-            padding: 10px;
-            border: 1px solid #30363D; /* Borda cinza escuro */
-            border-radius: 5px;
-            font-size: 16px;
-            background-color: #111; /* Cinza escuro */
-            color: #C9D1D9; /* Texto branco acinzentado */
+            padding: 9px 10px;
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            font: 16px 'Ubuntu Mono', 'DejaVu Sans Mono', Consolas, Monaco, monospace;
+            background-color: var(--card);
+            color: var(--ink);
         }
 
         input:focus {
             outline: none;
-            border-color: #58A6FF; /* Azul claro quando focado */
+            border-color: var(--acc);
         }
 
         input::placeholder {
-            color: #8B949E; /* Cinza claro para o placeholder */
+            color: var(--mut);
+            font-family: Ubuntu, Cantarell, 'Noto Sans', 'Segoe UI', system-ui, sans-serif;
+            font-size: 14px;
         }
 
         /* Remove as setas de incremento e decremento nos campos de número */
@@ -91,14 +97,18 @@
 
         /* Espaçamento entre os grupos de entrada */
         .input-group {
-            margin-bottom: 15px; /* Espaço de 15px entre os campos */
+            margin-bottom: 15px;
+        }
+
+        .input-group:last-child {
+            margin-bottom: 0;
         }
     </style>
 </head>
 <body>
-    <div class="title-container">
+    <header class="title-container">
         <h1>uConversor</h1>
-    </div>
+    </header>
 
     <div class="container">
         <div class="input-group">
