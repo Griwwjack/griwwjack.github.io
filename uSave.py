@@ -1036,7 +1036,7 @@ def L(parent, text="", size=14, color="ink", bold=False, mono=False, **kw):
 
 def mk_entry(parent, var):
     return tk.Entry(parent, textvariable=var, font=F(16, mono=True), bg=C["bg"], fg=C["ink"],
-                    insertbackground=C["ink"], insertwidth=2, relief="flat", bd=0,
+                    insertbackground=C["ink"], insertwidth=2, relief="flat", bd=sz(9),
                     highlightthickness=2, highlightbackground=C["line"], highlightcolor=C["acc"])
 
 
@@ -1305,7 +1305,7 @@ class ProfileEditor:
 
         L(left, "Jogo / nome do perfil", 13, "mut", anchor="w").pack(fill="x")
         self.nv = tk.StringVar(value=p["name"])
-        mk_entry(left, self.nv).pack(fill="x", ipady=sz(9), pady=(sz(2), sz(10)))
+        mk_entry(left, self.nv).pack(fill="x", ipady=sz(1), pady=(sz(2), sz(10)))
         L(left, "Formato", 13, "mut", anchor="w").pack(fill="x")
         self.seg = Seg(left, [("zip", "ZIP"), ("tar.gz", "TAR.GZ")], p["format"], self._fmt)
         self.seg.pack(anchor="w", pady=(sz(2), sz(10)))
@@ -1314,7 +1314,7 @@ class ProfileEditor:
                 lambda v: p.update(keep=v)).pack(anchor="w", pady=(sz(2), sz(10)))
         L(left, "Ignorar arquivos (padrões separados por vírgula)", 13, "mut", anchor="w").pack(fill="x")
         self.ev = tk.StringVar(value=p["exclude"])
-        mk_entry(left, self.ev).pack(fill="x", ipady=sz(9), pady=(sz(2), 0))
+        mk_entry(left, self.ev).pack(fill="x", ipady=sz(1), pady=(sz(2), 0))
 
         L(right, "Pastas de saves", 13, "mut", anchor="w").pack(fill="x")
         self.sf = ScrollFrame(right, bg=C["bg"], height=sz(236))
@@ -1667,7 +1667,7 @@ class App:
         L(m.body, fmt_dt(b["ts"]) + "  •  " + b["fmt"].upper(), 14, "mut", bg=C["card"], anchor="w").pack(fill="x")
         var = tk.StringVar(value=b["comment"][:MAX_COMMENT])
         ent = mk_entry(m.body, var)
-        ent.pack(fill="x", ipady=sz(10), pady=(sz(8), sz(4)))
+        ent.pack(fill="x", ipady=sz(1), pady=(sz(8), sz(4)))
         cnt = L(m.body, "", 13, "mut", bg=C["card"], anchor="e")
         cnt.pack(fill="x")
         err = L(m.body, "O comentário vai no final do nome do arquivo. Deixe vazio para remover.",
