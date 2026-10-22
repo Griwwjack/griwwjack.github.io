@@ -97,27 +97,104 @@ def backup_dir(profile, settings):
 
 
 BK_RE = re.compile(r"^(?P<p>.+?)__(?P<ts>\d{8}-\d{6})(?P<pre>__pre)?(?: - (?P<c>.*))?\.(?P<ext>zip|tar\.gz)$")
-MAX_COMMENT = 32
+MAX_COMMENT = 120
+WRAP_COMMENT = 40     # quebra de linha (apenas na exibição do registro)
+COMMENT_COLORS = [("white", "#ffffff"), ("red", "#ff0000"), ("orange", "#ff6a00"), ("yellow", "#ffd800"),
+                  ("green", "#4cff00"), ("blue", "#0094ff"), ("magenta", "#ff00dc"), ("black", "#000000")]
+MANIFEST_MIN = 4096
+_MCACHE = {}
 
 
 def clean_comment(text):
-    """Remove caracteres inválidos em nomes de arquivo e limita a 32 caracteres."""
-    t = re.sub(r'[\\/:*?"<>|\x00-\x1f]+', " ", text or "")
-    return re.sub(r"\s+", " ", t).strip()[:MAX_COMMENT].strip()
+    """Comentário vai no manifest.json: só remove caracteres de controle e limita a 120."""
+    return re.sub(r"\s+", " ", re.sub(r"[\x00-\x1f]+", " ", text or "")).strip()[:MAX_COMMENT].strip()
 
 
-def set_comment(b, comment):
-    """Renomeia o backup: <base> - <comentário>.<ext>. Retorna o novo caminho."""
-    c = clean_comment(comment)
-    new = os.path.join(os.path.dirname(b["path"]), b["base"] + (" - " + c if c else "") + "." + b["fmt"])
-    if new != b["path"]:
-        if os.path.exists(new):
-            raise FileExistsError("Já existe um arquivo com esse nome.")
-        os.rename(b["path"], new)
-    return new
+def _manifest_bytes(mf):
+    return json.dumps(mf, ensure_ascii=False).encode("utf-8")
 
 
-def list_backups(profile, settings):
+def _targz_manifest_entry(mf):
+    """Entrada tar do manifesto com tamanho FIXO (folga em espaços), para permitir
+    regravação no lugar sem recomprimir o resto do backup."""
+    raw = _manifest_bytes(mf)
+    size = max(MANIFEST_MIN, -(-(len(raw) + 1024) // 512) * 512)
+    ti = tarfile.TarInfo("manifest.json")
+    ti.size, ti.mtime, ti.mode = size, int(time.time()), 0o644
+    return ti.tobuf(tarfile.PAX_FORMAT, "utf-8", "surrogateescape") + raw.ljust(size, b" ")
+
+
+def read_manifest(path, strict=False):
+    try:
+        st = os.stat(path)
+        key = (path, st.st_mtime_ns, st.st_size)
+        if key in _MCACHE:
+            return dict(_MCACHE[key])
+        if path.endswith(".zip"):
+            with zipfile.ZipFile(path) as zf:
+                mf = json.loads(zf.read("manifest.json"))
+        else:
+            with open(path, "rb") as f:
+                h = f.read(20)
+                if h[:4] == b"\x1f\x8b\x08\x04" and h[12:14] == b"PZ":
+                    f.seek(0)
+                    data = _gunzip_member(f.read(28 + struct.unpack("<I", h[16:20])[0]))
+                    tar = tarfile.open(fileobj=io.BytesIO(data), mode="r:")
+                else:
+                    tar = tarfile.open(path, "r:gz")
+            with tar:
+                ti = tar.next()
+                if ti is None or ti.name != "manifest.json":
+                    raise ValueError("sem manifesto")
+                mf = json.loads(tar.extractfile(ti).read())
+        _MCACHE[key] = mf
+        return dict(mf)
+    except Exception as e:
+        if strict:
+            raise ValueError("Não foi possível ler o manifest.json deste backup (%s)." % e)
+        return {}
+
+
+def _write_manifest_zip(path, mf):
+    with zipfile.ZipFile(path, "a") as zf:      # só regrava a entrada e o diretório central
+        old = zf.NameToInfo.pop("manifest.json", None)
+        if old is not None:
+            zf.filelist.remove(old)
+        zf.writestr("manifest.json", _manifest_bytes(mf), compress_type=zipfile.ZIP_DEFLATED)
+
+
+def _write_manifest_targz(path, mf):
+    members = scan_members(path)
+    if not members:
+        raise ValueError("Este .tar.gz não foi criado pelo µSave; não dá para editar o comentário.")
+    off, total = members[0]
+    with open(path, "r+b") as f:
+        f.seek(off)
+        data = _gunzip_member(f.read(total))
+        ti = tarfile.TarInfo.frombuf(data[:512], "utf-8", "surrogateescape")
+        raw = _manifest_bytes(mf)
+        if ti.name != "manifest.json" or len(data) != 512 + ti.size or len(raw) > ti.size:
+            raise ValueError("Este backup é de uma versão antiga e não permite editar o comentário.")
+        blob = _gz_member(data[:512] + raw.ljust(ti.size, b" "), 0)
+        if len(blob) != total:
+            raise ValueError("Tamanho do manifesto mudou; edição não suportada neste backup.")
+        f.seek(off)
+        f.write(blob)
+
+
+def set_comment(b, comment, color="white"):
+    """Grava comentário e cor no manifest.json dentro do backup. Retorna o caminho final."""
+    mf = read_manifest(b["path"], strict=True)
+    mf["comment"], mf["color"] = clean_comment(comment), color
+    (_write_manifest_zip if b["fmt"] == "zip" else _write_manifest_targz)(b["path"], mf)
+    clean = os.path.join(os.path.dirname(b["path"]), b["base"] + "." + b["fmt"])
+    if b["path"] != clean and not os.path.exists(clean):    # nome antigo "… - comentário"
+        os.rename(b["path"], clean)
+        return clean
+    return b["path"]
+
+
+def list_backups(profile, settings, meta=True):
     d = backup_dir(profile, settings)
     out = []
     try:
@@ -134,8 +211,10 @@ def list_backups(profile, settings):
             ts = datetime.strptime(m.group("ts"), "%Y%m%d-%H%M%S")
         except (OSError, ValueError):
             continue
+        mf = read_manifest(str(d / n)) if meta else {}
         out.append(dict(path=str(d / n), name=n, ts=ts, size=st.st_size,
-                        fmt=m.group("ext"), pre=bool(m.group("pre")), comment=m.group("c") or "",
+                        fmt=m.group("ext"), pre=bool(m.group("pre")),
+                        comment=mf.get("comment") or m.group("c") or "", color=mf.get("color", "white"),
                         base="%s__%s%s" % (m.group("p"), m.group("ts"), m.group("pre") or "")))
     out.sort(key=lambda b: b["ts"], reverse=True)
     return out
@@ -448,12 +527,18 @@ class ParallelGzipWriter:
             del self.buf[:CHUNK]
         return len(b)
 
-    def _submit(self, data):
+    def _submit(self, data, level=None):
         if self.cancel.is_set():
             raise Cancelled()
-        self.pending.append(self.pool.submit(_gz_member, data, self.level))
+        self.pending.append(self.pool.submit(_gz_member, data, self.level if level is None else level))
         while len(self.pending) >= self.window:
             self.out.write(self.pending.popleft().result())
+
+    def flush_member(self, level=0):
+        """Fecha o membro atual (usado para isolar o manifesto, gravado sem compressão)."""
+        if self.buf:
+            self._submit(bytes(self.buf), level)
+            self.buf = bytearray()
 
     def close(self):
         if self.buf:
@@ -480,11 +565,9 @@ def _backup_targz(files, manifest, tmp_path, level, workers, prog, cancel):
     try:
         with open(tmp_path, "wb") as out:
             w = ParallelGzipWriter(out, pool, level, workers, cancel)
+            w.write(_targz_manifest_entry(manifest))
+            w.flush_member(0)
             tar = tarfile.open(fileobj=w, mode="w|", format=tarfile.PAX_FORMAT, encoding="utf-8")
-            data = json.dumps(manifest, ensure_ascii=False).encode()
-            ti = tarfile.TarInfo("manifest.json")
-            ti.size, ti.mtime = len(data), time.time()
-            tar.addfile(ti, io.BytesIO(data))
             for path, arc, _size in files:
                 if cancel.is_set():
                     raise Cancelled()
@@ -635,7 +718,7 @@ def run_backup(profile, settings, prog, cancel, pre=False):
     stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
     final = d / ("%s__%s%s.%s" % (safe_name(profile["name"]), stamp, "__pre" if pre else "", fmt))
     tmp = str(final) + ".part"
-    manifest = dict(app=APP_NAME, version=1, profile=profile["name"],
+    manifest = dict(app=APP_NAME, version=2, profile=profile["name"], comment="", color="white",
                     created=datetime.now().isoformat(timespec="seconds"),
                     files=len(files), bytes=prog.total,
                     sources={"src%d" % i: os.path.abspath(os.path.expanduser(s))
@@ -721,6 +804,9 @@ FONT = dict(ui="sans-serif", mono="monospace")
 TOUCH = None
 
 
+ROW_H = 0   # definida em build_ui (altura fixa do registro de backup)
+
+
 def sz(n):
     return max(1, int(round(n * S)))
 
@@ -736,6 +822,26 @@ def shade(hexcolor, f):
     else:
         r, g, b = (min(255, int(c + (255 - c) * (f - 1))) for c in (r, g, b))
     return "#%02x%02x%02x" % (r, g, b)
+
+
+def _lum(h):
+    """Luminância relativa (WCAG)."""
+    def ch(v):
+        v /= 255.0
+        return v / 12.92 if v <= 0.03928 else ((v + 0.055) / 1.055) ** 2.4
+    r, g, b = (ch(int(h[i:i + 2], 16)) for i in (1, 3, 5))
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b
+
+
+def comment_style(key):
+    """(cor do texto, fundo). Mantém a cor escolhida; se ela sumiria no fundo do card
+    (ex.: preto no tema escuro), desenha o comentário sobre uma etiqueta clara."""
+    fg = dict(COMMENT_COLORS).get(key, "#ffffff")
+    a, b = _lum(fg), _lum(C["card"])
+    ratio = (max(a, b) + 0.05) / (min(a, b) + 0.05)
+    if ratio >= 1.8:
+        return fg, C["card"]
+    return fg, ("#eeeeec" if _lum(fg) < 0.5 else "#2e2e2e")
 
 
 def fmt_size(n):
@@ -1410,7 +1516,9 @@ class App:
         self.root.geometry("1280x800")
         fams = set(tkfont.families())
         FONT["ui"] = next((f for f in ("Ubuntu", "Cantarell", "Noto Sans", "DejaVu Sans") if f in fams), "sans-serif")
-        FONT["mono"] = next((f for f in ("Ubuntu Mono", "DejaVu Sans Mono", "Noto Sans Mono") if f in fams), "monospace")
+        FONT["mono"] = next((f for f in ("Ubuntu Mono", "DejaVu Sans Mono", "Consolas", "Cascadia Mono", "Liberation Mono",
+                                         "Noto Sans Mono", "Courier New") if f in fams),
+                            tkfont.nametofont("TkFixedFont").actual("family"))
         TOUCH = Touch(self.root)
         self.sel = self.cfg["profiles"][0]["id"] if self.cfg["profiles"] else None
         self.main = None
@@ -1447,6 +1555,8 @@ class App:
     def build_ui(self):
         if self.main:
             self.main.destroy()
+        global ROW_H
+        ROW_H = sz(68)
         self.main = tk.Frame(self.root, bg=C["bg"])
         self.main.pack(fill="both", expand=True)
         hd = tk.Frame(self.main, bg=C["bar"])
@@ -1459,16 +1569,14 @@ class App:
         Btn(pad, "", self.open_settings, "hdr", icon="gear", w=sz(56)).pack(side="left", padx=(sz(6), sz(8)))
         Btn(pad, "", self.open_help, "hdr", icon="help", w=sz(56)).pack(side="left")
         Btn(pad, "", self.quit_app, "hdr", icon="close", w=sz(56)).pack(side="right", padx=(sz(12), 0))
-        info = tk.Frame(pad, bg=C["bar"])
-        info.pack(side="right")
-        tk.Label(info, text=APP_NAME, font=F(16, True, True), fg="#fff", bg=C["bar"], anchor="e").pack(anchor="e")
-        self.hdr_sub = tk.Label(info, text="", font=F(12), fg="#cfc3cb", bg=C["bar"], anchor="e")
-        self.hdr_sub.pack(anchor="e")
+        self.build_title(pad)
 
         self.foot = tk.Frame(self.main, bg=C["head"], highlightthickness=1, highlightbackground=C["line"])
         self.foot.pack(side="bottom", fill="x")
+        self.info_lbl = tk.Label(self.foot, text="", font=F(13), fg=C["mut"], bg=C["head"], anchor="e")
+        self.info_lbl.pack(side="right", padx=(sz(10), sz(14)), pady=sz(5))
         self.status = tk.Label(self.foot, text="Pronto.", font=F(13), fg=C["mut"], bg=C["head"], anchor="w")
-        self.status.pack(fill="x", padx=sz(14), pady=sz(5))
+        self.status.pack(side="left", fill="x", expand=True, padx=(sz(14), 0), pady=sz(5))
 
         body = tk.Frame(self.main, bg=C["bg"])
         body.pack(fill="both", expand=True, padx=sz(14), pady=sz(12))
@@ -1481,6 +1589,21 @@ class App:
         self.detail = tk.Frame(body, bg=C["bg"])
         self.detail.pack(side="left", fill="both", expand=True)
         self.refresh()
+
+    def build_title(self, parent):
+        """Título: “µ” em itálico, “Save” normal e “Backup” 1 px menor, todos na mesma linha de base."""
+        big = F(34)
+        parts = [("µ", (big[0], big[1], "italic"), F(34)), ("Save ", big, big), ("Backup", F(33), F(33))]
+        fonts = [tkfont.Font(font=f) for _t, f, _m in parts]
+        main = fonts[1]
+        asc, h = main.metrics("ascent"), main.metrics("linespace")
+        w = sum(f.measure(t) for (t, _f, _m), f in zip(parts, fonts)) + sz(2)
+        cv = tk.Canvas(parent, width=w, height=h, bg=C["bar"], highlightthickness=0, bd=0)
+        cv.pack(side="right")
+        x = 0
+        for (t, f, _m), fo in zip(parts, fonts):
+            cv.create_text(x, asc + fo.metrics("descent"), text=t, font=f, fill="#ffffff", anchor="sw")
+            x += fo.measure(t)
 
     def set_status(self, text, color="mut"):
         self.status.config(text=text, fg=C[color])
@@ -1497,7 +1620,7 @@ class App:
         self.fill_profiles()
         self.fill_detail()
         st = self.cfg["settings"]
-        self.hdr_sub.config(text="v%s  •  %d perfis  •  %d núcleos" % (APP_VER, len(self.cfg["profiles"]), st["workers"]))
+        self.info_lbl.config(text="v%s  •  %d perfis  •  %d núcleos" % (APP_VER, len(self.cfg["profiles"]), st["workers"]))
 
     def fill_profiles(self):
         sf = self.plist
@@ -1511,7 +1634,7 @@ class App:
             f = tk.Frame(sf.inner, bg=bg, highlightthickness=sz(2) if sel else 1,
                          highlightbackground=C["acc"] if sel else C["line"])
             f.pack(fill="x", pady=(0, sz(8)), padx=(0, sz(6)))
-            bks = list_backups(p, self.cfg["settings"])
+            bks = list_backups(p, self.cfg["settings"], meta=False)
             reg = [b for b in bks if not b["pre"]]
             tk.Label(f, text=p["name"], font=F(19, True), fg=C["ink"], bg=bg, anchor="w",
                      wraplength=sz(340), justify="left").pack(fill="x", padx=sz(14), pady=(sz(10), 0))
@@ -1557,6 +1680,7 @@ class App:
         L(d, "BACKUPS SALVOS (%d)" % len(bks), 13, "acc", bold=True, anchor="w").pack(fill="x", pady=(sz(14), sz(6)))
         sf = ScrollFrame(d)
         sf.pack(fill="both", expand=True)
+        clabels = []
         if not bks:
             L(sf.inner, "Nenhum backup ainda.", 15, "mut").pack(pady=sz(30))
         for b in bks:
@@ -1568,17 +1692,61 @@ class App:
                 side="right", padx=(sz(6), 0), pady=sz(8))
             Btn(r, "Restaurar", lambda b=b: self.do_restore(b), "ghost", icon="restore", h=sz(52)).pack(
                 side="right", pady=sz(8))
+            r.configure(height=ROW_H)          # altura FIXA do registro (com ou sem comentário)
+            r.pack_propagate(False)
             col = tk.Frame(r, bg=C["card"])
-            col.pack(side="left", fill="x", expand=True, padx=sz(14), pady=sz(8))
-            line = tk.Frame(col, bg=C["card"])
-            line.pack(fill="x")
-            tk.Label(line, text=fmt_dt(b["ts"]) + ("  ⟲ segurança" if b["pre"] else ""), font=F(17, True),
-                     fg=C["mut"] if b["pre"] else C["ink"], bg=C["card"]).pack(side="left")
-            if b["comment"]:
-                tk.Label(line, text=b["comment"], font=F(16, True), fg=C["ink"],
-                         bg=C["card"]).pack(side="left", padx=(sz(14), 0))
+            col.pack(side="left", anchor="n", padx=(sz(14), 0), pady=sz(8))
+            tk.Label(col, text=fmt_dt(b["ts"]) + ("  ⟲ segurança" if b["pre"] else ""), font=F(17, True),
+                     fg=C["mut"] if b["pre"] else C["ink"], bg=C["card"], anchor="w").pack(fill="x")
             tk.Label(col, text="%s  •  %s" % (fmt_size(b["size"]), b["fmt"].upper()), font=F(13),
                      fg=C["mut"], bg=C["card"], anchor="w").pack(fill="x")
+            if b["comment"]:
+                cfg_, cbg_ = comment_style(b["color"])
+                c_ = b["comment"]
+                shown = "\n".join(c_[k:k + WRAP_COMMENT] for k in range(0, len(c_), WRAP_COMMENT))
+                cont = tk.Frame(r, bg=C["card"], width=1, height=1)
+                cont.pack_propagate(False)
+                cont.pack(side="left", anchor="n", padx=(sz(14), sz(8)))
+                clabels.append((r, col, cont, shown, cfg_, cbg_))
+        if clabels:
+            self.root.after(20, lambda: self.layout_comments(clabels, 0))
+
+    def layout_comments(self, items, tries):
+        """Caixa do comentário com tamanho FIXO e igual em todos os registros: mesma fonte,
+        mesma posição, 3 linhas x 40 colunas. A fonte é escolhida uma única vez (no máximo 15)."""
+        items = [it for it in items if it[2].winfo_exists()]
+        if not items:
+            return
+        r0 = items[0][0]
+        row_w = r0.winfo_width() - 2
+        if row_w <= sz(300) and tries < 20:          # janela ainda não dimensionada
+            self.root.after(50, lambda: self.layout_comments(items, tries + 1))
+            return
+        col_w = max(it[1].winfo_reqwidth() for it in items)
+        col_h = max(it[1].winfo_reqheight() for it in items)
+        for it in items:                              # coluna da data com largura fixa => comentários alinhados
+            it[1].configure(width=col_w, height=col_h)
+            it[1].pack_propagate(False)
+        btn_left = min(w.winfo_x() for w in r0.winfo_children() if isinstance(w, Btn))
+        pad = sz(6)
+        avail = btn_left - sz(14) - col_w - sz(14) - sz(10)
+        box_h = ROW_H - sz(8)          # margem mínima de 4 px em cima e embaixo
+        px = 15
+        while px > 8:
+            f = tkfont.Font(font=F(px, True, True))
+            if f.measure("0" * WRAP_COMMENT) + 2 * pad <= avail and 3 * f.metrics("linespace") <= box_h:
+                break
+            px -= 1
+        box_w = tkfont.Font(font=F(px, True, True)).measure("0" * WRAP_COMMENT) + 2 * pad
+        ls = tkfont.Font(font=F(px, True, True)).metrics("linespace")
+        for _r, _col, cont, shown, fg, bg in items:
+            cont.configure(width=box_w, height=ROW_H)       # a caixa ocupa a altura toda do registro
+            lines = shown.count("\n") + 1
+            # 1–2 linhas: alinhadas com a data; 3 linhas: centralizadas na vertical do registro
+            y = (ROW_H - lines * ls) // 2 if lines >= 3 else sz(8)
+            lb = tk.Label(cont, text=shown, font=F(px, True, True), fg=fg, bg=bg, justify="left",
+                          anchor="nw", padx=pad if bg != C["card"] else 0, pady=0, bd=0)
+            lb.place(x=0, y=y)
 
     # ---- perfis ------------------------------------------------------------
     def new_profile(self):
@@ -1663,16 +1831,33 @@ class App:
                 "Restaurar", go)
 
     def edit_comment(self, b):
-        m = Modal(self, "Comentário do backup", width=720)
+        m = Modal(self, "Comentário do backup", width=1100)
         L(m.body, fmt_dt(b["ts"]) + "  •  " + b["fmt"].upper(), 14, "mut", bg=C["card"], anchor="w").pack(fill="x")
         var = tk.StringVar(value=b["comment"][:MAX_COMMENT])
+        color = [b["color"]]
         ent = mk_entry(m.body, var)
+        ent.config(font=F(14, True, True))
         ent.pack(fill="x", ipady=sz(1), pady=(sz(8), sz(4)))
         cnt = L(m.body, "", 13, "mut", bg=C["card"], anchor="e")
         cnt.pack(fill="x")
-        err = L(m.body, "O comentário vai no final do nome do arquivo. Deixe vazio para remover.",
-                13, "mut", bg=C["card"], anchor="w", wraplength=sz(660), justify="left")
-        err.pack(fill="x", pady=(sz(4), 0))
+        sw = tk.Frame(m.body, bg=C["card"])
+        sw.pack(fill="x", pady=(0, sz(4)))
+        cells = {}
+
+        def paint():
+            for key, cv in cells.items():
+                cv.config(highlightbackground=C["acc"] if key == color[0] else C["line"])
+
+        def pick(key):
+            color[0] = key
+            paint()
+        for key, hexc in COMMENT_COLORS:
+            cv = tk.Canvas(sw, width=sz(38), height=sz(38), bg=hexc, highlightthickness=2, bd=0, cursor="hand2")
+            cv.pack(side="left", padx=(0, sz(6)))
+            cv.bind("<ButtonRelease-1>", lambda e, k=key: not TOUCH.moved and pick(k))
+            cells[key] = cv
+        paint()
+        err = L(m.body, "", 13, "danger", bg=C["card"], anchor="w", wraplength=sz(1040), justify="left")
 
         def on_change(*_a):
             if len(var.get()) > MAX_COMMENT:
@@ -1683,9 +1868,10 @@ class App:
 
         def save():
             try:
-                set_comment(b, var.get())
-            except OSError as e:
-                err.config(text="⚠ " + str(e), fg=C["danger"])
+                set_comment(b, var.get(), color[0])
+            except (OSError, ValueError, zipfile.BadZipFile) as e:
+                err.config(text="⚠ " + str(e))
+                err.pack(fill="x", pady=(sz(6), 0))
                 return
             m.close()
             self.refresh()
