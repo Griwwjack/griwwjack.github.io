@@ -1097,7 +1097,7 @@ class ScrollFrame(tk.Frame):
         self.cv = tk.Canvas(self, bg=bg, highlightthickness=0, bd=0)
         if height:
             self.cv.configure(height=height)
-        self.bar = tk.Canvas(self, width=sz(8), bg=bg, highlightthickness=0, bd=0)
+        self.bar = tk.Canvas(self, width=sz(8), height=1, bg=bg, highlightthickness=0, bd=0)
         self.bar.pack(side="right", fill="y", padx=(sz(4), 0))
         self.cv.pack(side="left", fill="both", expand=True)
         self.cv.configure(yscrollcommand=self._set)
@@ -1402,28 +1402,36 @@ class ProfileEditor:
         self.p = p
         m = self.m = Modal(app, "Editar perfil" if profile else "Novo perfil", width=1120)
         card = C["card"]
-        cols = tk.Frame(m.body, bg=card)
-        cols.pack(fill="x")
-        left = tk.Frame(cols, bg=card, width=sz(480))
-        left.pack(side="left", fill="y", padx=(0, sz(24)))
-        right = tk.Frame(cols, bg=card)
-        right.pack(side="left", fill="both", expand=True)
-
-        L(left, "Jogo / nome do perfil", 13, "mut", anchor="w").pack(fill="x")
+        # Campos de TEXTO no topo (ficam visíveis acima do teclado virtual do Steam Deck);
+        # o que não usa teclado (formato, pastas, destino) fica mais abaixo.
+        grid = tk.Frame(m.body, bg=card)
+        grid.pack(fill="x")
+        grid.columnconfigure(0, weight=1, uniform="c")
+        grid.columnconfigure(1, weight=1, uniform="c")
+        ta = tk.Frame(grid, bg=card)
+        ta.grid(row=0, column=0, sticky="ew", padx=(0, sz(12)))
+        tb = tk.Frame(grid, bg=card)
+        tb.grid(row=0, column=1, sticky="ew")
+        L(ta, "Jogo / nome do perfil", 13, "mut", anchor="w").pack(fill="x")
         self.nv = tk.StringVar(value=p["name"])
-        mk_entry(left, self.nv).pack(fill="x", ipady=sz(1), pady=(sz(2), sz(10)))
+        mk_entry(ta, self.nv).pack(fill="x", ipady=sz(1), pady=(sz(2), sz(12)))
+        L(tb, "Ignorar arquivos (padrões separados por vírgula)", 13, "mut", anchor="w").pack(fill="x")
+        self.ev = tk.StringVar(value=p["exclude"])
+        mk_entry(tb, self.ev).pack(fill="x", ipady=sz(1), pady=(sz(2), sz(12)))
+
+        left = tk.Frame(grid, bg=card)
+        left.grid(row=1, column=0, sticky="nsew", padx=(0, sz(12)))
+        right = tk.Frame(grid, bg=card)
+        right.grid(row=1, column=1, sticky="nsew")
         L(left, "Formato", 13, "mut", anchor="w").pack(fill="x")
         self.seg = Seg(left, [("zip", "ZIP"), ("tar.gz", "TAR.GZ")], p["format"], self._fmt)
-        self.seg.pack(anchor="w", pady=(sz(2), sz(10)))
+        self.seg.pack(anchor="w", pady=(sz(2), sz(12)))
         L(left, "Manter os últimos backups", 13, "mut", anchor="w").pack(fill="x")
         Stepper(left, p["keep"], 0, 99, 1, lambda v: "Todos" if v == 0 else str(v),
-                lambda v: p.update(keep=v)).pack(anchor="w", pady=(sz(2), sz(10)))
-        L(left, "Ignorar arquivos (padrões separados por vírgula)", 13, "mut", anchor="w").pack(fill="x")
-        self.ev = tk.StringVar(value=p["exclude"])
-        mk_entry(left, self.ev).pack(fill="x", ipady=sz(1), pady=(sz(2), 0))
+                lambda v: p.update(keep=v)).pack(anchor="w", pady=(sz(2), 0))
 
         L(right, "Pastas de saves", 13, "mut", anchor="w").pack(fill="x")
-        self.sf = ScrollFrame(right, bg=C["bg"], height=sz(236))
+        self.sf = ScrollFrame(right, bg=C["bg"], height=sz(170))
         self.sf.pack(fill="x", pady=(sz(2), sz(8)))
         Btn(right, "Adicionar pasta…", self.add_src, "primary", icon="plus").pack(anchor="w")
 
