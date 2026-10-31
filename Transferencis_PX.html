@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Seleção de Pallets — FEFO</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  /* ===== Tema Ubuntu (mesmo do Processador de Pós Faturados) ===== */
+  :root{
+    color-scheme:light dark;
+    --bg:#f6f5f4; --card:#fff; --ink:#3d3d3d; --mut:#77716b; --line:#dcdad6; --bdr:#c4c0bb;
+    --acc:#e95420; --accink:#fff; --sel:#fad7c8; --head:#ebe9e7;
+    --bar:#2c001e; --barink:#fff;
+    --errbg:#fbe3e1; --errink:#8a1020; --bad:#c7162b;
+    --warnbg:#fdf0c8; --warnink:#6b4a00;
+    --ok:#0e8420;
+    --sans:Ubuntu,Cantarell,"Noto Sans","Segoe UI",system-ui,sans-serif;
+    --mono:"Ubuntu Mono","DejaVu Sans Mono",Consolas,monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#2e2e2e; --card:#242424; --ink:#eeeeec; --mut:#a8a39d; --line:#454545; --bdr:#5a5a5a;
+      --sel:#5a2f20; --head:#333;
+      --errbg:#3f1a1d; --errink:#ffb4ba; --bad:#ff6b6b;
+      --warnbg:#3d3216; --warnink:#f5d68a;
+      --ok:#5fd068;
+    }
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font:14px/1.45 var(--sans);
+    min-height:100vh; display:flex; flex-direction:column;
+  }
+  #barra{
+    background:var(--bar); color:var(--barink); padding:10px 16px;
+    font-weight:700; font-size:15px; text-align:center;
+    border-bottom:3px solid var(--acc); flex:0 0 auto;
+    position:sticky; top:0; z-index:10;
+  }
+  main{ flex:1; display:flex; flex-direction:column; gap:12px; padding:16px; width:100%; max-width:1000px; margin:0 auto; }
+  .sub{ color:var(--mut); font-size:13px; padding:0 2px; }
+  .sub b{ color:var(--ink); }
+
+  /* ----- cartões ----- */
+  section.panel{
+    background:var(--card); border:1px solid var(--line); border-radius:8px; overflow:hidden;
+  }
+  section.panel > h2{
+    display:flex; align-items:center; gap:10px; margin:0; padding:8px 12px;
+    font-size:13px; font-weight:700; border-bottom:1px solid var(--line); background:var(--head);
+  }
+  section.panel > h2 .step{
+    display:inline-flex; align-items:center; justify-content:center;
+    min-width:20px; height:20px; padding:0 6px; border-radius:10px;
+    background:var(--acc); color:var(--accink); font-size:12px; font-weight:700;
+  }
+  .pbody{ padding:16px; }
+  .pbody p.hint{ font-size:13px; color:var(--mut); margin:0 0 14px; }
+
+  /* ----- upload ----- */
+  .drop{
+    border:2px dashed var(--line); border-radius:8px; background:var(--card);
+    padding:16px 20px; text-align:center; cursor:pointer; min-height:84px;
+    display:flex; flex-direction:column; justify-content:center; align-items:center; gap:2px;
+  }
+  .drop:hover{ border-color:var(--acc); }
+  .drop.drag{ border-color:var(--acc); background:var(--sel); }
+  .drop:focus-visible, button:focus-visible{ outline:2px solid var(--acc); outline-offset:2px; }
+  .drop p{ margin:0; color:var(--mut); }
+  .drop strong{ color:var(--ink); }
+  .drop input{ display:none; }
+  .file-badge{
+    display:inline-flex; align-items:center; gap:8px; font-family:var(--mono); font-size:14px; font-weight:700;
+    background:var(--sel); color:var(--ink); border:1px solid var(--acc);
+    border-radius:6px; padding:3px 10px; margin-top:10px;
+  }
+
+  /* ----- formulários ----- */
+  .form-row{ display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; }
+  .field{ flex:1; min-width:160px; }
+  .field.small{ flex:0 0 130px; min-width:110px; }
+  .field label{ display:block; font-size:12.5px; font-weight:700; color:var(--mut); margin-bottom:5px; }
+  .field input{
+    width:100%; height:40px; padding:0 12px; border:1px solid var(--bdr); border-radius:6px;
+    font:14px var(--mono); background:var(--card); color:var(--ink);
+  }
+  .field input::placeholder{ color:var(--mut); opacity:.7; }
+  .field input:focus{ outline:2px solid var(--acc); outline-offset:1px; border-color:var(--acc); }
+
+  button.run{
+    border:0; border-radius:6px; background:var(--acc); color:var(--accink);
+    font:700 15px var(--sans); padding:0 28px; min-height:40px; cursor:pointer; white-space:nowrap;
+  }
+  button.run:hover:not(:disabled){ filter:brightness(.92); }
+  button.run:disabled{ background:var(--line); color:var(--mut); cursor:not-allowed; }
+
+  button.ghost{
+    background:transparent; border:1px solid var(--bdr); color:var(--ink); border-radius:6px;
+    padding:0 16px; min-height:36px; font:700 13px var(--sans); cursor:pointer;
+    display:inline-flex; align-items:center; gap:7px;
+  }
+  button.ghost:hover{ border-color:var(--acc); color:var(--acc); }
+  button.ghost.copied{ border-color:var(--ok); color:var(--ok); }
+  button.remove-row{
+    background:transparent; border:1px solid var(--bdr); color:var(--mut);
+    border-radius:6px; width:40px; height:40px; cursor:pointer; font-size:18px; flex:none;
+  }
+  button.remove-row:hover{ border-color:var(--bad); color:var(--bad); }
+  button.add-item{
+    background:transparent; border:1px dashed var(--bdr); color:var(--mut);
+    border-radius:6px; padding:0 16px; min-height:36px; font:700 13px var(--sans); cursor:pointer; margin-top:2px;
+  }
+  button.add-item:hover{ border-color:var(--acc); color:var(--acc); }
+
+  /* ----- mensagens ----- */
+  .msg{ font-size:13.5px; padding:10px 14px; border-radius:6px; margin-top:12px; border:1px solid transparent; }
+  .msg.error{ background:var(--errbg); color:var(--errink); border-color:var(--bad); }
+  .msg.warn{ background:var(--warnbg); color:var(--warnink); border-color:var(--warnink); }
+  .msg.info{ background:var(--head); color:var(--ink); border-color:var(--line); }
+
+  /* ----- resultado ----- */
+  h3.sub-h{ font-size:14px; font-weight:700; margin:0 0 10px; }
+  .summary{
+    display:grid; grid-template-columns:repeat(auto-fit, minmax(150px,1fr)); gap:1px;
+    background:var(--line); border:1px solid var(--line); border-radius:8px; overflow:hidden; margin-bottom:18px;
+  }
+  .stat{ background:var(--card); padding:12px 14px; }
+  .stat .k{ font-size:12px; font-weight:700; color:var(--mut); margin-bottom:4px; }
+  .stat .v{ font-family:var(--mono); font-size:22px; font-weight:700; }
+  .stat.ok .v{ color:var(--ok); }
+  .stat.bad .v{ color:var(--bad); }
+
+  .table-scroll{ overflow:auto; border:1px solid var(--line); border-radius:6px; }
+  table.result{ border-collapse:collapse; font:14px var(--mono); width:max-content; min-width:100%; }
+  table.result thead th{
+    position:sticky; top:0; z-index:1; text-align:left; font-weight:700;
+    background:var(--head); border-bottom:1px solid var(--line); padding:3px 12px; white-space:nowrap;
+  }
+  table.result tbody td{ padding:3px 12px; border-bottom:1px solid var(--line); white-space:nowrap; }
+  table.result tbody tr:last-child td{ border-bottom:none; }
+  table.result tbody tr:hover{ background:color-mix(in srgb, var(--sel) 40%, transparent); }
+  td.num, th.num{ text-align:right; }
+  .exp-soon{ color:var(--bad); font-weight:700; }
+  .empty-state{ text-align:center; padding:24px 16px; color:var(--mut); }
+
+  details.pallet-list{ border:1px solid var(--line); border-radius:6px; background:var(--card); overflow:hidden; }
+  details.pallet-list + details.pallet-list{ margin-top:10px; }
+  details.pallet-list summary{
+    list-style:none; cursor:pointer; user-select:none;
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    padding:8px 12px; background:var(--head); font-size:13px; font-weight:700;
+  }
+  details.pallet-list summary::-webkit-details-marker{ display:none; }
+  details.pallet-list summary:hover{ color:var(--acc); }
+  details.pallet-list summary .n{ font-family:var(--mono); font-size:13px; color:var(--mut); font-weight:400; display:inline-flex; align-items:center; gap:10px; }
+  details.pallet-list summary .chev{
+    display:inline-block; flex:none; width:8px; height:8px;
+    border-right:2px solid var(--acc); border-bottom:2px solid var(--acc);
+    transform:rotate(-45deg); transition:transform .15s ease;
+  }
+  details.pallet-list[open] summary .chev{ transform:rotate(45deg); }
+  details.pallet-list[open] summary{ border-bottom:1px solid var(--line); }
+  details.pallet-list .pallet-list-body{ padding:12px; }
+
+  .export-box{ margin-top:16px; padding-top:14px; border-top:1px solid var(--line); }
+  .export-head{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:10px; flex-wrap:wrap; }
+  .export-head h3{ font-size:13px; font-weight:700; margin:0; }
+  .export-head .count{ font-family:var(--mono); font-size:13px; color:var(--mut); }
+  .export-string{
+    background:var(--bg); border:1px solid var(--line); border-radius:6px; padding:12px;
+    font:14px/1.5 var(--mono); color:var(--ink); word-break:break-all; user-select:all;
+  }
+
+  .item-row{ display:flex; gap:10px; margin-bottom:10px; align-items:flex-end; }
+  .report-out{
+    margin-top:16px; background:var(--bg); border:1px solid var(--line); border-radius:6px;
+    padding:12px; font:14px/1.5 var(--mono); color:var(--ink);
+    white-space:pre-wrap; word-break:break-word; max-height:520px; overflow-y:auto;
+  }
+  .report-actions{ margin-top:12px; display:flex; gap:10px; flex-wrap:wrap; }
+
+  footer.note{ font-size:12px; color:var(--mut); padding:4px 2px 8px; }
+  .hidden{ display:none !important; }
+
+  @media (max-width:520px){
+    main{ padding:10px; }
+    .pbody{ padding:12px; }
+    button.run{ width:100%; }
+  }
+</style>
+</head>
+<body>
+<div id="barra">Seleção de Pallets — FEFO</div>
+<main>
+
+  <div class="sub">Combinação ótima por <b>FEFO</b> — vencimento mais próximo primeiro.</div>
+
+  <section class="panel" id="panel-upload">
+    <h2><span class="step">1</span>Planilha</h2>
+    <div class="pbody">
+      <div class="drop" id="dropZone" tabindex="0" role="button" aria-label="Escolher ou arrastar planilha">
+        <p><strong>Clique para escolher</strong> ou arraste o arquivo do relatório (.xlsx, .xls ou .csv)</p>
+        <input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
+        <div id="fileBadge"></div>
+      </div>
+      <div id="uploadMsg"></div>
+    </div>
+  </section>
+
+  <section class="panel" id="panel-form">
+    <h2><span class="step">2</span>Busca rápida de um produto</h2>
+    <div class="pbody">
+      <div class="form-row">
+        <div class="field">
+          <label for="produto">Código do produto ou parte da descrição</label>
+          <input type="text" id="produto" placeholder="ex: 12345 ou queijo">
+        </div>
+        <div class="field">
+          <label for="qtde">Quantidade desejada</label>
+          <input type="text" id="qtde" placeholder="ex: 500" inputmode="numeric">
+        </div>
+        <button class="run" id="btnRun" disabled>Selecionar pallets</button>
+      </div>
+      <div id="formMsg"></div>
+    </div>
+  </section>
+
+  <section class="panel hidden" id="panel-results">
+    <h2><span class="step">3</span>Resultado</h2>
+    <div class="pbody">
+      <div id="resultsBody"></div>
+    </div>
+  </section>
+
+  <section class="panel" id="panel-report">
+    <h2><span class="step">4</span>Relatório para o time</h2>
+    <div class="pbody">
+      <p class="hint">Gera o texto pronto (com estoque livre e o que entra saindo da maturação) para os produtos de uma DT/carga.</p>
+      <div class="form-row">
+        <div class="field small">
+          <label for="repDt">DT</label>
+          <input type="text" id="repDt" placeholder="98584726">
+        </div>
+        <div class="field small">
+          <label for="repCarga">Carga</label>
+          <input type="text" id="repCarga" placeholder="1">
+        </div>
+        <div class="field small">
+          <label for="repData">Data</label>
+          <input type="text" id="repData" placeholder="02/09">
+        </div>
+      </div>
+
+      <div style="margin-top:16px" id="itemsContainer"></div>
+      <button class="add-item" id="btnAddItem" type="button">+ adicionar produto</button>
+
+      <div class="form-row" style="margin-top:16px">
+        <button class="run" id="btnReport" disabled>Gerar relatório</button>
+      </div>
+      <div id="reportMsg"></div>
+
+      <div id="reportOutWrap" class="hidden">
+        <div class="report-out" id="reportOut"></div>
+        <div class="report-actions">
+          <button class="ghost" id="btnCopyReport">Copiar relatório</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="note">
+    Regras de bloqueio aplicadas: COD BLOQUEIO ou DESC BLOQUEIO preenchidos, FISCAL diferente de "LB", ou FISICA diferente de "LB"/"AR" → pallet indisponível. DT. MATURAÇÃO igual/posterior a hoje → pallet contado à parte, como "em maturação". Tudo roda no seu navegador — a planilha não é enviada a nenhum servidor.
+  </footer>
+
+</main>
+
+<script>
+(function(){
+  const dropZone = document.getElementById('dropZone');
+  const fileInput = document.getElementById('fileInput');
+  const fileBadge = document.getElementById('fileBadge');
+  const uploadMsg = document.getElementById('uploadMsg');
+  const formMsg = document.getElementById('formMsg');
+  const btnRun = document.getElementById('btnRun');
+  const produtoInput = document.getElementById('produto');
+  const qtdeInput = document.getElementById('qtde');
+  const panelResults = document.getElementById('panel-results');
+  const resultsBody = document.getElementById('resultsBody');
+
+  const btnReport = document.getElementById('btnReport');
+  const itemsContainer = document.getElementById('itemsContainer');
+  const btnAddItem = document.getElementById('btnAddItem');
+  const reportMsg = document.getElementById('reportMsg');
+  const reportOutWrap = document.getElementById('reportOutWrap');
+  const reportOut = document.getElementById('reportOut');
+  const btnCopyReport = document.getElementById('btnCopyReport');
+  const repData = document.getElementById('repData');
+
+  let sheetData = null;
+  let colMap = null;
+  let headerRow = -1;
+
+  // default date field to today, dd/mm
+  (function(){
+    const d = new Date();
+    repData.value = String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0');
+  })();
+
+  // ---------- helpers ----------
+  function removerAcentos(s){
+    if (s === null || s === undefined) return '';
+    s = String(s);
+    const map = {
+      'Á':'A','À':'A','Â':'A','Ã':'A','Ä':'A','É':'E','È':'E','Ê':'E','Ë':'E',
+      'Í':'I','Ì':'I','Î':'I','Ï':'I','Ó':'O','Ò':'O','Ô':'O','Õ':'O','Ö':'O',
+      'Ú':'U','Ù':'U','Û':'U','Ü':'U','Ç':'C',
+      'á':'a','à':'a','â':'a','ã':'a','ä':'a','é':'e','è':'e','ê':'e','ë':'e',
+      'í':'i','ì':'i','î':'i','ï':'i','ó':'o','ò':'o','ô':'o','õ':'o','ö':'o',
+      'ú':'u','ù':'u','û':'u','ü':'u','ç':'c'
+    };
+    return s.replace(/[^\u0000-\u007E]/g, ch => map[ch] || ch);
+  }
+  function norm(s){ return removerAcentos(String(s||'')).trim().toUpperCase(); }
+
+  function excelSerialToDate(v){
+    if (v instanceof Date) return v;
+    if (typeof v === 'number'){
+      // Converte o serial do Excel para a data de calendário correta (dia/mês/ano),
+      // construindo o Date em horário LOCAL a partir dos campos UTC do serial.
+      // Isso evita que, em fusos atrás de UTC (ex: Brasil, UTC-3), uma data como
+      // "hoje 00:00" vire "ontem" quando depois comparamos só a data (sem hora).
+      const utc_days = Math.floor(v - 25569);
+      const utc_value = utc_days * 86400;
+      const dateInfo = new Date(utc_value * 1000);
+      return new Date(dateInfo.getUTCFullYear(), dateInfo.getUTCMonth(), dateInfo.getUTCDate());
+    }
+    if (typeof v === 'string'){
+      const s = v.trim();
+      let m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+      if (m){
+        let yr = parseInt(m[3],10);
+        if (yr < 100) yr += 2000;
+        const d = new Date(yr, parseInt(m[2],10)-1, parseInt(m[1],10));
+        if (!isNaN(d.getTime())) return d;
+      }
+      const d2 = new Date(s);
+      if (!isNaN(d2.getTime())) return d2;
+    }
+    return null;
+  }
+  function isValidDate(d){ return d instanceof Date && !isNaN(d.getTime()); }
+  function fmtDate(d){
+    if (!isValidDate(d)) return '';
+    return String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + d.getFullYear();
+  }
+  function formatQtyBR(n){
+    return Number(n).toLocaleString('pt-BR', {minimumFractionDigits:3, maximumFractionDigits:3});
+  }
+  function formatNumSimple(n){
+    return Number(n).toLocaleString('pt-BR');
+  }
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function fefoSort(a,b){
+    if (a.validade && b.validade) return a.validade - b.validade;
+    if (a.validade && !b.validade) return -1;
+    if (!a.validade && b.validade) return 1;
+    return 0;
+  }
+
+  // ---------- upload ----------
+  ['dragover','dragenter'].forEach(evt=>{
+    dropZone.addEventListener(evt, e=>{ e.preventDefault(); dropZone.classList.add('drag'); });
+  });
+  ['dragleave','drop'].forEach(evt=>{
+    dropZone.addEventListener(evt, e=>{ e.preventDefault(); dropZone.classList.remove('drag'); });
+  });
+  dropZone.addEventListener('drop', e=>{ const f=e.dataTransfer.files[0]; if(f) handleFile(f); });
+  dropZone.addEventListener('click', ()=> fileInput.click());
+  dropZone.addEventListener('keydown', e=>{ if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); fileInput.click(); } });
+  fileInput.addEventListener('change', e=>{ if(e.target.files[0]) handleFile(e.target.files[0]); });
+
+  function showMsg(el, text, kind){ el.innerHTML = `<div class="msg ${kind}">${text}</div>`; }
+  function clearMsg(el){ el.innerHTML = ''; }
+
+  function handleFile(file){
+    clearMsg(uploadMsg);
+    fileBadge.innerHTML = `<div class="file-badge">📄 ${escapeHtml(file.name)}</div>`;
+    const reader = new FileReader();
+    reader.onload = function(e){
+      try{
+        const data = new Uint8Array(e.target.result);
+        const wb = XLSX.read(data, {type:'array', cellDates:false});
+        let sheetName = wb.SheetNames[0];
+        for (const name of wb.SheetNames){
+          if (norm(name).indexOf('ASSIST-WMS') >= 0){ sheetName = name; break; }
+        }
+        const ws = wb.Sheets[sheetName];
+        const rows = XLSX.utils.sheet_to_json(ws, {header:1, raw:true, defval:''});
+        sheetData = rows;
+
+        headerRow = -1;
+        for (let i=0; i<Math.min(30, rows.length); i++){
+          const cellA = rows[i] && rows[i][0];
+          if (norm(cellA) === 'CODEMP'){ headerRow = i; break; }
+        }
+        if (headerRow === -1){
+          showMsg(uploadMsg, 'Não encontrei a linha de cabeçalho (procurando "CODEMP" na coluna A, nas primeiras 30 linhas).', 'error');
+          btnRun.disabled = true; btnReport.disabled = true;
+          return;
+        }
+
+        const headerCells = rows[headerRow];
+        colMap = {};
+        const wanted = {
+          'PRODUTO':'produto','DESCRICAO':'descricao','ETIQUETA':'etiqueta','QTDE':'qtde',
+          'COD BLOQUEIO':'codBloq','DESC BLOQUEIO':'descBloq','FISCAL':'fiscal','FISICA':'fisica',
+          'DT. MATURACAO':'maturacao','DT. VALIDADE':'validade','LOTE':'lote','LOCACAO':'locacao'
+        };
+        headerCells.forEach((h, idx)=>{ const key = norm(h); if (wanted[key]) colMap[wanted[key]] = idx; });
+
+        if (colMap.produto === undefined || colMap.qtde === undefined || colMap.etiqueta === undefined){
+          showMsg(uploadMsg, 'Não consegui localizar as colunas obrigatórias (PRODUTO / QTDE / ETIQUETA) no cabeçalho.', 'error');
+          btnRun.disabled = true; btnReport.disabled = true;
+          return;
+        }
+
+        const missing = [];
+        ['codBloq','descBloq','fiscal','fisica','maturacao','descricao'].forEach(k=>{
+          if (colMap[k] === undefined){
+            const label = {codBloq:'COD BLOQUEIO', descBloq:'DESC BLOQUEIO', fiscal:'FISCAL', fisica:'FISICA', maturacao:'DT. MATURACAO', descricao:'DESCRICAO'}[k];
+            missing.push(label);
+          }
+        });
+
+        let ok = `Planilha "${escapeHtml(sheetName)}" carregada — cabeçalho na linha ${headerRow+1}, ${rows.length - headerRow - 1} linha(s) de dados.`;
+        if (missing.length){
+          showMsg(uploadMsg, ok + `<br>Atenção: coluna(s) não encontrada(s): <strong>${missing.join(', ')}</strong>.`, 'warn');
+        } else {
+          showMsg(uploadMsg, ok, 'info');
+        }
+        btnRun.disabled = false;
+        btnReport.disabled = false;
+      } catch(err){
+        showMsg(uploadMsg, 'Erro ao ler o arquivo: ' + err.message, 'error');
+        btnRun.disabled = true; btnReport.disabled = true;
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  // ---------- core search: returns {livres, maturacao} arrays, FEFO sorted ----------
+  function buscarCandidatos(produtoBusca){
+    const buscaPorCodigo = /^\d+(\.\d+)?$/.test(produtoBusca);
+    const hoje = new Date(); hoje.setHours(0,0,0,0);
+    const livres = [];
+    const maturacao = [];
+
+    for (let i = headerRow+1; i < sheetData.length; i++){
+      const row = sheetData[i];
+      if (!row) continue;
+      const etq = String(row[colMap.etiqueta] ?? '').trim();
+      if (!etq) continue;
+
+      const prod = String(row[colMap.produto] ?? '').trim();
+      const desc = colMap.descricao !== undefined ? String(row[colMap.descricao] ?? '').trim() : '';
+
+      let ehDoProduto = false;
+      if (buscaPorCodigo){
+        if (prod === produtoBusca || Number(prod) === Number(produtoBusca)) ehDoProduto = true;
+      } else {
+        if (desc.toUpperCase().indexOf(produtoBusca.toUpperCase()) >= 0) ehDoProduto = true;
+      }
+      if (!ehDoProduto) continue;
+
+      const codBloq = colMap.codBloq !== undefined ? String(row[colMap.codBloq] ?? '').trim() : '';
+      const descBloq = colMap.descBloq !== undefined ? String(row[colMap.descBloq] ?? '').trim() : '';
+      const fiscal = colMap.fiscal !== undefined ? norm(row[colMap.fiscal]) : '';
+      const fisica = colMap.fisica !== undefined ? norm(row[colMap.fisica]) : '';
+      const maturacaoRaw = colMap.maturacao !== undefined ? row[colMap.maturacao] : '';
+
+      const bloqueadoDuro =
+        (codBloq !== '') || (descBloq !== '') ||
+        (colMap.fiscal !== undefined && fiscal !== 'LB') ||
+        (colMap.fisica !== undefined && fisica !== 'LB' && fisica !== 'AR');
+      if (bloqueadoDuro) continue;
+
+      let bloqueadoPorMaturacao = false;
+      if (colMap.maturacao !== undefined){
+        const dMat = excelSerialToDate(maturacaoRaw);
+        if (isValidDate(dMat)){
+          const dMat0 = new Date(dMat); dMat0.setHours(0,0,0,0);
+          if (dMat0.getTime() >= hoje.getTime()) bloqueadoPorMaturacao = true;
+        }
+      }
+
+      let qtde = 0;
+      const qtdeRaw = row[colMap.qtde];
+      if (qtdeRaw !== '' && !isNaN(Number(qtdeRaw))) qtde = Math.trunc(Number(qtdeRaw));
+      if (qtde <= 0) continue;
+
+      const validadeRaw = colMap.validade !== undefined ? row[colMap.validade] : '';
+      const validadeDate = excelSerialToDate(validadeRaw);
+      const lote = colMap.lote !== undefined ? String(row[colMap.lote] ?? '').trim() : '';
+      const locacao = colMap.locacao !== undefined ? String(row[colMap.locacao] ?? '').trim() : '';
+
+      const item = { etq, codigo: prod, descricao: desc, lote, qtde,
+        validade: isValidDate(validadeDate) ? validadeDate : null, locacao,
+        origem: bloqueadoPorMaturacao ? 'Maturação' : 'Livre' };
+
+      if (bloqueadoPorMaturacao) maturacao.push(item); else livres.push(item);
+    }
+
+    livres.sort(fefoSort);
+    maturacao.sort(fefoSort);
+    return { livres, maturacao };
+  }
+
+  // ---------- knapsack: minimal combo >= qtdeDesejada ----------
+  function calcularCombinacao(candidatos, qtdeDesejada){
+    const n = candidatos.length;
+    let selecionado = new Array(n).fill(false);
+    if (n === 0) return { selecionado, total:0, avisoAprox:false };
+
+    const totalSum = candidatos.reduce((s,p)=>s+p.qtde, 0);
+    let total = 0, avisoAprox = false;
+
+    if (totalSum <= qtdeDesejada){
+      selecionado = selecionado.map(()=>true);
+      total = totalSum;
+    } else {
+      const maxQty = Math.max(...candidatos.map(p=>p.qtde));
+      let limite = qtdeDesejada + maxQty;
+      if (limite > totalSum) limite = totalSum;
+      const cells = n * (limite+1);
+      const LIMITE_CELULAS = 20000000;
+
+      if (cells > LIMITE_CELULAS){
+        total = 0;
+        for (let i=0; i<n && total < qtdeDesejada; i++){ selecionado[i]=true; total += candidatos[i].qtde; }
+        avisoAprox = true;
+      } else {
+        const dp = new Uint8Array((n+1) * (limite+1));
+        const idx = (i,s) => i*(limite+1) + s;
+        dp[idx(0,0)] = 1;
+        for (let i=1; i<=n; i++){
+          const q = candidatos[i-1].qtde;
+          for (let s=0; s<=limite; s++){
+            if (dp[idx(i-1,s)]){ dp[idx(i,s)] = 1; continue; }
+            if (s >= q && dp[idx(i-1, s-q)]) dp[idx(i,s)] = 1;
+          }
+        }
+        let melhor = -1;
+        for (let s=qtdeDesejada; s<=limite; s++){ if (dp[idx(n,s)]){ melhor = s; break; } }
+        if (melhor === -1){ selecionado = selecionado.map(()=>true); total = totalSum; }
+        else {
+          let s = melhor;
+          for (let i=n; i>=1; i--){
+            if (dp[idx(i-1,s)]) selecionado[i-1] = false;
+            else { selecionado[i-1] = true; s -= candidatos[i-1].qtde; }
+          }
+          total = melhor;
+        }
+      }
+    }
+    return { selecionado, total, avisoAprox };
+  }
+
+  // =====================================================================
+  // SECTION 2/3 — quick single-product lookup
+  // =====================================================================
+  btnRun.addEventListener('click', runSelection);
+
+  function runSelection(){
+    clearMsg(formMsg);
+    panelResults.classList.add('hidden');
+
+    const produtoBusca = produtoInput.value.trim();
+    const qtdeTxt = qtdeInput.value.trim();
+    if (!produtoBusca){ showMsg(formMsg, 'Digite o código do produto ou parte da descrição.', 'error'); return; }
+    if (!qtdeTxt || isNaN(Number(qtdeTxt)) || Number(qtdeTxt) <= 0){
+      showMsg(formMsg, 'Digite uma quantidade desejada válida.', 'error'); return;
+    }
+    const qtdeDesejada = Math.round(Number(qtdeTxt));
+
+    const { livres, maturacao } = buscarCandidatos(produtoBusca);
+    if (livres.length === 0 && maturacao.length === 0){
+      showResultEmpty(`Nenhum pallet foi encontrado para "${escapeHtml(produtoBusca)}".`);
+      return;
+    }
+
+    const comboLivre = calcularCombinacao(livres, qtdeDesejada);
+
+    let comboTotal = null;
+    if (maturacao.length > 0){
+      const pool = livres.concat(maturacao).sort(fefoSort);
+      const r = calcularCombinacao(pool, qtdeDesejada);
+      comboTotal = { ...r, pool };
+    }
+
+    renderResults({ produtoBusca, qtdeDesejada, livres, comboLivre, comboTotal });
+  }
+
+  function showResultEmpty(text){
+    panelResults.classList.remove('hidden');
+    resultsBody.innerHTML = `<div class="empty-state">${text}</div>`;
+  }
+
+  function renderTableBlock(items, showOrigin){
+    if (items.length === 0) return `<div class="empty-state">Nenhum pallet selecionado.</div>`;
+    let head = `<th>Etiqueta (pallet)</th><th>Lote</th><th class="num">Qtde</th><th>Dt. validade</th><th>Locação</th>` + (showOrigin ? `<th>Origem</th>` : '');
+    let rows = '';
+    const soon = new Date(); soon.setDate(soon.getDate()+7);
+    for (const p of items){
+      const isSoon = p.validade && p.validade <= soon;
+      rows += `<tr>
+        <td>${escapeHtml(p.etq)}</td>
+        <td>${escapeHtml(p.lote)}</td>
+        <td class="num">${p.qtde.toLocaleString('pt-BR')}</td>
+        <td class="${isSoon ? 'exp-soon':''}">${p.validade ? fmtDate(p.validade) : '—'}</td>
+        <td>${escapeHtml(p.locacao)}</td>
+        ${showOrigin ? `<td>${escapeHtml(p.origem)}</td>` : ''}
+      </tr>`;
+    }
+    return `<div class="table-scroll"><table class="result"><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div>`;
+  }
+
+  function collapsibleListHtml(label, items, showOrigin, exportTitle, btnId, open){
+    const body = renderTableBlock(items, showOrigin) + (items.length > 0 ? exportBoxHtml(exportTitle, items, btnId) : '');
+    return `<details class="pallet-list"${open ? ' open' : ''}>
+      <summary><span>${escapeHtml(label)}</span><span class="n">${items.length} pallet(s) <span class="chev"></span></span></summary>
+      <div class="pallet-list-body">${body}</div>
+    </details>`;
+  }
+
+  function exportBoxHtml(title, items, btnId){
+    const exportString = items.map(p=>p.etq).join(';') + (items.length ? ';' : '');
+    return `<div class="export-box">
+      <div class="export-head">
+        <h3>${escapeHtml(title)}</h3>
+        <span class="count">${items.length} etiqueta(s)</span>
+      </div>
+      <div class="export-string" data-export-id="${btnId}">${escapeHtml(exportString)}</div>
+      <div style="margin-top:12px">
+        <button class="ghost" data-copy-btn="${btnId}">Copiar etiquetas</button>
+      </div>
+    </div>`;
+  }
+
+  function renderResults({produtoBusca, qtdeDesejada, livres, comboLivre, comboTotal}){
+    panelResults.classList.remove('hidden');
+
+    const selLivre = livres.filter((_,i)=>comboLivre.selecionado[i]);
+    const diffLivre = comboLivre.total - qtdeDesejada;
+    const atingiuLivre = diffLivre >= 0;
+
+    let html = '';
+    if (comboLivre.avisoAprox || (comboTotal && comboTotal.avisoAprox)){
+      html += `<div class="msg warn">Volume muito grande para calcular a combinação exata — foi usado o critério FEFO simples (mais próximo do vencimento primeiro) em algum dos cenários.</div>`;
+    }
+
+    html += `<div class="summary">
+      <div class="stat"><div class="k">Produto buscado</div><div class="v" style="font-size:16px">${escapeHtml(produtoBusca)}</div></div>
+      <div class="stat"><div class="k">Qtde desejada</div><div class="v">${qtdeDesejada.toLocaleString('pt-BR')}</div></div>
+      <div class="stat"><div class="k">Só livres</div><div class="v">${comboLivre.total.toLocaleString('pt-BR')}</div></div>
+      <div class="stat ${atingiuLivre ? 'ok':'bad'}"><div class="k">${atingiuLivre ? 'Sobrou':'Faltou'} (livres)</div><div class="v">${Math.abs(diffLivre).toLocaleString('pt-BR')}</div></div>
+    </div>`;
+
+    html += `<h3 class="sub-h">Cenário 1 — apenas pallets livres</h3>`;
+    html += collapsibleListHtml('Ver pallets — só livres', selLivre, false, 'Etiquetas para uso — cenário 1 (só livres)', 'c1', false);
+
+    if (comboTotal){
+      const diffTotal = comboTotal.total - qtdeDesejada;
+      const atingiuTotal = diffTotal >= 0;
+      const selTotal = comboTotal.pool.filter((_,i)=>comboTotal.selecionado[i]);
+      const usadosLivre = selTotal.filter(p=>p.origem === 'Livre').length;
+      const usadosMat = selTotal.filter(p=>p.origem === 'Maturação').length;
+
+      html += `<div class="msg ${atingiuTotal ? 'info':'error'}" style="margin-top:22px">Se os pallets em maturação forem liberados, a melhor combinação possível usa ${usadosLivre} pallet(s) livre(s) + ${usadosMat} em maturação, totalizando ${comboTotal.total.toLocaleString('pt-BR')} (${atingiuTotal ? (diffTotal === 0 ? 'atende exatamente o pedido' : 'excesso de +' + diffTotal.toLocaleString('pt-BR')) : 'falta de -' + Math.abs(diffTotal).toLocaleString('pt-BR')}).</div>`;
+
+      html += `<h3 class="sub-h" style="margin-top:20px">Cenário 2 — considerando a maturação liberada (melhor combinação geral)</h3>`;
+      html += collapsibleListHtml('Ver pallets — livres + maturação', selTotal, true, 'Etiquetas para uso — cenário 2 (com maturação)', 'c2', false);
+    } else if (!atingiuLivre){
+      html += `<div class="msg error" style="margin-top:16px">Estoque livre insuficiente e não há pallets em maturação para complementar. Faltou ${Math.abs(diffLivre).toLocaleString('pt-BR')} unidade(s).</div>`;
+    }
+
+    resultsBody.innerHTML = html;
+    resultsBody.querySelectorAll('[data-copy-btn]').forEach(btn=>{
+      const id = btn.getAttribute('data-copy-btn');
+      btn.addEventListener('click', ()=>{
+        const el = resultsBody.querySelector(`[data-export-id="${id}"]`);
+        copyText(el.textContent, btn, 'Copiar etiquetas');
+      });
+    });
+  }
+
+  function copyText(text, btn, restoreLabel){
+    navigator.clipboard.writeText(text).then(()=>{
+      btn.textContent = 'Copiado ✓';
+      btn.classList.add('copied');
+      setTimeout(()=>{ btn.textContent = restoreLabel; btn.classList.remove('copied'); }, 1800);
+    }).catch(()=>{
+      const ta = document.createElement('textarea');
+      ta.value = text; document.body.appendChild(ta); ta.select();
+      try{ document.execCommand('copy'); }catch(e){}
+      document.body.removeChild(ta);
+      btn.textContent = 'Copiado ✓';
+      btn.classList.add('copied');
+      setTimeout(()=>{ btn.textContent = restoreLabel; btn.classList.remove('copied'); }, 1800);
+    });
+  }
+
+  // =====================================================================
+  // SECTION 4 — multi-product report (MODIFICADA CONFORME SOLICITADO)
+  // =====================================================================
+  let itemRowCount = 0;
+  function addItemRow(){
+    itemRowCount++;
+    const id = itemRowCount;
+    const row = document.createElement('div');
+    row.className = 'item-row';
+    row.dataset.id = id;
+    row.innerHTML = `
+      <div class="field">
+        <label>Produto (código)</label>
+        <input type="text" class="rep-produto" placeholder="ex: 65692641">
+      </div>
+      <div class="field">
+        <label>Quantidade pedida</label>
+        <input type="text" class="rep-qtde" placeholder="ex: 4817" inputmode="numeric">
+      </div>
+      <button type="button" class="remove-row" title="Remover">×</button>
+    `;
+    itemsContainer.appendChild(row);
+    row.querySelector('.remove-row').addEventListener('click', ()=>{
+      if (itemsContainer.children.length > 1) row.remove();
+    });
+  }
+  addItemRow();
+  btnAddItem.addEventListener('click', addItemRow);
+
+  btnReport.addEventListener('click', gerarRelatorio);
+
+  function saudacao(){
+    const h = new Date().getHours();
+    if (h < 12) return 'Bom dia';
+    if (h < 18) return 'Boa tarde';
+    return 'Boa noite';
+  }
+
+  function buildTableText(items){
+    let out = 'ETIQUETA CODIGO DESCRIÇÃO QTDE';
+    for (const p of items){
+      out += `\n${p.etq} ${p.codigo} ${p.descricao} ${formatQtyBR(p.qtde)}`;
+    }
+    return out;
+  }
+
+  function gerarRelatorio(){
+    clearMsg(reportMsg);
+    reportOutWrap.classList.add('hidden');
+
+    const dt = document.getElementById('repDt').value.trim() || '—';
+    const carga = document.getElementById('repCarga').value.trim() || '—';
+    const data = repData.value.trim() || '—';
+
+    const rows = Array.from(itemsContainer.querySelectorAll('.item-row'));
+    const itens = [];
+    for (const row of rows){
+      const produto = row.querySelector('.rep-produto').value.trim();
+      const qtdeTxt = row.querySelector('.rep-qtde').value.trim();
+      if (!produto && !qtdeTxt) continue;
+      if (!produto || !qtdeTxt || isNaN(Number(qtdeTxt)) || Number(qtdeTxt) <= 0){
+        showMsg(reportMsg, 'Preencha produto e quantidade válidos em todas as linhas adicionadas.', 'error');
+        return;
+      }
+      itens.push({ produto, qtde: Math.round(Number(qtdeTxt)) });
+    }
+    if (itens.length === 0){
+      showMsg(reportMsg, 'Adicione ao menos um produto com quantidade.', 'error');
+      return;
+    }
+
+    const blocos = [];
+    for (const it of itens){
+      const { livres, maturacao } = buscarCandidatos(it.produto);
+
+      if (livres.length === 0 && maturacao.length === 0){
+        blocos.push({ texto: `Para o produto ${it.produto} é pedido ${it.qtde} quantidades, porém não foram encontrados pallets em estoque para esse produto.`, tabela: null });
+        continue;
+      }
+
+      const codigoRef = (livres[0] || maturacao[0]).codigo || it.produto;
+      const comboLivre = calcularCombinacao(livres, it.qtde);
+      const selLivre = livres.filter((_,i)=>comboLivre.selecionado[i]);
+      const diffLivre = comboLivre.total - it.qtde;
+
+      // CASO 1: Livres são suficientes
+      if (diffLivre >= 0) {
+        let texto = `Para o produto ${codigoRef} é pedido ${formatNumSimple(it.qtde)} quantidades, a combinação livre em estoque atende o pedido com ${formatNumSimple(comboLivre.total)}`;
+        if (diffLivre > 0) {
+          texto += ` (sobra de +${formatNumSimple(diffLivre)}).`;
+        } else {
+          texto += `.`;
+        }
+        
+        let tabela = 'Pallets livres.\n' + buildTableText(selLivre);
+        blocos.push({ texto, tabela });
+      } 
+      // CASO 2: Livres NÃO são suficientes
+      else {
+        const faltaLivre = Math.abs(diffLivre);
+        let texto = `Para o produto ${codigoRef} é pedido ${formatNumSimple(it.qtde)} quantidades, porém a combinação livre em estoque é de ${formatNumSimple(comboLivre.total)} (falta de - ${formatNumSimple(faltaLivre)})`;
+
+        if (maturacao.length > 0) {
+          const pool = livres.concat(maturacao).sort(fefoSort);
+          const comboTotal = calcularCombinacao(pool, it.qtde);
+          const selTotal = pool.filter((_,i)=>comboTotal.selecionado[i]);
+          const selMat = selTotal.filter(p => p.origem === 'Maturação');
+          const selLiv = selTotal.filter(p => p.origem === 'Livre');
+          const diffTotal = comboTotal.total - it.qtde;
+
+          if (diffTotal >= 0) {
+            if (diffTotal > 0) {
+              texto += `, porém contando com os pallets em maturação temos uma sobra de +${formatNumSimple(diffTotal)}.`;
+            } else {
+              texto += `, porém contando com os pallets em maturação nos temos o suficiente para atender o pedido.`;
+            }
+          } else {
+            const faltaTotal = Math.abs(diffTotal);
+            texto += `, e mesmo contando com toda a maturação ainda temos uma falta de - ${formatNumSimple(faltaTotal)}.`;
+          }
+
+          let tabela = '';
+          if (selLiv.length > 0) {
+            tabela += 'Pallets livres.\n' + buildTableText(selLiv);
+          }
+          if (selMat.length > 0) {
+            if (tabela) tabela += '\n';
+            tabela += 'Pallets em maturação.\n' + buildTableText(selMat);
+          }
+
+          blocos.push({ texto, tabela });
+        } else {
+          texto += `, e não há pallets em maturação disponíveis.`;
+          let tabela = selLivre.length > 0 ? ('Pallets livres.\n' + buildTableText(selLivre)) : null;
+          blocos.push({ texto, tabela });
+        }
+      }
+    }
+
+    const n = itens.length;
+    let out = `${saudacao()}!\n`;
+    out += `Para a DT ${dt} carga ${carga} do dia ${data} temos ${n} ${n===1?'situação':'situações'} para avaliação.\n\n`;
+    blocos.forEach(b=>{
+      out += b.texto + '\n';
+      if (b.tabela) out += b.tabela + '\n';
+      out += '\n';
+    });
+    out = out.trim() + '\n';
+
+    reportOut.textContent = out;
+    reportOutWrap.classList.remove('hidden');
+  }
+
+  btnCopyReport.addEventListener('click', ()=>{
+    copyText(reportOut.textContent, btnCopyReport, 'Copiar relatório');
+  });
+
+})();
+</script>
+</body>
+</html>
