@@ -34,6 +34,7 @@ header{background:var(--bar);color:var(--barink);padding:8px 16px;display:flex;g
 #searchPanel{background:var(--head);padding:8px 16px;display:none;gap:10px;border-bottom:1px solid var(--line);align-items:center}
 .search-input{background:var(--card);border:1px solid var(--line);color:var(--ink);padding:5px 9px;border-radius:6px;font:inherit;outline:none}
 .search-input:focus,.fld input:focus,.fld textarea:focus,.ihead input:focus{border-color:var(--acc)}
+.fld input.bad,.fld input.bad:focus{border-color:var(--danger)}
 .tb{background:var(--head);border:1px solid var(--line);border-radius:6px;color:var(--ink);padding:6px 14px;font:700 13px Ubuntu,Cantarell,system-ui,sans-serif;cursor:pointer}
 .tb:hover{border-color:var(--acc)}
 #tabs{display:flex;background:var(--card);border-bottom:1px solid var(--line);overflow-x:auto;padding:0 12px;flex-shrink:0}
@@ -223,10 +224,21 @@ function render(){
   renderTabs();const t=tabs[cur];
   if(t.items)itemsView(main);else t.get().forEach(e=>main.append(group(e)));
   main.scrollTop=y}
+/* Datas/horas: exibidas como dd/mm/aaaa hh:mm:ss-03:00 e gravadas no XML como aaaa-mm-ddThh:mm:ss-03:00 */
+const DT=new Set(['dhEmi','dhSaiEnt','dhRecbto']),ISO=/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(Z|[+-]\d{2}:\d{2})$/,BR=/^(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2}):(\d{2})\s*(Z|[+-]\d{2}:\d{2})$/;
+const okDT=(y,mo,d,hh,mi,s)=>{const t=new Date(Date.UTC(y,mo-1,d));return mo>=1&&mo<=12&&t.getUTCMonth()===mo-1&&t.getUTCDate()===d&&hh<24&&mi<60&&s<60};
+const toBR=v=>{const m=ISO.exec(v);return m?`${m[3]}/${m[2]}/${m[1]} ${m[4]}:${m[5]}:${m[6]}${m[7]}`:v};
+function toISO(v){v=v.trim();let m=ISO.exec(v);
+  if(m)return okDT(+m[1],+m[2],+m[3],+m[4],+m[5],+m[6])?v:null;
+  m=BR.exec(v);if(!m||!okDT(+m[3],+m[2],+m[1],+m[4],+m[5],+m[6]))return null;
+  return `${m[3]}-${m[2]}-${m[1]}T${m[4]}:${m[5]}:${m[6]}${m[7]}`}
+const isDT=c=>DT.has(c.localName)&&ISO.test(c.textContent);
 function field(c){
   const ta=TA.has(c.localName),w=h('label','fld'+(ta?' wide':'')),i=h(ta?'textarea':'input'),s=h('span','',lbl(c.localName));
-  s.title=c.localName;if(ta)i.rows=3;i.value=c.textContent;i._el=c;
-  i.oninput=()=>{c.textContent=i.value;touch()};w.append(s,i);return w}
+  const dt=isDT(c);s.title=c.localName;if(ta)i.rows=3;i.value=dt?toBR(c.textContent):c.textContent;i._el=c;
+  i.oninput=()=>{if(dt){const v=toISO(i.value);i.classList.toggle('bad',v===null);if(v===null)return;c.textContent=v}else c.textContent=i.value;touch()};
+  if(dt){i.placeholder='dd/mm/aaaa hh:mm:ss-03:00';i.onblur=()=>{if(i.classList.contains('bad'))status('Data inválida: valor anterior mantido');i.classList.remove('bad');i.value=toBR(c.textContent)}}
+  w.append(s,i);return w}
 /* Campos mostrados primeiro em cada seção (só muda a exibição; a ordem do XML não é alterada) */
 const PRIO={ide:['nNF','serie']};
 function group(e,skip){
@@ -328,7 +340,7 @@ function toggleSearch(){const p=$('searchPanel'),v=p.style.display==='flex';p.st
 function findNext(){
   const n=$('findInput').value.toLowerCase();if(!n||!doc)return;
   const all=[];tabs.forEach((t,ti)=>t.get().forEach(e=>[...e.getElementsByTagName('*')].forEach(l=>{if(!l.children.length)all.push([ti,l,e])})));
-  const hit=all.map((x,i)=>x[1].textContent.toLowerCase().includes(n)?i:-1).filter(i=>i>=0);
+  const hit=all.map((x,i)=>(x[1].textContent+'\n'+(isDT(x[1])?toBR(x[1].textContent):'')).toLowerCase().includes(n)?i:-1).filter(i=>i>=0);
   if(!hit.length)return status('Nenhuma ocorrência');
   const k=hit.find(i=>i>cursor);cursor=k===undefined?hit[0]:k;
   const [ti,l,e]=all[cursor];cur=ti;if(tabs[ti].items)open.add(e);render();
