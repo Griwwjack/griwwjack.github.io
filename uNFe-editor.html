@@ -227,10 +227,13 @@ function field(c){
   const ta=TA.has(c.localName),w=h('label','fld'+(ta?' wide':'')),i=h(ta?'textarea':'input'),s=h('span','',lbl(c.localName));
   s.title=c.localName;if(ta)i.rows=3;i.value=c.textContent;i._el=c;
   i.oninput=()=>{c.textContent=i.value;touch()};w.append(s,i);return w}
+/* Campos mostrados primeiro em cada seção (só muda a exibição; a ordem do XML não é alterada) */
+const PRIO={ide:['nNF','serie']};
 function group(e,skip){
   const f=h('fieldset'),g=h('div','grid');f.append(h('legend','',lbl(e.localName)),g);
   if(e.localName==='infAdic'&&!e.children.length)e.append(doc.createElementNS(e.namespaceURI,'infCpl'));
-  for(const c of e.children){if(skip&&skip.has(c))continue;g.append(c.children.length?group(c,skip):field(c))}
+  const pr=PRIO[e.localName]||[],rk=c=>{const i=pr.indexOf(c.localName);return i<0?pr.length:i};
+  for(const c of [...e.children].sort((x,y)=>rk(x)-rk(y))){if(skip&&skip.has(c))continue;g.append(c.children.length?group(c,skip):field(c))}
   return f}
 
 /* ---------- Lista de itens ---------- */
