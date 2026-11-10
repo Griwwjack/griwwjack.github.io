@@ -40,6 +40,16 @@ tbody tr.sel td.cell{background:var(--cel);color:var(--celink);font-weight:700}
 .stats .dif,.stats .dif b{color:#c7162b}
 @media (prefers-color-scheme:dark){.stats .dif,.stats .dif b{color:#ff6b6b}}
 .vazio{padding:14px;color:var(--mut)}
+section h2 .tit{flex:0 0 150px}
+.busca{display:flex;align-items:center;gap:8px;margin:0 auto 0 0;font-weight:400}
+.busca input{width:180px;padding:4px 10px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--ink);font:13px "Ubuntu Mono","DejaVu Sans Mono",Consolas,monospace}
+.busca input::placeholder{color:var(--mut);font-family:Ubuntu,Cantarell,"Noto Sans","Segoe UI",system-ui,sans-serif}
+.busca input:focus{outline:none;border-color:var(--acc)}
+.busca button{border:1px solid var(--line);border-radius:6px;background:color-mix(in srgb,var(--ink) 8%,var(--head));color:var(--ink);font:700 13px Ubuntu,Cantarell,system-ui,sans-serif;padding:4px 14px;cursor:pointer}
+.busca button:hover{border-color:var(--acc)}
+.msg{color:var(--mut);font-size:13px}
+.msg.nao{color:#c7162b;font-weight:700}
+@media (prefers-color-scheme:dark){.msg.nao{color:#ff6b6b}}
 </style>
 </head>
 <body>
@@ -53,8 +63,8 @@ tbody tr.sel td.cell{background:var(--cel);color:var(--celink);font-weight:700}
   </div>
   <button id="salvar" disabled>Salvar como .txt</button>
 </header>
-<section><h2><span>Planilha original</span><span class="stats" id="st-orig"></span></h2><div class="box" id="orig"><div class="vazio">A prévia da planilha original aparecerá aqui.</div></div></section>
-<section><h2><span>Arquivo processado</span><span class="stats" id="st-proc"></span></h2><div class="box" id="proc"><div class="vazio">A prévia do arquivo processado aparecerá aqui.</div></div></section>
+<section><h2><span class="tit">Planilha original</span><form class="busca" data-t="orig" autocomplete="off"><input type="text" placeholder="Localizar..." aria-label="Localizar na planilha original" spellcheck="false"><button type="submit">Buscar</button><span class="msg" aria-live="polite"></span></form><span class="stats" id="st-orig"></span></h2><div class="box" id="orig"><div class="vazio">A prévia da planilha original aparecerá aqui.</div></div></section>
+<section><h2><span class="tit">Arquivo processado</span><form class="busca" data-t="proc" autocomplete="off"><input type="text" placeholder="Localizar..." aria-label="Localizar na tabela do arquivo processado" spellcheck="false"><button type="submit">Buscar</button><span class="msg" aria-live="polite"></span></form><span class="stats" id="st-proc"></span></h2><div class="box" id="proc"><div class="vazio">A prévia do arquivo processado aparecerá aqui.</div></div></section>
 </main>
 
 <script>/*! xlsx.js (C) 2013-present SheetJS -- http://sheetjs.com */
@@ -355,7 +365,7 @@ function statsOriginal(df) {
 const statsProcessado = linhas => { stats('st-proc', linhas.length, new Set(linhas.map(l => l.c[1])).size, linhas.reduce((s, l) => s + num(l.c[5]), 0)); compararStats(); };
 
 async function tratar(file) {
-  $('salvar').disabled = true; txtPronto = '';
+  $('salvar').disabled = true; txtPronto = ''; limparBusca();
   if (!/\.xlsx$/i.test(file.name)) { setStatus('Formato inválido: solte um arquivo .xlsx'); return; }
   setStatus('Processando...');
   stats('st-orig', null); stats('st-proc', null);
@@ -389,6 +399,59 @@ $('salvar').addEventListener('click', () => {
   const a = Object.assign(document.createElement('a'), { href: url, download: nomeSaida });
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
+});
+
+/* ===== Busca: localiza o valor, realça célula + linha e o equivalente na outra tabela ===== */
+const estBusca = {};
+function centralizar(box, tr, td) {
+  const b = box.getBoundingClientRect();
+  box.scrollTop += tr.getBoundingClientRect().top - b.top - box.clientHeight / 2 + tr.offsetHeight / 2;
+  const r = td.getBoundingClientRect();
+  if (r.left < b.left || r.right > b.right) box.scrollLeft += r.left - b.left - box.clientWidth / 2 + r.width / 2;
+}
+function buscar(t, form) {
+  const box = $(t), msg = form.querySelector('.msg'), q = form.querySelector('input').value.trim().toLowerCase();
+  msg.className = 'msg'; msg.textContent = '';
+  if (!q) return;
+  // a outra busca volta ao estado inicial, para não haver dúvida sobre qual campo gerou o realce atual
+  const outro = document.querySelector(`form.busca[data-t="${t === 'orig' ? 'proc' : 'orig'}"]`);
+  outro.querySelector('input').value = ''; estBusca[outro.dataset.t] = null;
+  const mo = outro.querySelector('.msg'); mo.className = 'msg'; mo.textContent = '';
+  const achados = [...box.querySelectorAll('tbody td:not(.i)')].filter(td => td.textContent.toLowerCase().includes(q));
+  if (!achados.length) { estBusca[t] = null; msg.className = 'msg nao'; msg.textContent = 'Não encontrado.'; return; }
+  const e = estBusca[t];
+  const n = e && e.q === q ? (e.n + 1) % achados.length : 0; // repetir a busca avança para a próxima ocorrência
+  estBusca[t] = { q, n };
+  const td = achados[n], tr = td.parentElement;
+  realcar(tr.dataset.i, t, td.cellIndex - 1);
+  centralizar(box, tr, td);
+  if (achados.length > 1) msg.textContent = `${n + 1} de ${fmt(achados.length)}`;
+}
+function limparBusca() { for (const k in estBusca) delete estBusca[k]; document.querySelectorAll('.busca .msg').forEach(m => { m.className = 'msg'; m.textContent = ''; }); }
+document.querySelectorAll('form.busca').forEach(f => {
+  f.addEventListener('submit', e => { e.preventDefault(); buscar(f.dataset.t, f); });
+  f.querySelector('input').addEventListener('input', () => { estBusca[f.dataset.t] = null; const m = f.querySelector('.msg'); m.className = 'msg'; m.textContent = ''; });
+});
+
+/* ===== Copiar (Ctrl+C) como texto puro: células separadas por tabulação, sem HTML/formatação ===== */
+document.addEventListener('copy', e => {
+  if (/^(INPUT|TEXTAREA)$/.test((document.activeElement || {}).tagName)) return; // campos de busca: cópia normal
+  const sel = getSelection();
+  if (!sel || sel.isCollapsed || !sel.rangeCount) return;
+  const r = sel.getRangeAt(0), linhas = [];
+  document.querySelectorAll('.box table tr').forEach(tr => {
+    if (!sel.containsNode(tr, true)) return;
+    const cel = [...tr.cells].filter(c => sel.containsNode(c, true)).map(c => {
+      if (sel.containsNode(c, false)) return c.textContent;
+      const x = document.createRange(); x.selectNodeContents(c); // célula parcialmente selecionada: só o trecho selecionado
+      if (r.compareBoundaryPoints(Range.START_TO_START, x) > 0) x.setStart(r.startContainer, r.startOffset);
+      if (r.compareBoundaryPoints(Range.END_TO_END, x) < 0) x.setEnd(r.endContainer, r.endOffset);
+      return x.toString() || undefined;
+    }).filter(v => v !== undefined);
+    if (cel.length) linhas.push(cel.join('\t'));
+  });
+  e.clipboardData.setData('text/plain', linhas.length ? linhas.join('\n') : sel.toString());
+  e.preventDefault();
 });
 
 const drop = $('drop');
