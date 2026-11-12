@@ -12,10 +12,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>µNFe Editor v0.1.0</title>
 <style>
-:root{color-scheme:light dark;--bg:#f6f5f4;--card:#fff;--ink:#3d3d3d;--mut:#77716b;--line:#dcdad6;--acc:#e95420;--accink:#fff;--sel:#fad7c8;--head:#ebe9e7;--bar:#2c001e;--barink:#fff;--danger:#c7162b;--warnbg:#fff1cc;--warnink:#6b4a00}
-#@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#2e2e2e;--card:#242424;--ink:#eeeeec;--mut:#a8a39d;--line:#454545;--sel:#5a2f20;--head:#333;--danger:#ff6b6b;--warnbg:#4a3a10;--warnink:#ffe08a}}
-@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#141414;--card:#242424;--ink:#eeeeec;--mut:#a8a39d;--line:#454545;--sel:#5a2f20;--head:#333;--danger:#ff6b6b;--warnbg:#4a3a10;--warnink:#ffe08a}}
-:root[data-theme=dark]{color-scheme:dark;--bg:#2e2e2e;--card:#242424;--ink:#eeeeec;--mut:#a8a39d;--line:#454545;--sel:#5a2f20;--head:#333;--danger:#ff6b6b;--warnbg:#4a3a10;--warnink:#ffe08a}
+:root{color-scheme:light dark;--bg:#f6f5f4;--card:#fff;--ink:#3d3d3d;--mut:#77716b;--line:#dcdad6;--acc:#e95420;--accink:#fff;--sel:#fad7c8;--head:#ebe9e7;--bar:#2c001e;--barink:#fff;--danger:#c7162b;--warnbg:#fff1cc;--warnink:#6b4a00;--x-tag:#c34113;--x-attr:#0b62a4;--x-val:#2e7d32;--x-punct:#8a847d;--x-decl:#7b3fa0;--x-ent:#946200}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#141414;--card:#242424;--ink:#eeeeec;--mut:#a8a39d;--line:#454545;--sel:#5a2f20;--head:#333;--danger:#ff6b6b;--warnbg:#4a3a10;--warnink:#ffe08a;--x-tag:#ff8a5c;--x-attr:#8ab4f8;--x-val:#8fd18a;--x-punct:#8f8a84;--x-decl:#c792ea;--x-ent:#e0b341}}
+:root[data-theme=dark]{color-scheme:dark;--bg:#2e2e2e;--card:#242424;--ink:#eeeeec;--mut:#a8a39d;--line:#454545;--sel:#5a2f20;--head:#333;--danger:#ff6b6b;--warnbg:#4a3a10;--warnink:#ffe08a;--x-tag:#ff8a5c;--x-attr:#8ab4f8;--x-val:#8fd18a;--x-punct:#8f8a84;--x-decl:#c792ea;--x-ent:#e0b341}
 :root[data-theme=light]{color-scheme:light}
 *{box-sizing:border-box}
 body,html{margin:0;padding:0;height:100%;background:var(--bg);color:var(--ink);font:14px/1.45 Ubuntu,Cantarell,'Noto Sans','Segoe UI',system-ui,sans-serif;overflow:hidden}
@@ -44,6 +43,17 @@ header{background:var(--bar);color:var(--barink);padding:8px 16px;display:flex;g
 #tabs button.on{border-bottom-color:var(--acc);color:var(--acc);font-weight:700}
 #warn{display:none;background:var(--warnbg);color:var(--warnink);font-size:13px;padding:6px 16px}
 main{flex:1;overflow:auto;padding:16px;scrollbar-gutter:stable}
+main.xml{padding:0;overflow:hidden;position:relative}
+.xmlwrap{position:absolute;inset:0;background:var(--card)}
+.xmlwrap textarea,.xmlwrap pre{position:absolute;inset:0;width:100%;height:100%;margin:0;border:none;padding:16px;font:14px/1.6 'Ubuntu Mono','DejaVu Sans Mono',Consolas,Monaco,monospace;tab-size:4;letter-spacing:0;font-variant-ligatures:none;white-space:pre;overflow-wrap:normal}
+.xmlwrap textarea{background:transparent;color:var(--ink);resize:none;outline:none;overflow:auto;scrollbar-gutter:stable;caret-color:var(--acc)}
+.xmlwrap pre{color:var(--ink);overflow:hidden;pointer-events:none;padding-right:30px;padding-bottom:30px}
+.xmlwrap:not(.hl-on) pre{display:none}
+.xmlwrap.hl-on textarea{color:transparent}
+.xmlwrap.hl-on textarea::selection{background:rgba(233,84,32,.35);color:transparent}
+.xmlerr{display:none;position:absolute;left:0;right:0;bottom:0;background:#c7162b;color:#fff;padding:6px 16px;font-size:13px}
+.x-t{color:var(--x-tag);font-weight:700}.x-a{color:var(--x-attr)}.x-v{color:var(--x-val)}.x-p{color:var(--x-punct)}
+.x-d{color:var(--x-decl)}.x-c{color:var(--x-punct);font-style:italic}.x-cd{color:var(--x-val)}.x-e{color:var(--x-ent)}
 main::-webkit-scrollbar,.iwrap::-webkit-scrollbar{width:10px;height:10px}
 main::-webkit-scrollbar-thumb,.iwrap::-webkit-scrollbar-thumb{background:var(--line);border-radius:5px}
 .empty{color:var(--mut);text-align:center;margin-top:20vh}
@@ -52,6 +62,9 @@ fieldset{grid-column:1/-1;background:var(--card);border:1px solid var(--line);bo
 .ibody fieldset{margin:0}
 legend{color:var(--acc);font-size:13px;font-weight:700;padding:0 6px}
 .fld{display:block}.fld.wide{grid-column:1/-1}
+.fld.inline{grid-column:1/-1;display:flex;align-items:center;gap:10px}
+.fld.inline span{margin:0;flex:0 0 auto}
+.fld.inline input{width:calc(46ch + 22px);max-width:100%}
 .fld span{display:block;font-size:12px;color:var(--mut);margin-bottom:3px}
 .fld input,.fld textarea,.ihead input{width:100%;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:5px 9px;font:14px 'Ubuntu Mono','DejaVu Sans Mono',Consolas,monospace;outline:none}
 .fld textarea{resize:vertical}
@@ -74,13 +87,27 @@ legend{color:var(--acc);font-size:13px;font-weight:700;padding:0 6px}
 .modal-content select+label{margin-top:15px}
 .close-modal{margin-top:20px;width:100%;background:var(--acc);color:var(--accink);border:none;padding:12px;cursor:pointer;border-radius:6px;font:700 15px Ubuntu,Cantarell,system-ui,sans-serif}
 .close-modal:hover{filter:brightness(.92)}
-html[data-tabs=side] .container{display:grid;grid-template-columns:190px 1fr;grid-template-rows:auto auto auto minmax(0,1fr)}
+html[data-tabs=side] .container{display:grid;grid-template-columns:190px 1fr;grid-template-rows:auto auto auto auto minmax(0,1fr)}
 html[data-tabs=side] header,html[data-tabs=side] #searchPanel{grid-column:1/-1}
-html[data-tabs=side] #tabs{grid-column:1;grid-row:3/5;flex-direction:column;border-right:1px solid var(--line);border-bottom:0;padding:8px 0;overflow-x:hidden;overflow-y:auto}
+html[data-tabs=side] #tabs{grid-column:1;grid-row:3/6;flex-direction:column;border-right:1px solid var(--line);border-bottom:0;padding:8px 0;overflow-x:hidden;overflow-y:auto}
 html[data-tabs=side] #tabs button{text-align:left;border-bottom:0;border-left:3px solid transparent}
 html[data-tabs=side] #tabs button.on{border-left-color:var(--acc)}
-html[data-tabs=side] #warn{grid-column:2;grid-row:3}
-html[data-tabs=side] main{grid-column:2;grid-row:4;min-height:0}
+html[data-tabs=side] #tabs button.has-unclosed.on{border-left-color:var(--danger);border-bottom:0}
+html[data-tabs=side] #unclosedWarn{grid-column:2;grid-row:3}
+html[data-tabs=side] #warn{grid-column:2;grid-row:4}
+html[data-tabs=side] main{grid-column:2;grid-row:5;min-height:0}
+#tabs button.has-unclosed{color:var(--danger);font-weight:700}
+#tabs button.has-unclosed.on{border-bottom-color:var(--danger)}
+.tab-badge-unclosed{background:var(--danger);color:#fff;border-radius:10px;padding:1px 6px;font-size:11px;font-weight:700;margin-left:5px;display:inline-block;vertical-align:middle;line-height:1.2}
+.fld.has-unclosed>span{color:var(--danger);font-weight:700}
+.fld.has-unclosed input,.fld.has-unclosed textarea,.ihead input.has-unclosed{border-color:var(--danger)!important;background-color:rgba(199,22,43,.08)!important;box-shadow:0 0 0 1px var(--danger)}
+.fld.has-unclosed input:focus,.fld.has-unclosed textarea:focus,.ihead input.has-unclosed:focus{outline:2px solid var(--danger);outline-offset:1px}
+.unclosed-tag-alert{display:inline-flex;align-items:center;font-size:11px;color:var(--danger);background:rgba(199,22,43,.12);border:1px solid rgba(199,22,43,.3);border-radius:4px;padding:1px 6px;margin-left:6px;font-weight:600}
+.item.has-unclosed{border-color:var(--danger);box-shadow:0 0 0 1px var(--danger)}
+#unclosedWarn{display:none;background:var(--warnbg);color:var(--warnink);border-bottom:1px solid var(--line);border-left:4px solid var(--danger);font-size:13px;padding:8px 16px;align-items:center;justify-content:space-between;gap:12px}
+#unclosedWarn b{color:var(--danger)}
+#unclosedWarn .close-warn{background:none;border:none;color:inherit;font-size:15px;cursor:pointer;padding:0 6px;border-radius:4px}
+#unclosedWarn .close-warn:hover{background:rgba(0,0,0,.1)}
 </style>
 </head>
 <body>
@@ -127,6 +154,7 @@ html[data-tabs=side] main{grid-column:2;grid-row:4;min-height:0}
 </div>
 
 <nav id="tabs"></nav>
+<div id="unclosedWarn"><div id="unclosedWarnMsg"></div><button type="button" class="close-warn" onclick="$('unclosedWarn').style.display='none'" title="Fechar aviso">✕</button></div>
 <div id="warn">⚠ O arquivo foi alterado: a assinatura digital (Signature) e o protocolo de autorização deixam de ser válidos.</div>
 <main id="form"></main>
 <input type="file" id="fileInput" accept=".xml" style="display:none">
@@ -154,6 +182,7 @@ html[data-tabs=side] main{grid-column:2;grid-row:4;min-height:0}
 <ul>
 <li>Abra um XML pelo botão da pasta ou arrastando o arquivo.</li>
 <li>Cada aba é uma seção da nota; os itens ficam em lista editável.</li>
+<li>A aba XML mostra o arquivo como texto colorido. Editar ali ou nos formulários atualiza os dois.</li>
 <li>Itens: ▸ expande todos os campos, Σ calcula vProd, ▲▼ move, ⧉ duplica, ✕ exclui.</li>
 <li>"Recalcular totais" soma os itens e atualiza ICMSTot, vNF e vNFTot.</li>
 <li>Ctrl+S salva, Ctrl+F localiza e substitui em todos os campos.</li>
@@ -172,15 +201,121 @@ html[data-tabs=side] main{grid-column:2;grid-row:4;min-height:0}
 </div></div>
 
 <script>
-const $=i=>document.getElementById(i),KEY={c:'nfe_draft',n:'nfe_name',t:'nfe_theme',l:'nfe_tabs'};
+const $=i=>document.getElementById(i),KEY={c:'nfe_draft',n:'nfe_name',t:'nfe_theme',l:'nfe_tabs',b:'nfe_bom'};
 const main=$('form'),tabsEl=$('tabs'),open=new Set();
-let doc=null,tabs=[],cur=0,cursor=-1,saveT;
+let doc=null,tabs=[],cur=0,cursor=-1,saveT,xmlTimer=0,xmlRaf=0,pendingXml=null,xmlBad=false,XBASE='',XMIN=false,SRC='',FAITH=false,HAS_BOM=false,EOL='\n',mo=null;
+const unclosedElements=new Set();
+
+const CONTAINERS=new Set([
+  'nfeProc','NFe','infNFe','ide','NFref','refNF','refNFP','refECF',
+  'emit','enderEmit','avulsa','dest','enderDest','retirada','entrega','autXML',
+  'det','prod','DI','adi','detExport','exportInd','rastro','med','arma','comb','CIDE','encerrabante',
+  'imposto','ICMS','ICMS00','ICMS10','ICMS20','ICMS30','ICMS40','ICMS51','ICMS60','ICMS70',
+  'ICMS90','ICMSPart','ICMSST','ICMSSN101','ICMSSN102','ICMSSN201','ICMSSN202','ICMSSN500','ICMSSN900',
+  'ICMSUFDest','IPI','IPITrib','IPINT','II','ISSQN','PIS','PISAliq','PISQtde','PISNT','PISOutr','PISST',
+  'COFINS','COFINSAliq','COFINSQtde','COFINSNT','COFINSOutr','COFINSST','IBSCBS','IBSCBSTot','gIBS','gIBSUF','gIBSMun','gCBS',
+  'total','ICMSTot','ISSQNtot','retTrib','transp','transporta','retTransp','veicTransp','reboque','vol','lacres',
+  'cobr','fat','dup','pag','detPag','card','infIntermed','infAdic','obsCont','obsFisco','procRef',
+  'exporta','compra','cana','forDia','deduc','infRespTec','infSolicNFF','protNFe','infProt',
+  'Signature','SignedInfo','CanonicalizationMethod','SignatureMethod','Reference','Transforms','Transform','DigestMethod','KeyInfo','X509Data'
+]);
+
+function repairXml(text){
+  const re=/<!--[\s\S]*?-->|<!\[CDATA\[[\s\S]*?\]\]>|<\?[\s\S]*?\?>|<!DOCTYPE(?:[^>\[]|\[[\s\S]*?\])*>|<\/([^\s>]+)\s*>|<([^\s\/>]+)((?:"[^"]*"|'[^']*'|[^>"'])*?)(\/?)>|([^<]+)/g;
+  const tokens=[];let m;
+  while((m=re.exec(text))){
+    tokens.push({raw:m[0],close:m[1],open:m[2],attrs:m[3],self:m[4]==='/',text:m[5]});
+  }
+  const st=[],unclosed=[],repTokens=[],cleanTokens=[];
+  for(let i=0;i<tokens.length;i++){
+    const t=tokens[i];
+    if(t.close){
+      if(st.length>0&&st[st.length-1].name===t.close){
+        st.pop();repTokens.push(t.raw);cleanTokens.push(t.raw);
+      }else{
+        const idx=st.findLastIndex(x=>x.name===t.close);
+        if(idx>=0){
+          while(st.length-1>idx){
+            const top=st.pop();
+            unclosed.push(top.name);
+            repTokens[top.tokenIdx]=top.markedOpen;
+            repTokens.push(`</${top.name}>`);
+            cleanTokens.push(`</${top.name}>`);
+          }
+          st.pop();
+          repTokens.push(t.raw);cleanTokens.push(t.raw);
+        }else{
+          repTokens.push(t.raw);cleanTokens.push(t.raw);
+        }
+      }
+    }else if(t.open){
+      if(st.length>0){
+        const top=st[st.length-1];
+        if(!CONTAINERS.has(top.name)||top.hasText){
+          st.pop();
+          unclosed.push(top.name);
+          repTokens[top.tokenIdx]=top.markedOpen;
+          repTokens.push(`</${top.name}>`);
+          cleanTokens.push(`</${top.name}>`);
+        }
+      }
+      const tokenIdx=repTokens.length;
+      repTokens.push(t.raw);cleanTokens.push(t.raw);
+      if(!t.self){
+        st.push({
+          name:t.open,
+          attrs:t.attrs,
+          tokenIdx:tokenIdx,
+          markedOpen:`<${t.open} data-unclosed-tag="1"${t.attrs||''}>`,
+          hasText:false
+        });
+      }
+    }else if(t.text!==undefined){
+      repTokens.push(t.raw);cleanTokens.push(t.raw);
+      if(st.length>0&&t.text.trim().length>0){
+        st[st.length-1].hasText=true;
+      }
+    }else{
+      repTokens.push(t.raw);cleanTokens.push(t.raw);
+    }
+  }
+  while(st.length>0){
+    const top=st.pop();
+    unclosed.push(top.name);
+    repTokens[top.tokenIdx]=top.markedOpen;
+    repTokens.push(`</${top.name}>`);
+    cleanTokens.push(`</${top.name}>`);
+  }
+  return {repairedForDom:repTokens.join(''),cleanRepaired:cleanTokens.join(''),unclosed:unclosed};
+}
+
+function countTabUnclosed(t){
+  if(!unclosedElements.size||t.xml)return 0;
+  let cnt=0;
+  for(const r of t.get()){
+    for(const el of unclosedElements){
+      if(r===el||r.contains(el))cnt++;
+    }
+  }
+  return cnt;
+}
+
+function updateUnclosedNotice(){
+  const banner=$('unclosedWarn'),msg=$('unclosedWarnMsg');
+  if(!banner||!msg)return;
+  if(!unclosedElements.size){banner.style.display='none';return}
+  const errTabs=tabs.filter(t=>countTabUnclosed(t)>0);
+  const tagList=[...new Set([...unclosedElements].map(e=>`&lt;${e.localName}&gt;`))].join(', ');
+  const tabList=errTabs.map(t=>`<b>${t.n}</b>`).join(', ')||'formulário';
+  msg.innerHTML=`⚠ <b>Arquivo com tags incompletas recuperadas:</b> As tags sem fechamento (${tagList}) foram abertas e destacadas na aba ${tabList}. Ao salvar, as correções serão preservadas.`;
+  banner.style.display='flex';
+}
 
 const L={det:'Dados do item',ide:'Identificação',emit:'Emitente',dest:'Destinatário',enderEmit:'Endereço do emitente',enderDest:'Endereço do destinatário',retirada:'Retirada',entrega:'Entrega',prod:'Produto',imposto:'Impostos',rastro:'Rastreabilidade',total:'Totais',ICMSTot:'Totais ICMS',IBSCBSTot:'Totais IBS/CBS',transp:'Transporte',transporta:'Transportadora',vol:'Volumes',pag:'Pagamento',detPag:'Forma de pagamento',infAdic:'Informações adicionais',compra:'Compra',infRespTec:'Responsável técnico',infProt:'Protocolo',protNFe:'Protocolo de autorização',
 cUF:'UF (cód.)',cNF:'Cód. numérico',natOp:'Natureza da operação',mod:'Modelo',serie:'Série',nNF:'Número',dhEmi:'Emissão',dhSaiEnt:'Saída/Entrada',tpNF:'Tipo (0=Ent, 1=Saí)',idDest:'Destino da operação',cMunFG:'Mun. fato gerador',tpImp:'Formato DANFE',tpEmis:'Tipo de emissão',cDV:'Dígito verif.',tpAmb:'Ambiente',finNFe:'Finalidade',indFinal:'Consumidor final',indPres:'Presença do comprador',procEmi:'Processo de emissão',verProc:'Versão do processo',
 xNome:'Nome / Razão social',xFant:'Nome fantasia',xLgr:'Logradouro',nro:'Número',xCpl:'Complemento',xBairro:'Bairro',cMun:'Cód. município',xMun:'Município',CEP:'CEP',cPais:'Cód. país',xPais:'País',fone:'Telefone',indIEDest:'Ind. IE destinatário',CRT:'Regime tributário',xEnder:'Endereço',
 cProd:'Código',cEAN:'EAN comercial',xProd:'Descrição',uCom:'Un. comercial',qCom:'Qtd. comercial',vUnCom:'Vl. unit. comercial',vProd:'Valor dos produtos',cEANTrib:'EAN tributável',uTrib:'Un. tributável',qTrib:'Qtd. tributável',vUnTrib:'Vl. unit. tributável',indTot:'Compõe total',nLote:'Lote',qLote:'Qtd. lote',dFab:'Fabricação',dVal:'Validade',vItem:'Valor do item',vTotTrib:'Total de tributos',orig:'Origem',modBC:'Mod. base cálculo',vBC:'Base de cálculo',pICMS:'Alíq. ICMS (%)',vICMS:'Valor ICMS',vNF:'Valor da NF-e',vNFTot:'Valor total NF-e',vFrete:'Frete',vSeg:'Seguro',vDesc:'Desconto',vOutro:'Outras despesas',modFrete:'Modalidade do frete',esp:'Espécie',qVol:'Qtd. volumes',nVol:'Numeração',pesoL:'Peso líquido',pesoB:'Peso bruto',tPag:'Meio de pagamento',vPag:'Valor pago',infCpl:'Informações complementares',infAdFisco:'Informações ao fisco',xCont:'Contrato',xContato:'Contato',chNFe:'Chave de acesso',dhRecbto:'Recebimento',nProt:'Nº do protocolo',cStat:'Status',xMotivo:'Motivo',verAplic:'Versão do aplicativo',digVal:'Digest value'};
-const lbl=t=>L[t]||t,TA=new Set(['infCpl','infAdFisco']);
+const lbl=t=>L[t]||t,TA=new Set(['infCpl','infAdFisco']),INL=new Set(['refNFe']); /* INL: campos exibidos com o rótulo e a caixa na mesma linha */
 const SUM=[['cProd','Código'],['xProd','Descrição'],['NCM','NCM'],['CFOP','CFOP'],[d=>{const ic=d.getElementsByTagName('ICMS')[0],g=ic&&ic.children[0];return g&&[...g.children].find(c=>c.localName==='CST'||c.localName==='CSOSN')},'CST'],['uCom','Un'],['qCom','Qtd'],['vUnCom','Vl. unit.'],['vProd','Total']];
 const HANDLED=new Set(['ide','emit','dest','retirada','entrega','det','total','transp','cobr','pag','infAdic','compra','infRespTec','exporta']);
 
@@ -193,18 +328,108 @@ function status(m){$('info').textContent=m;setTimeout(info,3500)}
 function info(){const n=doc&&sub(infNFe(),'ide/nNF'),s=doc&&sub(infNFe(),'ide/serie');$('info').textContent=n?`NF-e nº ${n.textContent} · Série ${s?s.textContent:''} · ${items().length} itens`:''}
 
 /* ---------- Documento ---------- */
-function load(txt,name){
-  const d=new DOMParser().parseFromString(txt,'application/xml');
-  if(d.getElementsByTagName('parsererror').length||!d.getElementsByTagName('infNFe').length){alert('Arquivo inválido: não foi encontrado um XML de NF-e (infNFe).');return false}
-  doc=d;open.clear();cur=0;cursor=-1;build();render();info();
-  $('fileName').textContent=name;$('fileName').classList.remove('unsaved');$('warn').style.display='none';
-  try{localStorage.setItem(KEY.c,txt);localStorage.setItem(KEY.n,name)}catch(e){}
+function load(txt,name,bom){
+  clearTimeout(xmlTimer);pendingXml=null;xmlBad=false;
+  if(bom===undefined)bom=txt.charCodeAt(0)===0xFEFF;
+  if(txt.charCodeAt(0)===0xFEFF)txt=txt.slice(1);
+
+  unclosedElements.clear();
+  let workingTxt=txt;
+  let d=new DOMParser().parseFromString(txt,'application/xml');
+  let hasErr=d.getElementsByTagName('parsererror').length>0;
+  let hasInfNFe=d.getElementsByTagName('infNFe').length>0;
+
+  if(hasErr||!hasInfNFe){
+    const rep=repairXml(txt);
+    if(rep.unclosed.length>0){
+      const dRep=new DOMParser().parseFromString(rep.repairedForDom,'application/xml');
+      if(!dRep.getElementsByTagName('parsererror').length&&dRep.getElementsByTagName('infNFe').length){
+        d=dRep;
+        workingTxt=rep.cleanRepaired;
+        d.querySelectorAll('[data-unclosed-tag]').forEach(el=>{
+          el.removeAttribute('data-unclosed-tag');
+          el._isUnclosed=true;
+          unclosedElements.add(el);
+        });
+      }
+    }
+  }
+
+  if(d.getElementsByTagName('parsererror').length||!d.getElementsByTagName('infNFe').length){
+    alert('Arquivo inválido: não foi encontrado um XML de NF-e (infNFe).');
+    return false;
+  }
+
+  HAS_BOM=!!bom;EOL=/\r\n/.test(workingTxt)?'\r\n':'\n';doc=d;mapSrc(workingTxt,d);open.clear();cur=0;cursor=-1;
+  build();
+
+  updateUnclosedNotice();
+  if(unclosedElements.size>0){
+    const errTabIdx=tabs.findIndex(t=>countTabUnclosed(t)>0);
+    if(errTabIdx>=0)cur=errTabIdx;
+    $('warn').style.display='block';
+    $('fileName').classList.add('unsaved');
+  }else{
+    $('warn').style.display='none';
+    $('fileName').classList.remove('unsaved');
+  }
+
+  render();info();
+  $('fileName').textContent=name;
+  try{localStorage.setItem(KEY.c,workingTxt);localStorage.setItem(KEY.n,name);localStorage.setItem(KEY.b,HAS_BOM?'1':'')}catch(e){}
   return true}
-function serialize(){
+function serializeLegacy(){
   const c=doc.cloneNode(true);
   c.querySelectorAll('infCpl,infAdFisco').forEach(e=>{if(!e.textContent.trim())e.remove()});
   const s=new XMLSerializer().serializeToString(c);
   return s.startsWith('<?xml')?s:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+s}
+/* ---------- Fidelidade ao arquivo original ----------
+   O texto original (SRC) é a base do arquivo salvo: só o que foi alterado é regerado. Declaração, ordem dos atributos,
+   aspas, entidades, espaços e quebras de linha do restante saem exatamente como entraram. */
+const SRCMAP=new WeakMap(),dirty=new Set(),attrCh=new Map();
+const escT=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\r/g,'&#xD;').replace(/\n/g,EOL);
+const escA=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;').replace(/\r/g,'&#xD;').replace(/\n/g,'&#xA;').replace(/\t/g,'&#x9;');
+function note(r){let n=r.target;
+  if(r.type==='attributes'){if(!attrCh.has(n))attrCh.set(n,new Set());attrCh.get(n).add(r.attributeName)}
+  for(;n;n=n.parentNode)if(n.nodeType===1)dirty.add(n)}
+function mapSrc(text,d){   /* registra a posição de cada elemento no texto original */
+  SRC=text;FAITH=false;dirty.clear();attrCh.clear();
+  const re=/<!--[\s\S]*?-->|<!\[CDATA\[[\s\S]*?\]\]>|<\?[\s\S]*?\?>|<!DOCTYPE(?:[^>\[]|\[[\s\S]*?\])*>|<\/([^\s>]+)\s*>|<([^\s\/>]+)((?:"[^"]*"|'[^']*'|[^>"'])*?)(\/?)>/g;
+  const st=[];let root=null,m,ok=true;
+  while((m=re.exec(text))){
+    if(m[1]){const r=st.pop();if(!r){ok=false;break}r.ce=m.index;r.e=m.index+m[0].length}
+    else if(m[2]){const r={name:m[2],s:m.index,ts:m.index+m[0].length,self:!!m[4],kids:[]};
+      if(st.length)st[st.length-1].kids.push(r);else if(!root)root=r;
+      if(r.self){r.ce=r.e=r.ts}else st.push(r)}}
+  const al=(e,r)=>e.tagName===r.name&&e.children.length===r.kids.length&&(SRCMAP.set(e,r),[...e.children].every((c,i)=>al(c,r.kids[i])));
+  FAITH=ok&&!!root&&!st.length&&al(d.documentElement,root);
+  if(mo)mo.disconnect();
+  mo=new MutationObserver(rs=>rs.forEach(note));mo.observe(d,{subtree:true,childList:true,characterData:true,attributes:true})}
+function startTag(e,r){
+  let t=SRC.slice(r.s,r.ts);if(r.self)t=t.replace(/\s*\/>$/,'>');
+  for(const a of attrCh.get(e)||[]){if(!e.hasAttribute(a))continue;
+    const re=new RegExp('(\\s'+a+'\\s*=\\s*)("[^"]*"|\'[^\']*\')'),v=escA(e.getAttribute(a));
+    t=re.test(t)?t.replace(re,(m,p,q)=>p+q[0]+v+q[0]):t.replace(/\s*>$/,' '+a+'="'+v+'">')}
+  return t}
+function ser(e){
+  const r=SRCMAP.get(e);
+  if(r&&!dirty.has(e))return SRC.slice(r.s,r.e);            /* elemento intacto: texto original */
+  let inner='';
+  for(const n of e.childNodes){
+    if(n.nodeType===1){if(!SRCMAP.has(n)&&/^(infCpl|infAdFisco)$/.test(n.localName)&&!n.textContent.trim())continue;inner+=ser(n)}
+    else if(n.nodeType===3)inner+=escT(n.data);
+    else if(n.nodeType===4)inner+='<![CDATA['+n.data+']]>';
+    else if(n.nodeType===8)inner+='<!--'+n.data+'-->';
+    else if(n.nodeType===7)inner+='<?'+n.target+' '+n.data+'?>'}
+  const nm=e.tagName;
+  if(r){if(r.self&&!inner)return SRC.slice(r.s,r.e);return startTag(e,r)+inner+(r.self?'</'+nm+'>':SRC.slice(r.ce,r.e))}
+  const at=[...e.attributes].map(a=>' '+a.name+'="'+escA(a.value)+'"').join('');
+  return inner?'<'+nm+at+'>'+inner+'</'+nm+'>':'<'+nm+at+'/>'}
+function serialize(){
+  if(!doc)return '';
+  if(mo)mo.takeRecords().forEach(note);
+  const r=FAITH&&SRCMAP.get(doc.documentElement);
+  return r?SRC.slice(0,r.s)+ser(doc.documentElement)+SRC.slice(r.e):serializeLegacy()}
 function touch(){
   $('fileName').classList.add('unsaved');$('warn').style.display='block';info();
   clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem(KEY.c,serialize());localStorage.setItem(KEY.n,$('fileName').textContent)}catch(e){}},500)}
@@ -214,16 +439,95 @@ function build(){
   ['Retirada / Entrega',()=>[...ch('retirada'),...ch('entrega')]],['Itens',()=>ch('det'),1],['Totais',()=>ch('total')],
   ['Transporte',()=>ch('transp')],['Pagamento',()=>[...ch('cobr'),...ch('pag')]],
   ['Adicionais',()=>[...ch('infAdic'),...ch('compra'),...ch('infRespTec'),...ch('exporta')]],
-  ['Outros',()=>[...infNFe().children].filter(c=>!HANDLED.has(c.localName))],['Protocolo',()=>pr]]
-  .map(([n,get,items])=>({n,get,items})).filter(t=>t.items||t.get().length)}
+  ['Outros',()=>[...infNFe().children].filter(c=>!HANDLED.has(c.localName))],['Protocolo',()=>pr],['XML',()=>[],0,1]]
+  .map(([n,get,items,xml])=>({n,get,items,xml})).filter(t=>t.items||t.xml||t.get().length)}
 
 /* ---------- Renderização ---------- */
-function renderTabs(){tabsEl.replaceChildren(...tabs.map((t,i)=>{const b=h('button',i===cur?'on':'',t.n);b.onclick=()=>{cur=i;renderTabs();render()};return b}))}
+/* ---------- Aba XML: texto editável com coloração, sincronizado com os formulários ---------- */
+const HL_MAX=400000;
+function formatXML(src,ind){
+  const t0=src.match(/<!--[\s\S]*?-->|<!\[CDATA\[[\s\S]*?\]\]>|<[^>]+>|[^<]+/g)||[];
+  const isOpen=s=>!!s&&/^<[^\/!?]/.test(s)&&!/\/>$/.test(s),isClose=s=>!!s&&s.startsWith('</');
+  const t=t0.filter((s,i)=>s.trim()||(isOpen(t0[i-1])&&isClose(t0[i+1]))),out=[];let lvl=0;
+  for(let i=0;i<t.length;i++){
+    const s=t[i],pad=ind.repeat(Math.max(lvl,0));
+    if(isOpen(s)){
+      if(t[i+1]!==undefined&&!t[i+1].startsWith('<')&&isClose(t[i+2])){out.push(pad+s+t[i+1]+t[i+2]);i+=2}
+      else if(isClose(t[i+1])){out.push(pad+s+t[i+1]);i+=1}
+      else{out.push(pad+s);lvl++}
+    }else if(isClose(s)){lvl--;out.push(ind.repeat(Math.max(lvl,0))+s)}
+    else out.push(pad+s)}
+  return out.join('\n')}
+function highlightXML(src){
+  const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'),sp=(c,s)=>`<span class="${c}">${esc(s)}</span>`;
+  const attrs=a=>a.replace(/("[^"]*"|'[^']*')|([^\s="']+)|([\s\S])/g,(m,v,n,o)=>v?sp('x-v',v):n?sp('x-a',n):esc(o));
+  return src.replace(/(<!--[\s\S]*?-->)|(<!\[CDATA\[[\s\S]*?\]\]>)|(<\?[\s\S]*?\?>)|(<\/?)([^\s<>\/]+)((?:"[^"]*"|'[^']*'|[^<>"'])*?)(\/?>)|([^<]+)|([\s\S])/g,
+    (m,com,cd,decl,open,name,at,close,txt,other)=>com?sp('x-c',com):cd?sp('x-cd',cd):decl?sp('x-d',decl)
+      :name!==undefined?sp('x-p',open)+sp('x-t',name)+attrs(at)+sp('x-p',close)
+      :txt!==undefined?esc(txt).replace(/&amp;(#?\w+);/g,'<span class="x-e">&amp;$1;</span>'):esc(other))+'\n'}
+function parseNFe(txt){
+  const d=new DOMParser().parseFromString(txt,'application/xml'),pe=d.getElementsByTagName('parsererror')[0];
+  if(pe){const m=/error on line (\d+) at column (\d+):\s*([\s\S]*?)\s*(?:Below is|$)/.exec(pe.textContent);
+    return {err:m?`linha ${m[1]}, coluna ${m[2]}: ${m[3]}`:(pe.textContent.trim().split('\n')[0]||'XML mal formado').slice(0,140)}}
+  if(!d.getElementsByTagName('infNFe').length)return {err:'elemento infNFe não encontrado'};
+  return {doc:d}}
+function flushXml(){clearTimeout(xmlTimer);if(pendingXml){const f=pendingXml;pendingXml=null;f()}}
+const isMin=s=>{const i=s.search(/<[^?!]/);return !/>\s*[\r\n]+\s*</.test(s.slice(Math.max(i,0)))};
+function toks(s){
+  const all=[],re=/<!--[\s\S]*?-->|<!\[CDATA\[[\s\S]*?\]\]>|<[^>]+>|[^<]+/g;let m;
+  while((m=re.exec(s)))all.push({x:m[0],s:m.index,e:m.index+m[0].length});
+  const o=t=>t&&/^<[^\/!?]/.test(t.x)&&!/\/>$/.test(t.x),c=t=>t&&t.x.startsWith('</');
+  return all.filter((t,i)=>t.x.trim()||(o(all[i-1])&&c(all[i+1])))}
+/* aplica ao texto original (base) só o trecho que o usuário mudou na visão indentada (T) */
+function patchText(base,T){
+  const A=toks(base),B=toks(T).map(t=>t.x);let a=0,b=0;
+  while(a<A.length&&a<B.length&&A[a].x===B[a])a++;
+  while(b<A.length-a&&b<B.length-a&&A[A.length-1-b].x===B[B.length-1-b])b++;
+  if(a===A.length&&a===B.length)return base;
+  const rs=a<A.length?A[a].s:(A.length?A[A.length-1].e:0),re=a+b<A.length?A[A.length-1-b].e:rs;
+  return base.slice(0,rs)+B.slice(a,B.length-b).join('')+base.slice(re)}
+function applyXml(txt,err){
+  const eol=XBASE.includes('\r\n')?'\r\n':'\n';
+  const nt=XMIN?patchText(XBASE,txt):(XBASE.replace(/\r\n?/g,'\n')===txt?XBASE:txt.replace(/\n/g,eol));
+  if(nt===XBASE){xmlBad=false;err.style.display='none';return}
+  const r=parseNFe(nt);
+  if(r.err){xmlBad=true;err.textContent='XML inválido (alterações ainda não aplicadas): '+r.err;err.style.display='block';return}
+  xmlBad=false;err.style.display='none';
+  EOL=/\r\n/.test(nt)?'\r\n':'\n';doc=r.doc;mapSrc(nt,doc);XBASE=nt;cursor=-1;open.clear();
+  build();cur=Math.max(0,tabs.findIndex(t=>t.xml));renderTabs();touch()}
+function xmlView(box){
+  const wrap=h('div','xmlwrap'),pre=h('pre'),ta=h('textarea'),err=h('div','xmlerr');
+  pre.setAttribute('aria-hidden','true');ta.spellcheck=false;XBASE=serialize();XMIN=isMin(XBASE);ta.value=XMIN?formatXML(XBASE,'  '):XBASE.replace(/\r\n?/g,'\n');
+  const sync=()=>{pre.scrollTop=ta.scrollTop;pre.scrollLeft=ta.scrollLeft};
+  const paint=()=>{const on=ta.value.length<=HL_MAX;wrap.classList.toggle('hl-on',on);pre.innerHTML=on?highlightXML(ta.value):'';sync()};
+  ta.addEventListener('scroll',sync);
+  ta.addEventListener('keydown',e=>{if(e.key==='Tab'&&!e.shiftKey&&!e.ctrlKey&&!e.altKey&&!e.metaKey){
+    e.preventDefault();if(!document.execCommand('insertText',false,'  ')){ta.setRangeText('  ',ta.selectionStart,ta.selectionEnd,'end');ta.dispatchEvent(new Event('input'))}}});
+  ta.addEventListener('input',()=>{
+    cancelAnimationFrame(xmlRaf);xmlRaf=requestAnimationFrame(paint);
+    clearTimeout(xmlTimer);pendingXml=()=>applyXml(ta.value,err);xmlTimer=setTimeout(flushXml,350)});
+  wrap.append(pre,ta,err);box.append(wrap);paint()}
+
+function renderTabs(){tabsEl.replaceChildren(...tabs.map((t,i)=>{
+  const uc=countTabUnclosed(t);
+  let cls=i===cur?'on':'';
+  if(uc>0)cls+=(cls?' ':'')+'has-unclosed';
+  const b=h('button',cls,t.n);
+  if(uc>0){
+    const badge=h('span','tab-badge-unclosed','⚠ '+uc);
+    badge.title=`${uc} tag(s) aberta(s) sem fechamento nesta aba`;
+    b.append(' ',badge);
+  }
+  const nm=t.n;
+  b.onclick=()=>{flushXml();
+    if(xmlBad&&tabs[cur]&&tabs[cur].xml&&!confirm('O texto XML contém erros e não foi aplicado. Sair desta aba descartará essas alterações. Continuar?'))return;
+    xmlBad=false;cur=Math.max(0,tabs.findIndex(x=>x.n===nm));renderTabs();render()};
+  return b}))}
 function render(){
-  const y=main.scrollTop;main.replaceChildren();
+  const y=main.scrollTop;main.replaceChildren();main.classList.remove('xml');
   if(!doc){tabsEl.replaceChildren();main.append(h('div','empty','Abra um arquivo XML de NF-e (ou arraste-o para cá).'));return}
-  renderTabs();const t=tabs[cur];
-  if(t.items)itemsView(main);else t.get().forEach(e=>main.append(group(e)));
+  renderTabs();const t=tabs[cur];main.classList.toggle('xml',!!t.xml);
+  if(t.xml)xmlView(main);else if(t.items)itemsView(main);else t.get().forEach(e=>main.append(group(e)));
   main.scrollTop=y}
 /* Datas/horas: exibidas como dd/mm/aaaa hh:mm:ss-03:00 e gravadas no XML como aaaa-mm-ddThh:mm:ss-03:00 */
 const DT=new Set(['dhEmi','dhSaiEnt','dhRecbto']),ISO=/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(Z|[+-]\d{2}:\d{2})$/,BR=/^(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2}):(\d{2})\s*(Z|[+-]\d{2}:\d{2})$/;
@@ -235,8 +539,17 @@ function toISO(v){v=v.trim();let m=ISO.exec(v);
   return `${m[3]}-${m[2]}-${m[1]}T${m[4]}:${m[5]}:${m[6]}${m[7]}`}
 const isDT=c=>DT.has(c.localName)&&ISO.test(c.textContent);
 function field(c){
-  const ta=TA.has(c.localName),w=h('label','fld'+(ta?' wide':'')),i=h(ta?'textarea':'input'),s=h('span','',lbl(c.localName));
-  const dt=isDT(c);s.title=c.localName;if(ta)i.rows=3;i.value=dt?toBR(c.textContent):c.textContent;i._el=c;
+  const isUnclosed=unclosedElements.has(c)||c._isUnclosed;
+  const ta=TA.has(c.localName),w=h('label','fld'+(ta?' wide':'')+(INL.has(c.localName)?' inline':'')+(isUnclosed?' has-unclosed':'')),i=h(ta?'textarea':'input'),s=h('span','',lbl(c.localName));
+  const dt=isDT(c);s.title=c.localName;
+  if(isUnclosed){
+    const tagWarn=h('span','unclosed-tag-alert','⚠ Tag aberta sem fechar (<'+c.localName+'>)');
+    tagWarn.title='Esta tag XML estava aberta e não foi fechada no arquivo original. O valor foi recuperado.';
+    s.append(' ',tagWarn);
+    i.classList.add('has-unclosed');
+    i.title='Tag <'+c.localName+'> estava aberta sem fechamento no XML original';
+  }
+  if(ta)i.rows=3;i.value=dt?toBR(c.textContent):c.textContent;i._el=c;
   i.oninput=()=>{if(dt){const v=toISO(i.value);i.classList.toggle('bad',v===null);if(v===null)return;c.textContent=v}else c.textContent=i.value;touch()};
   if(dt){i.placeholder='dd/mm/aaaa hh:mm:ss-03:00';i.onblur=()=>{if(i.classList.contains('bad'))status('Data inválida: valor anterior mantido');i.classList.remove('bad');i.value=toBR(c.textContent)}}
   w.append(s,i);return w}
@@ -323,9 +636,24 @@ function itemsView(box){
   hd.append(h('span','','#'),...SUM.map(s=>h('span','',s[1])),h('span'));list.append(hd);
   ds.forEach((d,i)=>{
     const p=sub(d,'prod'),skip=new Set(),it=h('div','item'),r=h('div','ihead'),body=h('div','ibody'),tg=h('button','mini tg');
+    const hasUnclosedInItem=[...unclosedElements].some(el=>d.contains(el));
+    if(hasUnclosedInItem){it.classList.add('has-unclosed');open.add(d)}
     const sync=()=>{const o=open.has(d);tg.textContent=(o?'▾ ':'▸ ')+(i+1);body.hidden=!o;if(o&&!body.firstChild)body.append(group(d,skip))};
     tg.onclick=()=>{open.has(d)?open.delete(d):open.add(d);sync()};r.append(tg);
-    SUM.forEach(([t])=>{const e=typeof t==='function'?t(d):sub(p,t);if(!e)return r.append(h('span'));skip.add(e);const x=h('input');x.value=e.textContent;x._el=e;x.oninput=()=>{e.textContent=x.value;touch()};r.append(x)});
+    SUM.forEach(([t])=>{
+      const e=typeof t==='function'?t(d):sub(p,t);
+      if(!e)return r.append(h('span'));
+      skip.add(e);
+      const x=h('input');
+      x.value=e.textContent;
+      x._el=e;
+      if(unclosedElements.has(e)||e._isUnclosed){
+        x.classList.add('has-unclosed');
+        x.title='Tag <'+e.localName+'> estava aberta sem fechamento no XML original';
+      }
+      x.oninput=()=>{e.textContent=x.value;touch()};
+      r.append(x);
+    });
     const a=h('div','acts');
     [['Σ','vProd = qtd × valor unitário',()=>calc(d)],
      ['▲','Subir',()=>op(()=>{const v=d.previousElementSibling;if(v&&v.localName==='det')v.before(d)})],
@@ -339,7 +667,7 @@ function itemsView(box){
 /* ---------- Busca ---------- */
 function toggleSearch(){const p=$('searchPanel'),v=p.style.display==='flex';p.style.display=v?'none':'flex';if(!v)$('findInput').focus()}
 function findNext(){
-  const n=$('findInput').value.toLowerCase();if(!n||!doc)return;
+  flushXml();const n=$('findInput').value.toLowerCase();if(!n||!doc)return;
   const all=[];tabs.forEach((t,ti)=>t.get().forEach(e=>[...e.getElementsByTagName('*')].forEach(l=>{if(!l.children.length)all.push([ti,l,e])})));
   const hit=all.map((x,i)=>(x[1].textContent+'\n'+(isDT(x[1])?toBR(x[1].textContent):'')).toLowerCase().includes(n)?i:-1).filter(i=>i>=0);
   if(!hit.length)return status('Nenhuma ocorrência');
@@ -352,21 +680,23 @@ $('btnSearch').onclick=$('btnCloseSearch').onclick=toggleSearch;
 $('btnFindNext').onclick=findNext;
 $('findInput').onkeydown=e=>{if(e.key==='Enter')findNext()};
 $('btnReplaceAll').onclick=()=>{
-  const f=$('findInput').value,r=$('replaceInput').value;if(!f||!doc)return;let n=0;
+  flushXml();const f=$('findInput').value,r=$('replaceInput').value;if(!f||!doc)return;let n=0;
   [...doc.getElementsByTagName('*')].forEach(e=>{if(!e.children.length&&!e.closest('Signature')&&e.textContent.includes(f)){e.textContent=e.textContent.split(f).join(r);n++}});
   if(n){touch();render()}status(n+' campo(s) alterado(s)')};
 
 /* ---------- Arquivo, tema e atalhos ---------- */
-function readFile(f){if(!f)return;const r=new FileReader();r.onload=ev=>load(ev.target.result,f.name);r.readAsText(f)}
+function readFile(f){if(!f)return;const r=new FileReader();r.onload=ev=>load(new TextDecoder('utf-8',{ignoreBOM:true}).decode(ev.target.result),f.name);r.readAsArrayBuffer(f)}
 $('btnOpen').onclick=()=>$('fileInput').click();
 $('fileInput').onchange=e=>{readFile(e.target.files[0]);e.target.value=''};
 document.ondragover=e=>e.preventDefault();
 document.ondrop=e=>{e.preventDefault();readFile(e.dataTransfer.files[0])};
 $('btnSave').onclick=()=>{
-  if(!doc)return;let n=$('fileName').textContent;if(!/\.xml$/i.test(n))n+='.xml';
-  const a=h('a');a.href=URL.createObjectURL(new Blob([serialize()],{type:'application/xml'}));a.download=n;a.click();
+  flushXml();if(!doc)return;
+  if(xmlBad&&!confirm('O texto da aba XML contém erros e não foi aplicado. Salvar a última versão válida?'))return;
+  let n=$('fileName').textContent;if(!/\.xml$/i.test(n))n+='.xml';
+  const a=h('a');a.href=URL.createObjectURL(new Blob([(HAS_BOM?'\ufeff':'')+serialize()],{type:'application/xml'}));a.download=n;a.click();
   $('fileName').classList.remove('unsaved')};
-$('btnNew').onclick=()=>{if(!confirm('Fechar a nota e limpar tudo?'))return;doc=null;tabs=[];
+$('btnNew').onclick=()=>{if(!confirm('Fechar a nota e limpar tudo?'))return;doc=null;tabs=[];pendingXml=null;clearTimeout(xmlTimer);xmlBad=false;unclosedElements.clear();if($('unclosedWarn'))$('unclosedWarn').style.display='none';
   try{localStorage.removeItem(KEY.c);localStorage.removeItem(KEY.n)}catch(e){}
   $('fileName').textContent='sem-titulo.xml';$('fileName').classList.remove('unsaved');$('warn').style.display='none';$('info').textContent='';render()};
 $('btnHelp').onclick=()=>$('modalHelp').style.display='flex';
@@ -380,10 +710,10 @@ document.addEventListener('keydown',e=>{
   if(e.ctrlKey&&e.key==='f'){e.preventDefault();toggleSearch()}});
 window.onclick=e=>{if(e.target.classList.contains('modal'))e.target.style.display='none'};
 window.onload=()=>{
-  let c=null,n=null;
-  try{Object.entries(SEL).forEach(([k,[,key]])=>P[k]=localStorage.getItem(key)||P[k]);c=localStorage.getItem(KEY.c);n=localStorage.getItem(KEY.n)}catch(e){}
+  let c=null,n=null,bm=false;
+  try{Object.entries(SEL).forEach(([k,[,key]])=>P[k]=localStorage.getItem(key)||P[k]);c=localStorage.getItem(KEY.c);n=localStorage.getItem(KEY.n);bm=localStorage.getItem(KEY.b)==='1'}catch(e){}
   applyPrefs();Object.entries(SEL).forEach(([k,[id]])=>$(id).value=P[k]);
-  if(!(c&&load(c,n||'sem-titulo.xml')))render()};
+  if(!(c&&load(c,n||'sem-titulo.xml',bm)))render()};
 </script>
 </body>
 </html>
