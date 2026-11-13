@@ -220,7 +220,7 @@ function diagnose(T){
       if(!st.length)return {msg:`a tag de fechamento </${x}> da linha ${L} não tem tag de abertura.`,lines:[L]};
       const top=st[st.length-1];
       if(top.n!==x){
-        if(st.some(s=>s.n===x))return {msg:`a tag <${top.n}> aberta na linha ${top.l} não foi fechada (aparece </${x}> na linha ${L}).`,lines:[top.l,L]};
+        if(st.some(s=>s.n===x))return {msg:`a tag <${top.n}> aberta na linha ${top.l} não foi fechada (aparece </${x}> na linha ${L}).`,lines:[top.l]};
         return {msg:`a tag </${x}> da linha ${L} não corresponde a <${top.n}>, aberta na linha ${top.l}.`,lines:[top.l,L]}}
       st.pop()}
     else if(m[2]&&!m[4])st.push({n:m[2],l:ln(m.index)})}
@@ -321,7 +321,7 @@ function formatXML(src,ind){
     const s=t[i],pad=ind.repeat(Math.max(lvl,0));
     if(isOpen(s)){
       if(t[i+1]!==undefined&&!t[i+1].startsWith('<')&&isClose(t[i+2])){out.push(pad+s+t[i+1]+t[i+2]);i+=2}
-      else if(t[i+1]!==undefined&&!t[i+1].startsWith('<')){out.push(pad+s+t[i+1]);i+=1;lvl++}   /* tag aberta + texto sem fechamento: na mesma linha */
+      else if(t[i+1]!==undefined&&!t[i+1].startsWith('<')){out.push(pad+s+t[i+1].replace(/\s+$/,''));i+=1;lvl++}   /* tag aberta + texto sem fechamento: na mesma linha, sem o espaço final */
       else if(isClose(t[i+1])){out.push(pad+s+t[i+1]);i+=1}
       else{out.push(pad+s);lvl++}
     }else if(isClose(s)){lvl--;out.push(ind.repeat(Math.max(lvl,0))+s)}
@@ -354,7 +354,11 @@ function patchText(base,T){
   while(b<A.length-a&&b<B.length-a&&A[A.length-1-b].x===B[B.length-1-b])b++;
   if(a===A.length&&a===B.length)return base;
   const rs=a<A.length?A[a].s:(A.length?A[A.length-1].e:0),re=a+b<A.length?A[A.length-1-b].e:rs;
-  return base.slice(0,rs)+B.slice(a,B.length-b).join('')+base.slice(re)}
+  let ins=B.slice(a,B.length-b).join('');
+  const aMid=A.slice(a,A.length-b),la=aMid[aMid.length-1];   /* texto solto com espaço/quebra de linha no final: o espaço volta depois do trecho novo */
+  if(la&&!la.x.startsWith('<')){const k=A.indexOf(la),tail=(/\s+$/.exec(la.x)||[''])[0],pv=A[k-1],nx=A[k+1];
+    if(tail.includes('\n')&&pv&&/^<[^\/!?]/.test(pv.x)&&!/\/>$/.test(pv.x)&&!(nx&&nx.x.startsWith('</'))&&!/\s$/.test(ins))ins+=tail}
+  return base.slice(0,rs)+ins+base.slice(re)}
 function applyXml(txt,show){
   const eol=XBASE.includes('\r\n')?'\r\n':'\n';
   const nt=XMIN?patchText(XBASE,txt):(XBASE.replace(/\r\n?/g,'\n')===txt?XBASE:txt.replace(/\n/g,eol));
