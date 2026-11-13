@@ -220,7 +220,7 @@ function diagnose(T){
       if(!st.length)return {msg:`a tag de fechamento </${x}> da linha ${L} não tem tag de abertura.`,lines:[L]};
       const top=st[st.length-1];
       if(top.n!==x){
-        if(st.some(s=>s.n===x))return {msg:`a tag <${top.n}> aberta na linha ${top.l} não foi fechada (aparece </${x}> na linha ${L}).`,lines:[top.l]};
+        if(st.some(s=>s.n===x))return {msg:`a tag <${top.n}> aberta na linha ${top.l} não foi fechada.`,lines:[top.l]};
         return {msg:`a tag </${x}> da linha ${L} não corresponde a <${top.n}>, aberta na linha ${top.l}.`,lines:[top.l,L]}}
       st.pop()}
     else if(m[2]&&!m[4])st.push({n:m[2],l:ln(m.index)})}
