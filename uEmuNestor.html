@@ -1,0 +1,273 @@
+<!-- =============================================================================
+    PROJETO: uEmuNestor
+    VERSÃO: 0.1.0
+    DATA: Novembro / 2026
+    DESCRIÇÃO: Emulador do microcomputador Nestor II.
+    TECNOLOGIAS: HTML, CSS, JavaScript (sem dependências).
+============================================================================= -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nestor II — Kit Didático Z80</title>
+<style>
+:root{--pcb:#1c2a26;--pcb2:#26382f;--ink:#d9d4c3;--dim:#7f9086;--led:#ff4b2b;--ledoff:#3a1a16;--key:#d8d2bf;--keyf:#b4ae9b;--er:#b5362c;--go:#3f7d52}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:grid;place-items:center;background:#111915;color:var(--ink);font:15px/1.4 "Trebuchet MS",Verdana,sans-serif}
+main{width:min(860px,100%);padding:16px}
+.board{background:linear-gradient(160deg,var(--pcb2),var(--pcb));border:1px solid #3c5448;border-radius:14px;padding:20px;box-shadow:0 18px 40px #0008}
+header{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+h1{font:700 19px Georgia,serif;margin:0;flex:1;letter-spacing:.02em}
+h1 small{font:400 13px "Trebuchet MS",sans-serif;color:var(--dim);margin-left:8px}
+.led{width:12px;height:12px;border-radius:50%;background:#401512;box-shadow:inset 0 0 0 1px #0006}
+.led.on{background:#ff5a3c;box-shadow:0 0 10px #ff5a3c}
+.disp{background:#140a09;border:2px solid #0b0605;border-radius:8px;padding:18px 12px;display:flex;justify-content:center;gap:10px;box-shadow:inset 0 3px 10px #000}
+.disp svg{width:min(15vw,78px);height:auto}
+.disp .gap{width:min(5vw,34px)}
+.seg{fill:var(--ledoff)}.seg.on{fill:var(--led);filter:drop-shadow(0 0 3px #ff4b2b99)}
+.panel{display:flex;flex-wrap:wrap;gap:18px 26px;margin-top:18px;justify-content:center}
+.grid{display:grid;gap:9px}
+.hex{grid-template-columns:repeat(4,66px)}.fn{grid-template-columns:repeat(2,66px)}.sys{grid-template-columns:96px}
+button{font:700 16px "Trebuchet MS",sans-serif;height:54px;border:0;border-radius:7px;background:var(--key);color:#222;cursor:pointer;box-shadow:0 3px 0 #0007,inset 0 2px 0 #fff6;touch-action:manipulation}
+button:active,button.dn{transform:translateY(2px);box-shadow:0 1px 0 #0007}
+button:focus-visible{outline:2px solid #ffd27a;outline-offset:2px}
+.f{background:var(--keyf);font-size:13px}.go{background:var(--go);color:#fff}.er{background:var(--er);color:#fff}
+.s{background:#2d3f37;color:var(--ink);font-size:13px}.s.act{background:#8a6a1f;color:#fff}
+.st{margin-top:16px;font-size:13px;color:var(--dim);min-height:20px}
+.st a{color:#ffd27a}
+details{margin-top:12px;font-size:13px;color:var(--dim)}
+details pre{margin:8px 0 0;white-space:pre-wrap;font:12.5px/1.5 Consolas,monospace;color:var(--ink)}
+@media(prefers-reduced-motion:no-preference){.led{transition:background .2s}}
+</style>
+</head>
+<body>
+<main><div class="board">
+<header><h1>Nestor II<small>Kit Didático Z80 · Nova Eletrônica</small></h1><span class="led" id="led"></span></header>
+<div class="disp" id="disp"></div>
+<div class="panel">
+ <div class="grid hex" id="hex"></div>
+ <div class="grid fn" id="fn"></div>
+ <div class="grid sys">
+  <button class="s" id="bpow">POWER</button>
+  <button class="s" id="brst">RESET</button>
+  <button class="s" id="bnmi">NMI</button>
+  <button class="s" id="bk7">K7: vazio</button>
+ </div>
+</div>
+<div class="st" id="st">Iniciando…</div>
+<input type="file" id="file" accept=".hex,.HEX" hidden>
+<details><summary>Ajuda</summary><pre>Teclado do PC: 0-9 a-f = hex · Enter/g = GO · r = ER · p = PERM · l = LOAD
++ / − = DT+ / DT− · i = IV · q ou espaço = QUAD
+
+K7 (fita): clique em “K7” e escolha um arquivo .hex (nome = título de 4 dígitos).
+  Carregar: com a fita inserida, pressione LOAD; o conteúdo vai direto para a RAM.
+  Gravar: preencha título/início/fim na tela da fita, pressione GO; o .hex é baixado.
+NMI aciona a interrupção não mascarável (vetor em 0066h → ROTINT, ajustável com IV).
+POWER zera a RAM; RESET mantém a RAM.</pre></details>
+</div></main>
+<script>
+"use strict";
+/* ===== Núcleo Z80 ===== */
+const PAR=new Uint8Array(256);for(let i=0;i<256;i++){let p=4,v=i;while(v){p^=(v&1)*4;v>>=1}PAR[i]=p}
+const szyx=v=>(v&0xA8)|((v&255)?0:64);
+class Z80{
+constructor(b){this.b=b;this.reset()}
+reset(){this.r=new Uint8Array(8);this.s=new Uint8Array(8);this.r[7]=255;this.F=255;this.F2=255;this.SP=65535;this.PC=0;this.IX=65535;this.IY=65535;this.I=0;this.R=0;this.iff1=0;this.iff2=0;this.im=0;this.halt=0;this.nmi=0;this.t=0;this.pr=0;this.d=null}
+rd(a){return this.b.rd(a&65535)}wr(a,v){this.b.wr(a&65535,v&255)}
+f8(){const v=this.rd(this.PC);this.PC=(this.PC+1)&65535;return v}
+sb(){const v=this.f8();return v>127?v-256:v}
+f16(){const l=this.f8();return l|this.f8()<<8}
+fop(){this.R=(this.R&128)|((this.R+1)&127);return this.f8()}
+rd16(a){return this.rd(a)|this.rd(a+1)<<8}
+wr16(a,v){this.wr(a,v);this.wr(a+1,v>>8)}
+push(v){this.SP=(this.SP-2)&65535;this.wr16(this.SP,v)}
+pop(){const v=this.rd16(this.SP);this.SP=(this.SP+2)&65535;return v}
+get hl(){return this.pr==0?this.r[4]<<8|this.r[5]:this.pr==1?this.IX:this.IY}
+set hl(v){v&=65535;if(this.pr==0){this.r[4]=v>>8;this.r[5]=v&255}else if(this.pr==1)this.IX=v;else this.IY=v}
+mem(){if(!this.pr)return this.r[4]<<8|this.r[5];if(this.d===null){this.d=this.sb();this.t+=8}return((this.pr==1?this.IX:this.IY)+this.d)&65535}
+gr(i,pl){const r=this.r;if(i==6)return this.rd(this.mem());if(i<4||i==7)return r[i];if(this.pr&&!pl){const v=this.pr==1?this.IX:this.IY;return i==4?v>>8:v&255}return r[i]}
+sr(i,v,pl){v&=255;const r=this.r;if(i==6){this.wr(this.mem(),v);return}if(i<4||i==7){r[i]=v;return}
+ if(this.pr&&!pl){const k=this.pr==1?"IX":"IY",o=this[k];this[k]=i==4?v<<8|o&255:o&0xFF00|v}else r[i]=v}
+grp(p){const r=this.r;return p==0?r[0]<<8|r[1]:p==1?r[2]<<8|r[3]:p==2?this.hl:this.SP}
+srp(p,v){v&=65535;const r=this.r;if(p==0){r[0]=v>>8;r[1]=v&255}else if(p==1){r[2]=v>>8;r[3]=v&255}else if(p==2)this.hl=v;else this.SP=v}
+cc(i){const F=this.F;const v=[F&64,F&1,F&4,F&128][i>>1];return i&1?!!v:!v}
+alu(y,b){const a=this.r[7];let r,f;
+ if(y<2){const c=y?this.F&1:0;r=a+b+c;f=szyx(r)|((a&15)+(b&15)+c>15?16:0)|((a^r)&(b^r)&128?4:0)|(r>255?1:0)}
+ else if(y==2||y==3||y==7){const c=y==3?this.F&1:0;r=a-b-c;f=szyx(r)|((a&15)-(b&15)-c<0?16:0)|((a^b)&(a^r)&128?4:0)|(r<0?1:0)|2;if(y==7)f=(f&0xD7)|(b&0x28)}
+ else{r=y==4?a&b:y==5?a^b:a|b;f=szyx(r)|PAR[r&255]|(y==4?16:0)}
+ this.F=f;if(y!=7)this.r[7]=r&255}
+inc(v){const r=(v+1)&255;this.F=(this.F&1)|szyx(r)|((v&15)==15?16:0)|(v==127?4:0);return r}
+dec(v){const r=(v-1)&255;this.F=(this.F&1)|szyx(r)|((v&15)==0?16:0)|(v==128?4:0)|2;return r}
+rot(y,v){let c,r;switch(y){case 0:c=v>>7;r=v<<1|c;break;case 1:c=v&1;r=v>>1|c<<7;break;case 2:c=v>>7;r=v<<1|(this.F&1);break;case 3:c=v&1;r=v>>1|(this.F&1)<<7;break;case 4:c=v>>7;r=v<<1;break;case 5:c=v&1;r=v>>1|v&128;break;case 6:c=v>>7;r=v<<1|1;break;default:c=v&1;r=v>>1}
+ r&=255;this.F=szyx(r)|PAR[r]|c;return r}
+add16(a,b,c){const r=a+b+c;this.F=(this.F&0xC4)|((a&0xFFF)+(b&0xFFF)+c>0xFFF?16:0)|(r>65535?1:0)|((r>>8)&0x28);return r&65535}
+adc16(a,b,sub){const c=this.F&1,r=sub?a-b-c:a+b+c,x=r&65535;
+ this.F=(x&0x8000?128:0)|(x?0:64)|((x>>8)&0x28)|(sub?((a&0xFFF)-(b&0xFFF)-c<0?16:0)|((a^b)&(a^x)&0x8000?4:0)|2:((a&0xFFF)+(b&0xFFF)+c>0xFFF?16:0)|((a^x)&(b^x)&0x8000?4:0))|(r>65535||r<0?1:0);return x}
+daa(){let a=this.r[7],F=this.F,n=F&2,d=0,c=F&1;if((F&16)||(a&15)>9)d|=6;if(c||a>0x99){d|=0x60;c=1}
+ const h=n?((F&16)&&(a&15)<6?16:0):((a&15)>9?16:0);a=(n?a-d:a+d)&255;this.r[7]=a;this.F=szyx(a)|PAR[a]|n|h|c}
+step(){this.t=0;
+ if(this.nmi){this.nmi=0;this.halt=0;this.iff2=this.iff1;this.iff1=0;this.push(this.PC);this.PC=0x66;return 11}
+ if(this.halt)return 4;
+ this.pr=0;this.d=null;let op=this.fop();
+ while(op==0xDD||op==0xFD){this.pr=op==0xDD?1:2;this.t+=4;this.d=null;op=this.fop()}
+ this.ex(op);return this.t}
+ex(op){const x=op>>6,y=op>>3&7,z=op&7,p=y>>1,q=y&1,r=this.r;let v;
+ if(x==0){switch(z){
+  case 0:if(y==0)this.t+=4;else if(y==1){let a=r[7],f=this.F;r[7]=this.s[7];this.F=this.F2;this.s[7]=a;this.F2=f;this.t+=4}
+   else{const e=this.sb();if(y==2){this.t+=8;r[0]=(r[0]-1)&255;if(r[0]){this.PC=(this.PC+e)&65535;this.t+=5}}
+    else if(y==3){this.PC=(this.PC+e)&65535;this.t+=12}else{this.t+=7;if(this.cc(y-4)){this.PC=(this.PC+e)&65535;this.t+=5}}}break;
+  case 1:if(!q){this.srp(p,this.f16());this.t+=10}else{this.hl=this.add16(this.hl,this.grp(p),0);this.t+=11}break;
+  case 2:this.t+=7;if(p==0){q?r[7]=this.rd(r[0]<<8|r[1]):this.wr(r[0]<<8|r[1],r[7])}else if(p==1){q?r[7]=this.rd(r[2]<<8|r[3]):this.wr(r[2]<<8|r[3],r[7])}
+   else if(p==2){const a=this.f16();this.t+=9;q?this.hl=this.rd16(a):this.wr16(a,this.hl)}else{const a=this.f16();this.t+=6;q?r[7]=this.rd(a):this.wr(a,r[7])}break;
+  case 3:this.srp(p,this.grp(p)+(q?-1:1));this.t+=6;break;
+  case 4:this.t+=4;if(y==6)this.t+=7;v=this.gr(y);this.sr(y,this.inc(v));break;
+  case 5:this.t+=4;if(y==6)this.t+=7;v=this.gr(y);this.sr(y,this.dec(v));break;
+  case 6:this.t+=7;if(y==6){this.t+=3;const a=this.mem();this.wr(a,this.f8())}else this.sr(y,this.f8());break;
+  default:this.t+=4;if(y<4){const o=this.F;this.sr(7,this.rot(y,r[7]));this.F=(o&0xC4)|(this.F&0x29)}
+   else if(y==4)this.daa();else if(y==5){r[7]^=255;this.F=(this.F&0xC5)|18|(r[7]&0x28)}
+   else if(y==6)this.F=(this.F&0xC4)|1|(r[7]&0x28);else this.F=(this.F&0xC4)|((this.F&1)?16:0)|((this.F&1)^1)|(r[7]&0x28)}
+ }else if(x==1){if(op==0x76){this.halt=1;this.t+=4;return}
+  this.t+=4;if(y==6||z==6)this.t+=3;
+  if(y==6){this.wr(this.mem(),r[z])}else if(z==6){this.sr(y,this.rd(this.mem()),1)}else this.sr(y,this.gr(z))
+ }else if(x==2){this.t+=4;if(z==6)this.t+=3;this.alu(y,this.gr(z))
+ }else switch(z){
+  case 0:if(this.cc(y)){this.PC=this.pop();this.t+=11}else this.t+=5;break;
+  case 1:this.t+=10;if(!q){v=this.pop();if(p==3){r[7]=v>>8;this.F=v&255}else this.srp(p,v)}
+   else if(p==0)this.PC=this.pop();else if(p==1){for(let i=0;i<6;i++){const t=r[i];r[i]=this.s[i];this.s[i]=t}this.t-=6}
+   else if(p==2){this.PC=this.hl;this.t-=6}else{this.SP=this.hl;this.t-=4}break;
+  case 2:{const a=this.f16();this.t+=10;if(this.cc(y))this.PC=a}break;
+  case 3:switch(y){
+   case 0:this.PC=this.f16();this.t+=10;break;
+   case 1:this.cb();break;
+   case 2:this.b.out(this.f8(),r[7]);this.t+=11;break;
+   case 3:r[7]=this.b.in(this.f8());this.t+=11;break;
+   case 4:{const a=this.pop();this.push(this.hl);this.hl=a;this.t+=19}break;
+   case 5:{const h=r[4],l=r[5];r[4]=r[2];r[5]=r[3];r[2]=h;r[3]=l;this.t+=4}break;
+   case 6:this.iff1=this.iff2=0;this.t+=4;break;
+   default:this.iff1=this.iff2=1;this.t+=4}break;
+  case 4:{const a=this.f16();if(this.cc(y)){this.push(this.PC);this.PC=a;this.t+=17}else this.t+=10}break;
+  case 5:if(!q){v=p==3?r[7]<<8|this.F:this.grp(p);this.push(v);this.t+=11}
+   else if(p==0){const a=this.f16();this.push(this.PC);this.PC=a;this.t+=17}else if(p==2){this.pr=0;this.ed()}break;
+  case 6:this.t+=7;this.alu(y,this.f8());break;
+  default:this.push(this.PC);this.PC=y*8;this.t+=11}
+}
+cb(){const r=this.r;let op,a,idx=this.pr;
+ if(idx){const d=this.sb();op=this.f8();a=((idx==1?this.IX:this.IY)+d)&65535;this.t+=15}else{op=this.fop();a=r[4]<<8|r[5];this.t+=4}
+ const x=op>>6,y=op>>3&7,z=op&7,m=idx||z==6;
+ let v=m?this.rd(a):r[z];this.t+=m?(idx?4:7):4;
+ if(x==0){v=this.rot(y,v)}else if(x==1){this.F=(this.F&1)|16|((v&(1<<y))?(y==7?128:0):0x44)|(v&0x28);if(m&&!idx)this.t-=0;return}
+ else v=x==2?v&~(1<<y):v|(1<<y);
+ v&=255;if(m){this.wr(a,v);this.t+=4;if(idx&&z!=6)r[z]=v}else r[z]=v}
+ed(){const r=this.r,op=this.fop(),x=op>>6,y=op>>3&7,z=op&7,p=y>>1,q=y&1;let v;this.t+=8;
+ if(x==1)switch(z){
+  case 0:v=this.b.in(r[1]);this.F=(this.F&1)|szyx(v)|PAR[v];if(y!=6)r[y==7?7:y]=v;this.t+=4;break;
+  case 1:this.b.out(r[1],y==6?0:r[y]);this.t+=4;break;
+  case 2:this.hl=this.adc16(this.hl,this.grp(p),!q);this.t+=7;break;
+  case 3:{const a=this.f16();this.t+=12;q?this.srp(p,this.rd16(a)):this.wr16(a,this.grp(p))}break;
+  case 4:{const a=r[7];r[7]=0;this.alu(2,a);r[7]=this.r[7]}break;
+  case 5:this.PC=this.pop();this.iff1=this.iff2;this.t+=6;break;
+  case 6:this.im=y&2?(y&1?2:1):0;break;
+  default:if(y==0){this.I=r[7];this.t+=1}else if(y==1){this.R=r[7];this.t+=1}
+   else if(y<4){v=y==2?this.I:this.R;r[7]=v;this.F=(this.F&1)|szyx(v)|(this.iff2?4:0);this.t+=1}
+   else if(y<6){const a=r[4]<<8|r[5],m=this.rd(a),A=r[7];let n;
+    if(y==5){n=(m<<4|A&15)&255;r[7]=A&0xF0|m>>4}else{n=(m>>4|(A&15)<<4)&255;r[7]=A&0xF0|m&15}
+    this.wr(a,n);this.F=(this.F&1)|szyx(r[7])|PAR[r[7]];this.t+=10}}
+ else if(x==2&&y>=4&&z<4)this.blk(y&1,y>>1&1,z);
+}
+blk(dec,rep,z){const r=this.r,s=dec?-1:1;let hl=r[4]<<8|r[5],bc=r[0]<<8|r[1],de=r[2]<<8|r[3],v,again=0;this.t+=8;
+ if(z==0){v=this.rd(hl);this.wr(de,v);hl+=s;de+=s;bc=(bc-1)&65535;const n=v+r[7];this.F=(this.F&0xC1)|(n&8)|((n&2)<<4)|(bc?4:0);again=bc!=0}
+ else if(z==1){v=this.rd(hl);const a=r[7],d=(a-v)&255,h=(a&15)<(v&15)?16:0;hl+=s;bc=(bc-1)&65535;const n=d-(h?1:0);
+  this.F=(this.F&1)|2|szyx(d)&0xC0|h|(n&8)|((n&2)<<4)|(bc?4:0);again=bc!=0&&d!=0}
+ else if(z==2){v=this.b.in(bc);this.wr(hl,v);hl+=s;r[0]=(r[0]-1)&255;this.F=(r[0]?0:64)|2|(this.F&0x29);again=r[0]!=0;bc=r[0]<<8|r[1]}
+ else{v=this.rd(hl);r[0]=(r[0]-1)&255;bc=r[0]<<8|r[1];this.b.out(bc,v);hl+=s;this.F=(r[0]?0:64)|2|(this.F&0x29);again=r[0]!=0}
+ r[4]=(hl>>8)&255;r[5]=hl&255;r[2]=(de>>8)&255;r[3]=de&255;r[0]=bc>>8;r[1]=bc&255;
+ if(rep&&again){this.PC=(this.PC-2)&65535;this.t+=5}}
+}
+
+/* ===== Hardware do Nestor II ===== */
+const ROM_B64="eNrtlu9PW1UYx59zLpZ7G4YtCK0lm73eZCmrG9AshfiiTsWgMTogBjKmoInR8GY1LhE2tJoRWvamMXuh0bMXYvzxkiXLghqj2OsGt80lmoZohzEhoeI2OmEKtGO71+dculH9C/aiT9pzzvN5zn3O8z03zdMWOHtxPrsu/8GCD8qD4FxmxAa5cy1LTF5mNthjCxH9AzgR251QYNiApAuQ65/CybSwQAxIBEBXQf8dDFeiE1QQjbrkO2A4Lp8GfQMwa0QNA4B6g81Gz8Sm5+SAMBaOHA7Zx8LHXrnC4/jABlH7oLiupKC+BIf1SeDpZzu6tGpewiTEds2qX8B6WoikScYJpOHk+cTXkFHWtGoIkW+Sv0GsWtyeHHxSXdCl7RF58KvkGlShgiUOT5zqAA0PewMTc9Uu1BM0lV2J+0gQFOuDu+TrbDgXVnJhvY+gqz9N+F63/Be7CzAeqbkL8IF+pcfj9w9lrZ2LGsF7eov4i18NNxxX3vT7PUOaaUay8iobmsT0cUKFO/OiNu/8kIwOeH7WpgufnfvozKn8e++Pj16aiMbxvFp9kJSe31Dqm6YZMtNC6N00kXMsqLbk2Xp2/iK+RjXH5CwLGuoG2VaKH81pExAePDgSHfCEaz2vX0HPuVsYiapA9RUSHFeCU3KBqV5KrnEVXGCB3wgSHh/lcZPHcdzBlzg2LGyU4AmOb1v4dgmOcnzLwrdK8GmOtyy8VYJnOL5p4ZslOM5x3sL5Is71yptsiAcLPLhpBTd5MJLr4JJusJBKBXwhESooEYriamiAPkNfpkM0Tj+n39I09QjqEmmkh2gvPUbH6Fl6nibpMsV7hv8b4UYJga29U18ml/52tbqgbGUrW9nueQtB4AiTn7U7+7Ybv9z3n67vzWPT911FutPzvWvFlv9A8lXRcLQ5jFqfoDrER48w/INwVJqxFr4mg/iaDeprKfoS+g7022fkLnuI4LGqKMq99hAtLjuZW5S7mVuQX2AhM9DPAgNsOGt1YfIiW8Q2pJA+qxs5RKvZbaaJviJebrIHepj8yf36kxLmIJWgV0nyT5V6h6QXRL7GUIekttrR/XUympu4uiZOaXgSNmzleeW1walc93PtwjWtX6+XMFolafXilN4opRpwqPPmW3HSMnuhTTogYqYD1F15oIIvKvDIjFb9sZtWH2p0EsCqKh53GNdJrtu7rt3RsK+TPdzLrIq/x/b8p6D/IrWt+t++4N3AVfNWseh/pLYF1InejtLc0U5m827fviO/r5cB1poYlKxkBsovcPn4KB9XRLmHfZdosqNUJ8ACrU091FYIQbrCWjYXeHkjxhPapKgT+3FUuiGJml5jrxdxSDWgUpy1jAzAK7Tt35/60b3+SKrdt5qqy2hiq5jR5MfsWIo7Lz+1PUfn5qZNM16YxcYYK8R+mJmOT8/GopyMz5jln1fZyla2st2z9i9JHGO8";
+const BUF=0x9B50,CLOCK=2.048;
+const KEYS={};"01234567".split("").forEach((c,i)=>KEYS[c]=[1,1<<i]);"89abcdef".split("").forEach((c,i)=>KEYS[c]=[2,1<<i]);
+Object.assign(KEYS,{p:[4,1],l:[4,2],"-":[4,4],"+":[4,8],g:[4,16],r:[4,32],i:[4,64],q:[4,128]});
+const rom=new Uint8Array(4096),ram=new Uint8Array(0x8000);
+const M={seg:[255,255,255,255,255,255],dig:0,line:0,held:null,k7:{state:0,n:0},tape:null,powered:false,blankUntil:0,pend:null};
+const bus={
+ rd(a){return a<0x1000?rom[a]:(a>=0x2000&&a<0xA000?ram[a-0x2000]:255)},
+ wr(a,v){if(a>=0x2000&&a<0xA000)ram[a-0x2000]=v},
+ in(p){p&=7;return p==1&&M.held&&(M.line&M.held[0])?M.held[1]:(p==1?0:255)},
+ out(p,v){p&=7;
+  if(p==3){M.dig=v;M.line=v}
+  else if(p==1){let ch=false;for(let i=0;i<6;i++)if((M.dig>>i&1)&&M.seg[i]!=v){M.seg[i]=v;ch=true}
+   if(ch&&M.k7.state==0&&M.seg.every(b=>b==0xF7)){M.k7.state=1;M.k7.n=0;say("Gravação detectada…")}}
+  else if(p==4&&M.k7.state==1&&++M.k7.n==10){M.k7.state=0;saveTape()}}
+};
+const cpu=new Z80(bus);
+
+/* ===== Fita K7 (Intel HEX) ===== */
+const hex2=n=>n.toString(16).toUpperCase().padStart(2,"0"),hex4=n=>n.toString(16).toUpperCase().padStart(4,"0");
+function toHex(d,base){let o="";for(let i=0;i<d.length;i+=16){const c=d.slice(i,i+16),a=(base+i)&65535;let s=c.length+(a>>8)+(a&255)+c.reduce((x,y)=>x+y,0);
+ o+=":"+hex2(c.length)+hex4(a)+"00"+c.map(hex2).join("")+hex2((-s)&255)+"\n"}return o+":00000001FF\n"}
+function fromHex(txt){const m=new Map();let lin=0,seg=0;
+ for(const l0 of txt.split(/\r?\n/)){const l=l0.trim();if(l[0]!=":")continue;const b=l.slice(1).match(/../g).map(h=>parseInt(h,16));
+  if(b.reduce((x,y)=>x+y,0)&255)throw new Error("checksum inválido");const n=b[0],a=b[1]<<8|b[2],t=b[3],d=b.slice(4,4+n);
+  if(t==0)d.forEach((v,i)=>m.set((seg+lin+a+i)&65535,v));else if(t==1)break;else if(t==2)seg=(d[0]<<8|d[1])<<4;else if(t==4)lin=(d[0]<<8|d[1])<<16}
+ if(!m.size)throw new Error("arquivo vazio");const k=[...m.keys()],ini=Math.min(...k),fim=Math.max(...k),out=new Uint8Array(fim-ini+1);m.forEach((v,a)=>out[a-ini]=v);return{data:out,ini}}
+function saveTape(){const g=a=>bus.rd(a),w=a=>g(a)|g(a+1)<<8,t=w(BUF),ini=w(BUF+2),fim=w(BUF+4);
+ if(fim<ini){say("K7: erro — endereço final menor que o inicial");return}
+ const d=new Uint8Array(fim-ini+1).map((_,i)=>g(ini+i)),name=hex4(t)+".hex",ck=d.reduce((x,y)=>x+y,0)&255;
+ const url=URL.createObjectURL(new Blob([toHex(d,ini)],{type:"text/plain"})),a=document.createElement("a");a.href=url;a.download=name;a.click();
+ say(`K7: gravado ${hex4(ini)}h–${hex4(fim)}h (${d.length} bytes), checksum ${hex2(ck)}h — <a href="${url}" download="${name}">baixar ${name}</a>`)}
+function loadTape(){if(!M.tape)return;const{name,data,ini}=M.tape,fim=ini+data.length-1;
+ data.forEach((v,i)=>bus.wr(ini+i,v));const t=parseInt(name.replace(/\.hex$/i,""),16)||0,w=(a,v)=>{bus.wr(a,v&255);bus.wr(a+1,v>>8)};
+ w(BUF,t);w(BUF+2,ini);w(BUF+4,fim);bus.wr(BUF+6,data.reduce((x,y)=>x+y,0)&255);
+ say(`K7: ${name} carregado em ${hex4(ini)}h–${hex4(fim)}h (${data.length} bytes). Pressione GO no monitor.`)}
+
+/* ===== Interface ===== */
+const $=id=>document.getElementById(id),st=$("st");
+function say(h){st.innerHTML=h}
+const NS="http://www.w3.org/2000/svg",hs=(x1,x2,y,t=9)=>[[x1,y],[x1+t/2,y-t/2],[x2-t/2,y-t/2],[x2,y],[x2-t/2,y+t/2],[x1+t/2,y+t/2]],
+ vs=(x,y1,y2,t=9)=>[[x,y1],[x+t/2,y1+t/2],[x+t/2,y2-t/2],[x,y2],[x-t/2,y2-t/2],[x-t/2,y1+t/2]];
+const SEGS=[hs(10,46,7),vs(51,11,45),vs(51,53,87),hs(10,46,91),vs(5,53,87),vs(5,11,45),hs(10,46,49)];
+const digs=[];
+for(let i=0;i<6;i++){if(i==4){const g=document.createElement("span");g.className="gap";$("disp").append(g)}
+ const s=document.createElementNS(NS,"svg");s.setAttribute("viewBox","0 0 70 98");const ps=SEGS.map(pts=>{const e=document.createElementNS(NS,"polygon");e.setAttribute("points",pts.map(p=>p.join(",")).join(" "));e.setAttribute("class","seg");s.append(e);return e});
+ const dp=document.createElementNS(NS,"circle");dp.setAttribute("cx",62);dp.setAttribute("cy",90);dp.setAttribute("r",5);dp.setAttribute("class","seg");s.append(dp);ps.push(dp);digs.push(ps);$("disp").append(s)}
+let shown=[];
+function paint(){const blank=!M.powered||performance.now()<M.blankUntil;
+ for(let i=0;i<6;i++){const v=blank?255:M.seg[i];if(shown[i]===v)continue;shown[i]=v;digs[i].forEach((e,b)=>e.classList.toggle("on",!(v>>b&1)))}}
+const mk=(host,list)=>list.forEach(([lbl,k,cls])=>{const b=document.createElement("button");b.textContent=lbl;b.dataset.k=k;if(cls)b.className=cls;
+ b.addEventListener("pointerdown",e=>{e.preventDefault();press(k)});["pointerup","pointerleave","pointercancel"].forEach(ev=>b.addEventListener(ev,()=>release(k)));$(host).append(b)});
+mk("hex","CDEF89AB45670123".split("").map(c=>[c.toUpperCase(),c.toLowerCase()]));
+mk("fn",[["PERM","p","f"],["GO","g","go"],["LOAD","l","f"],["ER","r","er"],["−1","-","f"],["IV","i","f"],["+1","+","f"],["QUAD","q","f"]]);
+let rel=null,downAt=0;
+function press(k){if(!M.powered||!KEYS[k])return;clearTimeout(rel);M.held=KEYS[k];downAt=performance.now();
+ document.querySelector(`[data-k="${k}"]`)?.classList.add("dn");if(k=="l"&&M.tape)loadTape()}
+function release(k){document.querySelector(`[data-k="${k}"]`)?.classList.remove("dn");if(!M.held||M.held!==KEYS[k])return;
+ clearTimeout(rel);rel=setTimeout(()=>{if(M.held===KEYS[k])M.held=null},Math.max(0,120-(performance.now()-downAt)))}
+const pc={Enter:"g"," ":"q",Add:"+",Subtract:"-","=":"+"};
+addEventListener("keydown",e=>{if(e.ctrlKey||e.metaKey||e.altKey||e.repeat)return;const k=pc[e.key]||e.key.toLowerCase();if(KEYS[k]){e.preventDefault();press(k)}});
+addEventListener("keyup",e=>{const k=pc[e.key]||e.key.toLowerCase();if(KEYS[k])release(k)});
+
+function power(on){M.powered=on;$("led").classList.toggle("on",on);$("bpow").classList.toggle("act",on);M.held=null;M.k7.state=0;
+ M.seg.fill(255);if(on){ram.fill(0);cpu.reset();say("ROM 4 KiB · RAM 32 KiB · 2,048 MHz"+(M.tape?` · K7: ${M.tape.name}`:""))}else say("Desligado — pressione POWER")}
+$("bpow").onclick=()=>power(!M.powered);
+$("brst").onclick=()=>{if(!M.powered)return;cpu.reset();M.k7.state=0;M.seg.fill(255);M.blankUntil=performance.now()+300};
+$("bnmi").onclick=()=>{if(M.powered)cpu.nmi=1};
+$("bk7").onclick=()=>{if(M.tape){M.tape=null;$("bk7").textContent="K7: vazio";$("bk7").classList.remove("act")}else $("file").click()};
+$("file").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(!f)return;
+ try{const r=fromHex(await f.text());M.tape={name:f.name,...r};$("bk7").textContent="K7: "+f.name;$("bk7").classList.add("act");
+  say(`K7: ${f.name} inserida (${hex4(r.ini)}h–${hex4(r.ini+r.data.length-1)}h, ${r.data.length} bytes). Pressione LOAD.`)}
+ catch(err){say("K7: erro ao ler "+f.name+" — "+err.message)}};
+
+/* ===== Laço principal ===== */
+let last=performance.now(),debt=0;
+function frame(now){const dt=Math.min(now-last,50);last=now;
+ if(M.powered){debt+=dt*CLOCK*1000;while(debt>0)debt-=cpu.step()}
+ paint();requestAnimationFrame(frame)}
+(async()=>{try{const bin=Uint8Array.from(atob(ROM_B64),c=>c.charCodeAt(0));
+ const out=await new Response(new Blob([bin]).stream().pipeThrough(new DecompressionStream("deflate"))).arrayBuffer();rom.set(new Uint8Array(out).slice(0,4096));
+ power(true);requestAnimationFrame(frame)}catch(e){say("Falha ao carregar a ROM embutida: "+e.message)}})();
+</script>
+</body>
+</html>
