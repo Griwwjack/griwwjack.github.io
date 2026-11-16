@@ -38,6 +38,12 @@ button:focus-visible{outline:2px solid #ffd27a;outline-offset:2px}
 .st a{color:#ffd27a}
 details{margin-top:12px;font-size:13px;color:var(--dim)}
 details pre{margin:8px 0 0;white-space:pre-wrap;font:12.5px/1.5 Consolas,monospace;color:var(--ink)}
+select.s{height:54px;border:0;border-radius:7px;font:inherit;font-size:13px;padding:0 6px}
+.io,.deck{display:flex;flex-wrap:wrap;gap:12px 28px;align-items:center;justify-content:center;margin-top:16px;font-size:13px;color:var(--dim)}
+.io b,.deck b{color:var(--ink);font-weight:600;margin-right:6px}.row{display:flex;gap:5px;margin-top:5px}
+.bit{height:30px;width:30px;font-size:12px;border-radius:5px;background:#33473d;color:var(--dim)}.bit.on{background:var(--key);color:#222}
+.l{width:14px;height:14px;border-radius:50%;background:var(--ledoff);margin:8px 8px 0 8px;display:inline-block}.l.on{background:var(--led);box-shadow:0 0 6px var(--led)}
+.deck button{height:34px;padding:0 12px;font-size:13px}.deck label{display:flex;gap:4px;align-items:center}#dinfo{color:var(--ink)}
 @media(prefers-reduced-motion:no-preference){.led{transition:background .2s}}
 </style>
 </head>
@@ -51,19 +57,28 @@ details pre{margin:8px 0 0;white-space:pre-wrap;font:12.5px/1.5 Consolas,monospa
  <div class="grid sys">
   <button class="s" id="bpow">POWER</button>
   <button class="s" id="brst">RESET</button>
-  <button class="s" id="bnmi">NMI</button>
-  <button class="s" id="bk7">K7: vazio</button>
+  <button class="s" id="bnmi" title="NMI sai só pelo conector J4">NMI (J4)</button>
+  <select class="s" id="clk" title="Clock da CPU"><option value="2.048">2,048 MHz</option><option value="3.5">3,5 MHz</option><option value="4" selected>4 MHz</option></select>
  </div>
 </div>
+<div class="io"><div><b>PE · J2 (entrada)</b><div class="row" id="pe"></div></div><div><b>PS · J3 (saída)</b><div class="row" id="ps"></div></div></div>
+<div class="deck"><b>Gravador K7</b><button class="s" id="dopen">Abrir…</button><button class="s" id="dplay">▶ Play</button><button class="s" id="drec">● Rec</button><button class="s" id="dstop">■ Stop</button>
+ <label><input type="checkbox" id="turbo"> turbo</label><label><input type="checkbox" id="mute"> mudo</label><span id="dinfo">sem fita</span></div>
 <div class="st" id="st">Iniciando…</div>
-<input type="file" id="file" accept=".hex,.HEX" hidden>
+<input type="file" id="file" accept=".hex,.HEX,.wav,.WAV" hidden>
 <details><summary>Ajuda</summary><pre>Teclado do PC: 0-9 a-f = hex · Enter/g = GO · r = ER · p = PERM · l = LOAD
 + / − = DT+ / DT− · i = IV · q ou espaço = QUAD
 
-K7 (fita): clique em “K7” e escolha um arquivo .hex (nome = título de 4 dígitos).
-  Carregar: com a fita inserida, pressione LOAD; o conteúdo vai direto para a RAM.
-  Gravar: preencha título/início/fim na tela da fita, pressione GO; o .hex é baixado.
-NMI aciona a interrupção não mascarável (vetor em 0066h → ROTINT, ajustável com IV).
+Portas (decodificação parcial por A0/A1/A2, como no esquema):
+  PE (J2): 8 chaves de entrada, padrão 1 (entrada TTL solta). PE0 também recebe a fita.
+  PS (J3): 8 LEDs de saída (latch). PS0 vai ao alto-falante e à fita.
+
+Gravador K7 (sinal real, 1 kHz/2 kHz, no formato do monitor):
+  Abrir: um .hex (o nome é o título, ex. 0002.hex) vira sinal de fita; também aceita .wav.
+  Ler: no monitor escolha o título e inicie a leitura; então Play.
+  Gravar: no monitor inicie a gravação (GO) e pressione Rec antes; Stop ao terminar. O .hex e o .wav ficam para baixar.
+  Turbo acelera 8× durante Play/Rec (sem som). A fita real dura minutos.
+Clock: ajuste antes de abrir WAVs. NMI só existe no conector J4 (botão do emulador).
 POWER zera a RAM; RESET mantém a RAM.</pre></details>
 </div></main>
 <script>
@@ -153,7 +168,7 @@ ex(op){const x=op>>6,y=op>>3&7,z=op&7,p=y>>1,q=y&1,r=this.r;let v;
   default:this.push(this.PC);this.PC=y*8;this.t+=11}
 }
 cb(){const r=this.r;let op,a,idx=this.pr;
- if(idx){const d=this.sb();op=this.f8();a=((idx==1?this.IX:this.IY)+d)&65535;this.t+=15}else{op=this.fop();a=r[4]<<8|r[5];this.t+=4}
+ if(idx){const d=this.sb();op=this.f8();a=((idx==1?this.IX:this.IY)+d)&65535;this.t+=15}else{op=this.fop();a=r[4]<<8|r[5]}
  const x=op>>6,y=op>>3&7,z=op&7,m=idx||z==6;
  let v=m?this.rd(a):r[z];this.t+=m?(idx?4:7):4;
  if(x==0){v=this.rot(y,v)}else if(x==1){this.F=(this.F&1)|16|((v&(1<<y))?(y==7?128:0):0x44)|(v&0x28);if(m&&!idx)this.t-=0;return}
@@ -185,43 +200,88 @@ blk(dec,rep,z){const r=this.r,s=dec?-1:1;let hl=r[4]<<8|r[5],bc=r[0]<<8|r[1],de=
  if(rep&&again){this.PC=(this.PC-2)&65535;this.t+=5}}
 }
 
-/* ===== Hardware do Nestor II ===== */
+/* ===== Hardware do Nestor II (conforme esquema) ===== */
 const ROM_B64="eNrtlu9PW1UYx59zLpZ7G4YtCK0lm73eZCmrG9AshfiiTsWgMTogBjKmoInR8GY1LhE2tJoRWvamMXuh0bMXYvzxkiXLghqj2OsGt80lmoZohzEhoeI2OmEKtGO71+dculH9C/aiT9pzzvN5zn3O8z03zdMWOHtxPrsu/8GCD8qD4FxmxAa5cy1LTF5mNthjCxH9AzgR251QYNiApAuQ65/CybSwQAxIBEBXQf8dDFeiE1QQjbrkO2A4Lp8GfQMwa0QNA4B6g81Gz8Sm5+SAMBaOHA7Zx8LHXrnC4/jABlH7oLiupKC+BIf1SeDpZzu6tGpewiTEds2qX8B6WoikScYJpOHk+cTXkFHWtGoIkW+Sv0GsWtyeHHxSXdCl7RF58KvkGlShgiUOT5zqAA0PewMTc9Uu1BM0lV2J+0gQFOuDu+TrbDgXVnJhvY+gqz9N+F63/Be7CzAeqbkL8IF+pcfj9w9lrZ2LGsF7eov4i18NNxxX3vT7PUOaaUay8iobmsT0cUKFO/OiNu/8kIwOeH7WpgufnfvozKn8e++Pj16aiMbxvFp9kJSe31Dqm6YZMtNC6N00kXMsqLbk2Xp2/iK+RjXH5CwLGuoG2VaKH81pExAePDgSHfCEaz2vX0HPuVsYiapA9RUSHFeCU3KBqV5KrnEVXGCB3wgSHh/lcZPHcdzBlzg2LGyU4AmOb1v4dgmOcnzLwrdK8GmOtyy8VYJnOL5p4ZslOM5x3sL5Is71yptsiAcLPLhpBTd5MJLr4JJusJBKBXwhESooEYriamiAPkNfpkM0Tj+n39I09QjqEmmkh2gvPUbH6Fl6nibpMsV7hv8b4UYJga29U18ml/52tbqgbGUrW9nueQtB4AiTn7U7+7Ybv9z3n67vzWPT911FutPzvWvFlv9A8lXRcLQ5jFqfoDrER48w/INwVJqxFr4mg/iaDeprKfoS+g7022fkLnuI4LGqKMq99hAtLjuZW5S7mVuQX2AhM9DPAgNsOGt1YfIiW8Q2pJA+qxs5RKvZbaaJviJebrIHepj8yf36kxLmIJWgV0nyT5V6h6QXRL7GUIekttrR/XUympu4uiZOaXgSNmzleeW1walc93PtwjWtX6+XMFolafXilN4opRpwqPPmW3HSMnuhTTogYqYD1F15oIIvKvDIjFb9sZtWH2p0EsCqKh53GNdJrtu7rt3RsK+TPdzLrIq/x/b8p6D/IrWt+t++4N3AVfNWseh/pLYF1InejtLc0U5m827fviO/r5cB1poYlKxkBsovcPn4KB9XRLmHfZdosqNUJ8ACrU091FYIQbrCWjYXeHkjxhPapKgT+3FUuiGJml5jrxdxSDWgUpy1jAzAK7Tt35/60b3+SKrdt5qqy2hiq5jR5MfsWIo7Lz+1PUfn5qZNM16YxcYYK8R+mJmOT8/GopyMz5jln1fZyla2st2z9i9JHGO8";
-const BUF=0x9B50,CLOCK=2.048;
+const BUF=0x9B50;let CLOCK=4;
 const KEYS={};"01234567".split("").forEach((c,i)=>KEYS[c]=[1,1<<i]);"89abcdef".split("").forEach((c,i)=>KEYS[c]=[2,1<<i]);
 Object.assign(KEYS,{p:[4,1],l:[4,2],"-":[4,4],"+":[4,8],g:[4,16],r:[4,32],i:[4,64],q:[4,128]});
 const rom=new Uint8Array(4096),ram=new Uint8Array(0x8000);
-const M={seg:[255,255,255,255,255,255],dig:0,line:0,held:null,k7:{state:0,n:0},tape:null,powered:false,blankUntil:0,pend:null};
+/* M: latch = latch único de segmentos (U7/U8); dig = registrador de dígitos (U6); pe = chaves de J2; ps = latches de J3 */
+const M={seg:[255,255,255,255,255,255],latch:255,dig:0,held:null,pe:255,ps:0,cyc:0,powered:false,blankUntil:0,alog:[],alv:0};
+const D={mode:"stop",e:[],init:0,p:0,t0:0,name:"",rec:null};
 const bus={
- rd(a){return a<0x1000?rom[a]:(a>=0x2000&&a<0xA000?ram[a-0x2000]:255)},
+ /* 74LS138: Y0=ROMCS (0000–1FFF, 2732 só tem A0–A11 → espelhada); RAMCS = Y1..Y4 (2000–9FFF); A000+ sem chip */
+ rd(a){return a<0x2000?rom[a&0xFFF]:(a<0xA000?ram[a-0x2000]:255)},
  wr(a,v){if(a>=0x2000&&a<0xA000)ram[a-0x2000]=v},
- in(p){p&=7;return p==1&&M.held&&(M.line&M.held[0])?M.held[1]:(p==1?0:255)},
- out(p,v){p&=7;
-  if(p==3){M.dig=v;M.line=v}
-  else if(p==1){let ch=false;for(let i=0;i<6;i++)if((M.dig>>i&1)&&M.seg[i]!=v){M.seg[i]=v;ch=true}
-   if(ch&&M.k7.state==0&&M.seg.every(b=>b==0xF7)){M.k7.state=1;M.k7.n=0;say("Gravação detectada…")}}
-  else if(p==4&&M.k7.state==1&&++M.k7.n==10){M.k7.state=0;saveTape()}}
+ /* Decodificação parcial por A0/A1/A2 + RD/WR (U16, U17, U18) */
+ in(p){let v=255,f=0;
+  if(p&2){f=1;let pe=M.pe;if(D.mode=="play")pe=(pe&254)|tapeLevel();v&=pe}
+  if(p&1){f=1;v&=(M.held&&(M.dig&M.held[0]))?M.held[1]:0}
+  return f?v:255},
+ out(p,v){
+  if(p&1){M.latch=v;if(!(p&2))for(let i=0;i<6;i++)if(M.dig>>i&1)M.seg[i]=v}
+  if(p&2)M.dig=v;
+  if(p&4)setPS(v)}
 };
 const cpu=new Z80(bus);
+function setPS(v){const o=M.ps&1,n=v&1;M.ps=v;if(o!=n){M.alog.push([M.cyc,n]);if(D.mode=="rec")D.rec.push(M.cyc-D.t0)}}
 
-/* ===== Fita K7 (Intel HEX) ===== */
+/* ===== Gravador K7: sinal real em PE0 (entrada) e PS0 (saída) ===== */
 const hex2=n=>n.toString(16).toUpperCase().padStart(2,"0"),hex4=n=>n.toString(16).toUpperCase().padStart(4,"0");
 function toHex(d,base){let o="";for(let i=0;i<d.length;i+=16){const c=d.slice(i,i+16),a=(base+i)&65535;let s=c.length+(a>>8)+(a&255)+c.reduce((x,y)=>x+y,0);
- o+=":"+hex2(c.length)+hex4(a)+"00"+c.map(hex2).join("")+hex2((-s)&255)+"\n"}return o+":00000001FF\n"}
+ o+=":"+hex2(c.length)+hex4(a)+"00"+Array.from(c,hex2).join("")+hex2((-s)&255)+"\n"}return o+":00000001FF\n"}
 function fromHex(txt){const m=new Map();let lin=0,seg=0;
  for(const l0 of txt.split(/\r?\n/)){const l=l0.trim();if(l[0]!=":")continue;const b=l.slice(1).match(/../g).map(h=>parseInt(h,16));
   if(b.reduce((x,y)=>x+y,0)&255)throw new Error("checksum inválido");const n=b[0],a=b[1]<<8|b[2],t=b[3],d=b.slice(4,4+n);
   if(t==0)d.forEach((v,i)=>m.set((seg+lin+a+i)&65535,v));else if(t==1)break;else if(t==2)seg=(d[0]<<8|d[1])<<4;else if(t==4)lin=(d[0]<<8|d[1])<<16}
  if(!m.size)throw new Error("arquivo vazio");const k=[...m.keys()],ini=Math.min(...k),fim=Math.max(...k),out=new Uint8Array(fim-ini+1);m.forEach((v,a)=>out[a-ini]=v);return{data:out,ini}}
-function saveTape(){const g=a=>bus.rd(a),w=a=>g(a)|g(a+1)<<8,t=w(BUF),ini=w(BUF+2),fim=w(BUF+4);
- if(fim<ini){say("K7: erro — endereço final menor que o inicial");return}
- const d=new Uint8Array(fim-ini+1).map((_,i)=>g(ini+i)),name=hex4(t)+".hex",ck=d.reduce((x,y)=>x+y,0)&255;
- const url=URL.createObjectURL(new Blob([toHex(d,ini)],{type:"text/plain"})),a=document.createElement("a");a.href=url;a.download=name;a.click();
- say(`K7: gravado ${hex4(ini)}h–${hex4(fim)}h (${d.length} bytes), checksum ${hex2(ck)}h — <a href="${url}" download="${name}">baixar ${name}</a>`)}
-function loadTape(){if(!M.tape)return;const{name,data,ini}=M.tape,fim=ini+data.length-1;
- data.forEach((v,i)=>bus.wr(ini+i,v));const t=parseInt(name.replace(/\.hex$/i,""),16)||0,w=(a,v)=>{bus.wr(a,v&255);bus.wr(a+1,v>>8)};
- w(BUF,t);w(BUF+2,ini);w(BUF+4,fim);bus.wr(BUF+6,data.reduce((x,y)=>x+y,0)&255);
- say(`K7: ${name} carregado em ${hex4(ini)}h–${hex4(fim)}h (${data.length} bytes). Pressione GO no monitor.`)}
+/* Meio-períodos em ciclos de CPU, iguais aos gerados por GE1KHZ/GE2KHZ do monitor (V1KHZ=9Ah → 2046 T; V2KHZ=40h → 876 T) */
+function buildTape(title,ini,data){const e=[],H1=2046,H2=876;let t=2000;
+ const tone=(n,h)=>{for(let i=0;i<n*2;i++){e.push(t);t+=h}},bt=b=>{if(b){tone(4,H2);tone(4,H1)}else{tone(8,H2);tone(2,H1)}},
+  by=v=>{bt(0);for(let i=0;i<8;i++)bt(v>>i&1);bt(1)},fim=ini+data.length-1;
+ tone(4000,H1);[title&255,title>>8,ini&255,ini>>8,fim&255,fim>>8,data.reduce((x,y)=>x+y,0)&255].forEach(by);
+ tone(2000,H2);data.forEach(by);tone(4000,H2);e.push(t);return e}
+/* Decodificador: reproduz LFITA/LEBIT do monitor sobre os períodos medidos */
+function decode(e,init){let lv=init;const rise=[];e.forEach(t=>{lv^=1;if(lv)rise.push(t)});
+ const c=[];for(let i=1;i<rise.length;i++)c.push(rise[i]-rise[i-1]<2900?1:0);
+ let i=0;while(i<c.length&&c[i]==0)i++;if(i<500)throw new Error("sem sincronismo de 1 kHz");i++;
+ const bit=()=>{let l=0,h=0;for(;;){if(i>=c.length)throw new Error("fita incompleta");if(c[i++]==0){l=(l-2)&255;h=1}else{l=(l+1)&255;if(h)return l>>7}}},
+  by=()=>{bit();let v=0;for(let k=0;k<8;k++)v=(bit()<<7)|(v>>1);bit();return v},
+  hd=[0,0,0,0,0,0,0].map(by),ini=hd[2]|hd[3]<<8,fim=hd[4]|hd[5]<<8;
+ if(fim<ini)throw new Error("cabeçalho inválido");const data=new Uint8Array(fim-ini+1).map(by);
+ return{title:hd[0]|hd[1]<<8,ini,data,ck:hd[6],sum:data.reduce((x,y)=>x+y,0)&255}}
+function wavBytes(e,init){const cps=CLOCK*1e6,R=44100,n=Math.ceil((e[e.length-1]/cps+.3)*R),o=new Uint8Array(44+n),v=new DataView(o.buffer);
+ [[0,0x52494646],[8,0x57415645],[12,0x666D7420],[36,0x64617461]].forEach(([a,x])=>v.setUint32(a,x));
+ v.setUint32(4,36+n,true);v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,R,true);v.setUint32(28,R,true);v.setUint16(32,1,true);v.setUint16(34,8,true);v.setUint32(40,n,true);
+ let lv=init,k=0;for(let i=0;i<n;i++){const t=i/R*cps;while(k<e.length&&e[k]<=t){lv^=1;k++}o[44+i]=lv?200:56}return o}
+function parseWav(b){const v=new DataView(b);if(v.getUint32(0)!=0x52494646)throw new Error("não é WAV");
+ const ch=v.getUint16(22,true),R=v.getUint32(24,true),bits=v.getUint16(34,true);let o=12,off=-1,len=0;
+ while(o+8<=b.byteLength){const id=v.getUint32(o),sz=v.getUint32(o+4,true);if(id==0x64617461){off=o+8;len=Math.min(sz,b.byteLength-off);break}o+=8+sz+(sz&1)}
+ if(off<0||(bits!=8&&bits!=16))throw new Error("use WAV PCM de 8 ou 16 bits");
+ const bw=bits/8,n=Math.floor(len/(bw*ch)),x=i=>{const q=off+i*bw*ch;return bits==16?v.getInt16(q,true)/32768:(v.getUint8(q)-128)/128};
+ let pk=0;for(let i=0;i<n;i++)pk=Math.max(pk,Math.abs(x(i)));const th=pk*.2,cps=CLOCK*1e6,e=[];let st=0;
+ for(let i=0;i<n;i++){const a=x(i);if(!st&&a>th){st=1;e.push(1000+i/R*cps)}else if(st&&a<-th){st=0;e.push(1000+i/R*cps)}}
+ if(e.length<2)throw new Error("sem sinal");if(e.length&1)e.push(e[e.length-1]+1000);return e}
+function tapeLevel(){const t=M.cyc-D.t0,e=D.e;while(D.p<e.length&&e[D.p]<=t)D.p++;
+ if(D.p>=e.length&&t>e[e.length-1]+CLOCK*5e5)stop("K7: fim da fita");return(D.p+D.init)&1}
+const dl=(parts,name,type,txt)=>`<a href="${URL.createObjectURL(new Blob(parts,{type}))}" download="${name}">${txt}</a>`;
+function stop(msg){const w=D.mode;D.mode="stop";if(w=="rec")finishRec();else if(msg)say(msg)}
+function finishRec(){const e=D.rec;D.rec=null;if(e.length<40){say("K7: gravação vazia");return}
+ D.e=e;D.name="gravação";let m;
+ try{const r=decode(e,D.init),nm=hex4(r.title)+".hex";
+  m=`K7: ${nm} — ${hex4(r.ini)}h–${hex4(r.ini+r.data.length-1)}h (${r.data.length} bytes), checksum ${r.ck==r.sum?"confere":"diverge"} — ${dl([toHex(r.data,r.ini)],nm,"text/plain","baixar "+nm)} · `}
+ catch(err){m="K7: não consegui decodificar a gravação ("+err.message+") — "}
+ say(m+dl([wavBytes(e,D.init)],"fita.wav","audio/wav","baixar fita.wav"))}
+
+/* ===== Áudio: PS0 → alto-falante (Web Audio) ===== */
+let ac=null,nextT=0;
+function wake(){if(!ac)try{ac=new AudioContext()}catch(e){}ac&&ac.resume()}
+function audio(c0,c1,turbo){const log=M.alog;
+ if(!ac||$("mute").checked||turbo||c1<=c0){log.length=0;M.alv=M.ps&1;return}
+ const cps=CLOCK*1e6,R=ac.sampleRate,n=Math.max(1,Math.round((c1-c0)/cps*R)),b=ac.createBuffer(1,n,R),d=b.getChannelData(0);let lv=M.alv,j=0;
+ for(let s=0;s<n;s++){const t=c0+s*(c1-c0)/n;while(j<log.length&&log[j][0]<=t)lv=log[j++][1];d[s]=lv?.05:-.05}
+ M.alv=log.length?log[log.length-1][1]:lv;log.length=0;
+ const src=ac.createBufferSource();src.buffer=b;src.connect(ac.destination);const st=Math.max(nextT,ac.currentTime+.03);src.start(st);nextT=st+b.duration}
 
 /* ===== Interface ===== */
 const $=id=>document.getElementById(id),st=$("st");
@@ -233,37 +293,47 @@ const digs=[];
 for(let i=0;i<6;i++){if(i==4){const g=document.createElement("span");g.className="gap";$("disp").append(g)}
  const s=document.createElementNS(NS,"svg");s.setAttribute("viewBox","0 0 70 98");const ps=SEGS.map(pts=>{const e=document.createElementNS(NS,"polygon");e.setAttribute("points",pts.map(p=>p.join(",")).join(" "));e.setAttribute("class","seg");s.append(e);return e});
  const dp=document.createElementNS(NS,"circle");dp.setAttribute("cx",62);dp.setAttribute("cy",90);dp.setAttribute("r",5);dp.setAttribute("class","seg");s.append(dp);ps.push(dp);digs.push(ps);$("disp").append(s)}
-let shown=[];
+let shown=[],lastTxt="";const peB=[],psL=[];
+for(let b=7;b>=0;b--){const x=document.createElement("button");x.className="bit";x.textContent=b;x.title="PE"+b;x.onclick=()=>{M.pe^=1<<b};$("pe").append(x);peB[b]=x;
+ const l=document.createElement("span");l.className="l";l.title="PS"+b;$("ps").append(l);psL[b]=l}
 function paint(){const blank=!M.powered||performance.now()<M.blankUntil;
- for(let i=0;i<6;i++){const v=blank?255:M.seg[i];if(shown[i]===v)continue;shown[i]=v;digs[i].forEach((e,b)=>e.classList.toggle("on",!(v>>b&1)))}}
+ for(let i=0;i<6;i++){const v=blank?255:M.seg[i];if(shown[i]===v)continue;shown[i]=v;digs[i].forEach((e,b)=>e.classList.toggle("on",!(v>>b&1)))}
+ for(let b=0;b<8;b++){peB[b].classList.toggle("on",!!(M.pe>>b&1));psL[b].classList.toggle("on",M.powered&&!!(M.ps>>b&1))}
+ const tx=D.mode=="stop"?(D.name||"sem fita"):`${D.mode=="play"?"▶":"●"} ${D.name||"gravando"} · ${((M.cyc-D.t0)/(CLOCK*1e6))|0} s`;
+ if(tx!==lastTxt){$("dinfo").textContent=tx;lastTxt=tx}}
 const mk=(host,list)=>list.forEach(([lbl,k,cls])=>{const b=document.createElement("button");b.textContent=lbl;b.dataset.k=k;if(cls)b.className=cls;
  b.addEventListener("pointerdown",e=>{e.preventDefault();press(k)});["pointerup","pointerleave","pointercancel"].forEach(ev=>b.addEventListener(ev,()=>release(k)));$(host).append(b)});
 mk("hex","CDEF89AB45670123".split("").map(c=>[c.toUpperCase(),c.toLowerCase()]));
 mk("fn",[["PERM","p","f"],["GO","g","go"],["LOAD","l","f"],["ER","r","er"],["−1","-","f"],["IV","i","f"],["+1","+","f"],["QUAD","q","f"]]);
 let rel=null,downAt=0;
-function press(k){if(!M.powered||!KEYS[k])return;clearTimeout(rel);M.held=KEYS[k];downAt=performance.now();
- document.querySelector(`[data-k="${k}"]`)?.classList.add("dn");if(k=="l"&&M.tape)loadTape()}
+function press(k){wake();if(!M.powered||!KEYS[k])return;clearTimeout(rel);M.held=KEYS[k];downAt=performance.now();document.querySelector(`[data-k="${k}"]`)?.classList.add("dn")}
 function release(k){document.querySelector(`[data-k="${k}"]`)?.classList.remove("dn");if(!M.held||M.held!==KEYS[k])return;
  clearTimeout(rel);rel=setTimeout(()=>{if(M.held===KEYS[k])M.held=null},Math.max(0,120-(performance.now()-downAt)))}
 const pc={Enter:"g"," ":"q",Add:"+",Subtract:"-","=":"+"};
-addEventListener("keydown",e=>{if(e.ctrlKey||e.metaKey||e.altKey||e.repeat)return;const k=pc[e.key]||e.key.toLowerCase();if(KEYS[k]){e.preventDefault();press(k)}});
+addEventListener("keydown",e=>{if(e.ctrlKey||e.metaKey||e.altKey||e.repeat||e.target.tagName=="SELECT")return;const k=pc[e.key]||e.key.toLowerCase();if(KEYS[k]){e.preventDefault();press(k)}});
 addEventListener("keyup",e=>{const k=pc[e.key]||e.key.toLowerCase();if(KEYS[k])release(k)});
 
-function power(on){M.powered=on;$("led").classList.toggle("on",on);$("bpow").classList.toggle("act",on);M.held=null;M.k7.state=0;
- M.seg.fill(255);if(on){ram.fill(0);cpu.reset();say("ROM 4 KiB · RAM 32 KiB · 2,048 MHz"+(M.tape?` · K7: ${M.tape.name}`:""))}else say("Desligado — pressione POWER")}
+function power(on){M.powered=on;$("led").classList.toggle("on",on);$("bpow").classList.toggle("act",on);M.held=null;stop();
+ M.seg.fill(255);M.dig=0;M.latch=255;if(on){ram.fill(0);M.ps=0;M.alv=0;cpu.reset();say("ROM 4 KiB (espelhada em 1000h) · RAM 32 KiB · "+CLOCK+" MHz")}else say("Desligado — pressione POWER")}
 $("bpow").onclick=()=>power(!M.powered);
-$("brst").onclick=()=>{if(!M.powered)return;cpu.reset();M.k7.state=0;M.seg.fill(255);M.blankUntil=performance.now()+300};
+$("brst").onclick=()=>{if(!M.powered)return;cpu.reset();M.seg.fill(255);M.dig=0;M.blankUntil=performance.now()+300};
 $("bnmi").onclick=()=>{if(M.powered)cpu.nmi=1};
-$("bk7").onclick=()=>{if(M.tape){M.tape=null;$("bk7").textContent="K7: vazio";$("bk7").classList.remove("act")}else $("file").click()};
-$("file").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(!f)return;
- try{const r=fromHex(await f.text());M.tape={name:f.name,...r};$("bk7").textContent="K7: "+f.name;$("bk7").classList.add("act");
-  say(`K7: ${f.name} inserida (${hex4(r.ini)}h–${hex4(r.ini+r.data.length-1)}h, ${r.data.length} bytes). Pressione LOAD.`)}
- catch(err){say("K7: erro ao ler "+f.name+" — "+err.message)}};
+$("clk").onchange=e=>{CLOCK=+e.target.value;say("Clock: "+CLOCK+" MHz")};
+$("dopen").onclick=()=>$("file").click();
+$("file").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(!f)return;stop();
+ try{if(/\.wav$/i.test(f.name)){D.e=parseWav(await f.arrayBuffer());D.init=0;say(`K7: ${f.name} aberto (${D.e.length} transições). Escolha o clock antes de abrir WAVs. Pressione Play.`)}
+  else{const r=fromHex(await f.text());D.e=buildTape(parseInt(f.name.replace(/\.hex$/i,""),16)||0,r.ini,r.data);D.init=0;
+   say(`K7: ${f.name} convertido em sinal (${hex4(r.ini)}h–${hex4(r.ini+r.data.length-1)}h, ${r.data.length} bytes). No monitor, selecione a leitura da fita e pressione Play.`)}
+  D.name=f.name}catch(err){say("K7: erro ao abrir "+f.name+" — "+err.message)}};
+$("dplay").onclick=()=>{wake();if(!M.powered)return;if(!D.e.length){say("K7: nenhuma fita — use Abrir");return}stop();D.mode="play";D.p=0;D.init=D.name=="gravação"?D.init:0;D.t0=M.cyc};
+$("drec").onclick=()=>{wake();if(!M.powered)return;stop();D.rec=[];D.init=M.ps&1;D.t0=M.cyc;D.mode="rec";say("K7: gravando… execute a gravação no monitor e pressione Stop ao terminar")};
+$("dstop").onclick=()=>stop("K7: parado");
 
 /* ===== Laço principal ===== */
 let last=performance.now(),debt=0;
 function frame(now){const dt=Math.min(now-last,50);last=now;
- if(M.powered){debt+=dt*CLOCK*1000;while(debt>0)debt-=cpu.step()}
+ if(M.powered){const turbo=$("turbo").checked&&D.mode!="stop",c0=M.cyc;debt+=dt*CLOCK*1000*(turbo?8:1);
+  while(debt>0){const c=cpu.step();debt-=c;M.cyc+=c}audio(c0,M.cyc,turbo)}
  paint();requestAnimationFrame(frame)}
 (async()=>{try{const bin=Uint8Array.from(atob(ROM_B64),c=>c.charCodeAt(0));
  const out=await new Response(new Blob([bin]).stream().pipeThrough(new DecompressionStream("deflate"))).arrayBuffer();rom.set(new Uint8Array(out).slice(0,4096));
